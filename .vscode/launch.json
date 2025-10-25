@@ -4,6 +4,7 @@
 	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
 	"configurations": [
+		// I got this first one from another project, may be redundant with the rest
 		{
 			"type": "chrome",
 			"request": "launch",
@@ -11,6 +12,8 @@
 			"url": "http://localhost:3000",
 			"webRoot": "${workspaceFolder}"
 		},
+		// I got all these below configurations from the next.js debugger guide
+		// https://nextjs.org/docs/app/guides/debugging
 		{
 			"name": "Next.js: debug server-side",
 			"type": "node-terminal",
