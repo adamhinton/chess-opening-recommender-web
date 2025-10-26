@@ -44,7 +44,7 @@ export async function processLichessUsername(formData: FormData) {
 	});
 
 	const response = await fetch(
-		`https://lichess.org/api/games/user/${username}?max=100`,
+		`https://lichess.org/api/games/user/${username}?${params.toString()}`,
 		{
 			headers: {
 				Accept: "application/x-ndjson",
@@ -75,24 +75,39 @@ export async function processLichessUsername(formData: FormData) {
 
 	console.log("response:", response);
 
-	const gameData = await response.json();
+	const gameData = await response.text();
 
 	console.log("Fetched game data:", gameData);
 
+	// Parse NDJSON - each line is a separate JSON object
+	const games = gameData
+		.trim()
+		.split("\n")
+		.filter((line) => line.trim() !== "")
+		.map((line) => {
+			try {
+				return JSON.parse(line);
+			} catch (error) {
+				console.error("Error parsing game line:", error);
+				return null;
+			}
+		})
+		.filter((game) => game !== null);
+
 	// Check if we got any games
-	if (!gameData || !Array.isArray(gameData) || gameData.length === 0) {
+	if (!games || games.length === 0) {
 		return {
 			success: false,
 			message: `No rated games found for ${username} in blitz, rapid, or classical time controls. Please make sure you have played some rated games.`,
 		};
 	}
 
-	console.log(`Found ${gameData.length} games for ${username}`);
+	console.log(`Found ${games.length} games for ${username}`);
 
 	// For now, just return a success message
 	return {
 		success: true,
-		gameData,
-		message: `Successfully loaded ${gameData.length} games for ${username}`,
+		gameData: games,
+		message: `Successfully loaded ${games.length} games for ${username}`,
 	};
 }
