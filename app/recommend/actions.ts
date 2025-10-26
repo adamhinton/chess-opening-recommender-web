@@ -4,6 +4,9 @@
 // This server action will call the Liches (or other site) API to get game data for that username
 // Then, it will process that data.
 // Right now, we just want to successfully download game data.
+
+// API docs:
+// https://lichess.org/api#tag/Games/operation/apiGamesUser
 // ________________________________
 
 "use server";
