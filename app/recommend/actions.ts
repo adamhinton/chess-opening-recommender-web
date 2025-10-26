@@ -11,7 +11,7 @@
 export async function processLichessUsername(formData: FormData) {
 	const username = formData.get("username");
 
-	if (!username) {
+	if (!username || typeof username !== "string") {
 		throw new Error("Username is required");
 	}
 
