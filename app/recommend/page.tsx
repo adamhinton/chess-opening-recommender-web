@@ -5,10 +5,12 @@ import { useState } from "react";
 
 const Recommend = () => {
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	// Todo clean this up with tagged unions; just doing this for testing
 	const [result, setResult] = useState<{
 		success: boolean;
-		message: string;
-		username?: string;
+		gameData?: unknown;
+		message?: string;
 	} | null>(null);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
