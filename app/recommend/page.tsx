@@ -77,6 +77,14 @@ const Recommend = () => {
 							}`}
 						>
 							<p>{result.message}</p>
+							{result.success &&
+								result.gameData &&
+								Array.isArray(result.gameData) &&
+								result.gameData.length > 0 && (
+									<p className="text-sm mt-2 opacity-80">
+										Ready to analyze your games and recommend openings!
+									</p>
+								)}
 						</div>
 					)}
 				</div>

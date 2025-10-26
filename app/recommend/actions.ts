@@ -17,6 +17,22 @@ export async function processLichessUsername(formData: FormData) {
 		throw new Error("Username is required");
 	}
 
+	// // First, verify the user exists by checking their profile
+	// const userResponse = await fetch(`https://lichess.org/api/user/${username}`);
+
+	// if (!userResponse.ok) {
+	// 	if (userResponse.status === 404) {
+	// 		return {
+	// 			success: false,
+	// 			message: `User "${username}" not found on Lichess. Please check the username and try again.`,
+	// 		};
+	// 	}
+	// 	return {
+	// 		success: false,
+	// 		message: `Error checking user "${username}". Please try again.`,
+	// 	};
+	// }
+
 	// Now call Lichess API to get user game data, with parameters such as openings, rated only, etc
 	const params = new URLSearchParams({
 		rated: "true",
@@ -28,26 +44,50 @@ export async function processLichessUsername(formData: FormData) {
 	});
 
 	const response = await fetch(
-		`https://lichess.org/api/user/${username}/games?${params}`
+		`https://lichess.org/api/games/user/${username}?max=100`
 	);
 
 	console.log("response:", response);
 
 	if (!response.ok) {
 		console.error("Failed to fetch game data:", response.statusText);
+
+		let errorMessage = `Failed to fetch game data for ${username}.`;
+
+		if (response.status === 404) {
+			errorMessage = `User "${username}" not found on Lichess. Please check the username and try again.`;
+		} else if (response.status === 429) {
+			errorMessage = "Too many requests. Please wait a moment and try again.";
+		} else if (response.status >= 500) {
+			errorMessage = "Lichess server error. Please try again later.";
+		}
+
 		return {
 			success: false,
-			message: `Failed to fetch game data for ${username}.`,
+			message: errorMessage,
 		};
 	}
+
+	console.log("response:", response);
 
 	const gameData = await response.json();
 
 	console.log("Fetched game data:", gameData);
 
+	// Check if we got any games
+	if (!gameData || !Array.isArray(gameData) || gameData.length === 0) {
+		return {
+			success: false,
+			message: `No rated games found for ${username} in blitz, rapid, or classical time controls. Please make sure you have played some rated games.`,
+		};
+	}
+
+	console.log(`Found ${gameData.length} games for ${username}`);
+
 	// For now, just return a success message
 	return {
 		success: true,
 		gameData,
+		message: `Successfully loaded ${gameData.length} games for ${username}`,
 	};
 }
