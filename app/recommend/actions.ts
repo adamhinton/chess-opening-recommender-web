@@ -44,7 +44,12 @@ export async function processLichessUsername(formData: FormData) {
 	});
 
 	const response = await fetch(
-		`https://lichess.org/api/games/user/${username}?max=100`
+		`https://lichess.org/api/games/user/${username}?max=100`,
+		{
+			headers: {
+				Accept: "application/x-ndjson",
+			},
+		}
 	);
 
 	console.log("response:", response);
