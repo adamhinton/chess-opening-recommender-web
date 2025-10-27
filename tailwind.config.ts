@@ -2,9 +2,9 @@ import type { Config } from "tailwindcss";
 
 export default {
 	content: [
-		"./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-		"./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-		"./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+		"./app/**/*.{js,ts,jsx,tsx,mdx}",
+		"./components/**/*.{js,ts,jsx,tsx,mdx}",
+		"./lib/**/*.{js,ts,jsx,tsx,mdx}",
 	],
 	theme: {
 		extend: {
@@ -15,6 +15,7 @@ export default {
 					100: "hsl(var(--primary-100))",
 					200: "hsl(var(--primary-200))",
 					DEFAULT: "hsl(var(--primary))",
+					foreground: "hsl(var(--primary-foreground))",
 				},
 				/* Secondary color: Soft orange */
 				secondary: {
@@ -22,6 +23,7 @@ export default {
 					100: "hsl(var(--secondary-100))",
 					200: "hsl(var(--secondary-200))",
 					DEFAULT: "hsl(var(--secondary))",
+					foreground: "hsl(var(--secondary-foreground))",
 				},
 				/* Accent color: Soft green */
 				accent: {
@@ -29,6 +31,7 @@ export default {
 					100: "hsl(var(--accent-100))",
 					200: "hsl(var(--accent-200))",
 					DEFAULT: "hsl(var(--accent))",
+					foreground: "hsl(var(--accent-foreground))",
 				},
 				/* Neutral color: Light gray background */
 				neutral: {
@@ -49,10 +52,18 @@ export default {
 					sidebar: "hsl(var(--background-sidebar))",
 					// Highlighted sections, focus areas
 					highlight: "hsl(var(--background-highlight))",
+					// Default background
+					DEFAULT: "hsl(var(--background))",
 				},
 				foreground: {
 					DEFAULT: "hsl(var(--foreground))",
 				},
+				/* Additional shadcn/ui compatible colors */
+				muted: {
+					DEFAULT: "hsl(var(--muted))",
+					foreground: "hsl(var(--muted-foreground))",
+				},
+				border: "hsl(var(--border))",
 			},
 		},
 	},

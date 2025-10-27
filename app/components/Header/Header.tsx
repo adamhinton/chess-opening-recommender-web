@@ -87,7 +87,7 @@ export const Header: React.FC = () => {
 					{/* Social links */}
 					<div className="flex items-center space-x-3">
 						<Link
-							href="https://www.linkedin.com/in/adamhinton"
+							href="https://www.linkedin.com/in/adam-hinton"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="text-muted-foreground hover:text-primary transition-colors duration-200"
