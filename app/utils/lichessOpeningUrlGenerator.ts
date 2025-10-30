@@ -1,0 +1,24 @@
+// ______________________________________
+// Lichess Opening URL Generator
+
+// The problem:
+// This app will display a list of openings that it thinks the user will enjoy or score well with.
+// To help the user explore these openings further, we want to provide direct links to Lichess.org's opening explorer for each recommended opening.
+// Lichess has a specific URL format for accessing openings based on their ECO codes.
+// But, there's no way to directly link to an opening using just its ECO code. We have to build a URL based on the opening name.
+
+// The solution:
+// This utility will attempt to build a Lichess opening explorer URL given an opening name.
+// It will take the user to the page where a text search is performed for the text of the opening. It will also show openings with similar names.
+// ______________________________________
+
+// Examples of lichess's syntax:
+// King's Pawn Game >> lichess.org/opening?q=King%27s+Pawn+Game
+// Van't Kruijs Opening >> https://lichess.org/opening?q=Van%27t+Kruijs+Opening
+
+export const generateLichessOpeningUrl = (openingName: string): URL => {
+	const baseUrl = "https://lichess.org/opening";
+	const url = new URL(baseUrl);
+	url.searchParams.append("q", openingName);
+	return url;
+};
