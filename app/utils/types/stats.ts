@@ -13,7 +13,7 @@ const ResultTypeSchema = z.enum(["win", "draw", "loss"]);
 type GameResult = z.infer<typeof ResultTypeSchema>;
 
 const ColorSchema = z.enum(["white", "black"]);
-type Color = z.infer<typeof ColorSchema>;
+export type Color = z.infer<typeof ColorSchema>;
 
 /**
  * See docstring for RawOpeningStats type.
