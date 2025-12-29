@@ -18,6 +18,17 @@ export async function processLichessUsername(formData: FormData) {
 		throw new Error("Username is required");
 	}
 
+	// TODO:
+	// Load list of training openings
+	// Filter out invalid games
+	// -- rating delta >100, opening not in training set, other stuff I can't remember
+	// Wake up HF space
+	// Log memory usage
+	// Log games per
+	// Exponential backoff
+	// Threading or something
+	// -- Download games while processing previous batch
+
 	try {
 		// Step 1: Check if we already have this lichess username's data in localStorage
 		const existingStats = StatsLocalStorageUtils.getExistingStats(username);
@@ -85,7 +96,6 @@ export async function processLichessUsername(formData: FormData) {
 			gameCount++;
 			console.log(`Processing game ${gameCount}:`, game.id);
 			// TODO: Process game and accumulate opening stats
-			// OpeningStatsUtils.accumulateOpeningStats(playerData, ...)
 		}
 
 		// Save to localStorage
