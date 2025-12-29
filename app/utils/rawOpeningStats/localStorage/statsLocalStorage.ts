@@ -12,12 +12,7 @@
 // VALIDATION: All retrieved data validated with Zod schemas
 // =========================================
 
-import {
-	PlayerData,
-	PlayerDataSchema,
-	OpeningStatsUtils,
-	Color,
-} from "../../types/stats";
+import { PlayerData, PlayerDataSchema } from "../../types/stats";
 
 // ============================================================================
 // Configuration
@@ -49,18 +44,17 @@ const CONFIG = {
 interface StoredPlayerData {
 	// Core player data
 	playerData: PlayerData;
-	// When we last fetched games (Unix timestamp)
-	lastFetched: number;
-	// Oldest game timestamp processed so far (for resuming backwards fetch)
+	// When we last fetched games
+	lastFetchedUnixMS: number;
+	// Oldest game timestamp processed so far
 	sinceUnixMS?: number;
 	// Number of games processed so far
 	fetchProgress: number;
 	// Whether fetch completed successfully
 	isComplete: boolean;
 	// Schema version for migrations
-	schemaVersion: number;
-	// Creation timestamp
-	createdAt: number;
+	schemaVersion: 1.0; // update to union type if/when we get different version numbers
+	createdAtUnixMS: number;
 }
 
 /**
@@ -197,7 +191,7 @@ export class StatsLocalStorageUtils {
 				return { exists: false };
 			}
 
-			const age = Date.now() - stored.lastFetched;
+			const age = Date.now() - stored.lastFetchedUnixMS;
 			const isStale = age > CONFIG.MAX_AGE_MS;
 			const canResume = !stored.isComplete;
 
@@ -221,7 +215,7 @@ export class StatsLocalStorageUtils {
 	static saveStats(
 		playerData: PlayerData,
 		options: {
-			lastFetched?: number;
+			lastFetchedUnixMS?: number;
 			sinceUnixMS?: number;
 			fetchProgress: number;
 			isComplete: boolean;
@@ -246,12 +240,12 @@ export class StatsLocalStorageUtils {
 
 		const stored: StoredPlayerData = {
 			playerData,
-			lastFetched: options.lastFetched ?? Date.now(),
+			lastFetchedUnixMS: options.lastFetchedUnixMS ?? Date.now(),
 			sinceUnixMS: options.sinceUnixMS,
 			fetchProgress: options.fetchProgress,
 			isComplete: options.isComplete,
 			schemaVersion: CONFIG.CURRENT_SCHEMA_VERSION,
-			createdAt: Date.now(),
+			createdAtUnixMS: Date.now(),
 		};
 
 		const key = this.getPlayerKey(playerData.lichessUsername);
@@ -273,21 +267,16 @@ export class StatsLocalStorageUtils {
 	}
 
 	/**
-	 * Get stats for a username, or return empty PlayerData structure
+	 * Get existing stats for a username
+	 * Returns null if no stats exist
 	 */
-	static getStatsOrEmpty(
-		username: string,
-		rating: number,
-		color: Color
-	): PlayerData {
+	static getExistingStats(username: string): PlayerData | null {
 		const check = this.checkExistingStatsByUsername(username);
 
 		if (check.exists && check.data) {
 			return check.data.playerData;
 		}
-
-		// Return empty structure
-		return OpeningStatsUtils.createEmptyPlayerData(username, rating, color);
+		return null;
 	}
 
 	/**
