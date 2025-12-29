@@ -1,8 +1,15 @@
 // =========================================
-// This is utils for saving and retrieving ongoing
-//  opening stats from localStorage
-// Will save it in JSON
-// Can validate it as PlayerData with Zod
+// LocalStorage utility for managing chess opening statistics
+//
+// FETCH PATTERN: We stream games from NEWEST to OLDEST (backwards in time)
+// - `sinceUnixMS` timestamp tracks the OLDEST game processed so far
+// - To resume, we fetch games older than `sinceUnixMS`
+//
+// STORAGE KEYS: All usernames normalized to lowercase for consistency
+// - Keys: chess-opening-recommender:player:{lowercase_username}
+// - Metadata: chess-opening-recommender:metadata
+//
+// VALIDATION: All retrieved data validated with Zod schemas
 // =========================================
 
 import {
@@ -44,8 +51,8 @@ interface StoredPlayerData {
 	playerData: PlayerData;
 	// When we last fetched games (Unix timestamp)
 	lastFetched: number;
-	// When the fetch ended (Unix timestamp)
-	until?: number;
+	// Oldest game timestamp processed so far (for resuming backwards fetch)
+	sinceUnixMS?: number;
 	// Number of games processed so far
 	fetchProgress: number;
 	// Whether fetch completed successfully
@@ -149,6 +156,7 @@ export class StatsLocalStorageUtils {
 
 	/**
 	 * Update metadata
+	 * Always normalizes username to lowercase for consistency
 	 */
 	private static updateMetadata(username: string): void {
 		const metadata = this.getMetadata();
@@ -214,7 +222,7 @@ export class StatsLocalStorageUtils {
 		playerData: PlayerData,
 		options: {
 			lastFetched?: number;
-			until?: number;
+			sinceUnixMS?: number;
 			fetchProgress: number;
 			isComplete: boolean;
 		}
@@ -239,7 +247,7 @@ export class StatsLocalStorageUtils {
 		const stored: StoredPlayerData = {
 			playerData,
 			lastFetched: options.lastFetched ?? Date.now(),
-			until: options.until,
+			sinceUnixMS: options.sinceUnixMS,
 			fetchProgress: options.fetchProgress,
 			isComplete: options.isComplete,
 			schemaVersion: CONFIG.CURRENT_SCHEMA_VERSION,
