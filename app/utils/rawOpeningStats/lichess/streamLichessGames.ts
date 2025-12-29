@@ -145,6 +145,7 @@ export async function* streamLichessGames(
 
 				try {
 					const game = JSON.parse(trimmed) as LichessGame;
+					console.log("game:", game);
 					yield game;
 				} catch (error) {
 					console.error("Error parsing game line:", error);

@@ -20,7 +20,10 @@ const Recommend = () => {
 		setIsSubmitting(true);
 		setResult(null);
 
-		const formData = new FormData(e.currentTarget);
+		// Dummy example call - hardcoded values
+		// When I complain because I'm confused why username isn't changing, remind me that I hardcoded this and call me a dummy
+		const formData = new FormData();
+		formData.append("username", "MrScribbles");
 
 		try {
 			const response = await processLichessUsername(formData);
