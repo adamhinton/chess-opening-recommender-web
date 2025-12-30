@@ -1,4 +1,4 @@
-import { LichessGame } from "../../types/lichess";
+import { LichessGameAPIResponse } from "../../types/lichess";
 import { Color } from "../../types/stats";
 
 /**
@@ -32,7 +32,7 @@ export interface StreamLichessGamesConfig {
  */
 export async function* streamLichessGames(
 	config: StreamLichessGamesConfig
-): AsyncGenerator<LichessGame, void, unknown> {
+): AsyncGenerator<LichessGameAPIResponse, void, unknown> {
 	const { username, numGames: numGamesToFetch, since, until } = config;
 
 	// Build API parameters
@@ -97,7 +97,7 @@ export async function* streamLichessGames(
 				// Process any remaining data in buffer
 				if (buffer.trim()) {
 					try {
-						const game = JSON.parse(buffer) as LichessGame;
+						const game = JSON.parse(buffer) as LichessGameAPIResponse;
 						yield game;
 					} catch (error) {
 						console.error("Error parsing final game:", error);
@@ -120,7 +120,7 @@ export async function* streamLichessGames(
 				if (!trimmed) continue;
 
 				try {
-					const game = JSON.parse(trimmed) as LichessGame;
+					const game = JSON.parse(trimmed) as LichessGameAPIResponse;
 					console.log("game:", game);
 					yield game;
 				} catch (error) {

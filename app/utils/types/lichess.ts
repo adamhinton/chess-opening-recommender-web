@@ -10,29 +10,40 @@ import { z } from "zod";
 
 /**
  * Represents a single game from Lichess API (NDJSON format).
- * Only includes fields we care about for opening stats.
+ * There are more fields in the response; this only includes fields and values we care about for opening stats.
  */
-export interface LichessGame {
+export interface LichessGameAPIResponse {
 	id: string;
+	clock: {
+		createdAt: number; // unix MS time
+		lasteMoveAt: number; // unix MS time
+	};
 	rated: boolean;
-	speed: string;
+	speed: "blitz" | "rapid" | "classical";
 	players: {
-		white: {
-			user: { name: string };
-			rating: number;
-		};
-		black: {
-			user: { name: string };
-			rating: number;
-		};
+		white: LichessPlayerFromAPI;
+		black: LichessPlayerFromAPI;
 	};
 	opening?: {
 		eco: string;
 		name: string;
+		ply: never; // THIS IS MISLEADING. This is how many moves the OPENING has, not how many moves the game has. DO NOT USE THIS TO COUNT HOW MANY MOVES THE GAME HAS. I made it never to raise an error if we ever try to use it. This would filter out a lot of games.
 	};
-	winner?: "white" | "black";
-	status: string;
+	winner?: "white" | "black"; // if this doesn't exist you know it's a draw
+	status: string; // we want mate, resign, stalemate, timeout, outoftime, draw
+	variant: "standard" | string;
 }
+
+/**
+ * The player data that comes with a game from a lichess API call
+ * It has other fields too but these are the ones we need
+ */
+type LichessPlayerFromAPI = {
+	user: {
+		name: string;
+	};
+	rating: number;
+};
 
 /**
  * Rating info for a single time control (raw Lichess API format)

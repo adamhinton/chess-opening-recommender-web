@@ -14,7 +14,7 @@
  * - Game completion validation (no aborted/timeout games)
  */
 
-import { LichessGame } from "../../types/lichess";
+import { LichessGameAPIResponse } from "../../types/lichess";
 import { isValidOpening } from "./isValidOpening";
 
 /**
@@ -55,7 +55,7 @@ export interface GameValidationFilters {
  * }
  */
 export function isValidLichessGame(
-	game: LichessGame,
+	game: LichessGameAPIResponse,
 	filters: GameValidationFilters
 ): boolean {
 	// Apply opening validation filter

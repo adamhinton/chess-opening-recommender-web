@@ -6,7 +6,7 @@
  * predictions for openings the model has never seen.
  */
 
-import { LichessGame } from "../../types/lichess";
+import { LichessGameAPIResponse } from "../../types/lichess";
 
 /**
  * Checks if a Lichess game's opening is in the valid training set.
@@ -28,7 +28,7 @@ import { LichessGame } from "../../types/lichess";
  * }
  */
 export function isValidOpening(
-	game: LichessGame,
+	game: LichessGameAPIResponse,
 	validOpenings: Set<string>
 ): boolean {
 	// Filter out games without opening data
