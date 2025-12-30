@@ -33,15 +33,16 @@ export interface StreamLichessGamesConfig {
 export async function* streamLichessGames(
 	config: StreamLichessGamesConfig
 ): AsyncGenerator<LichessGame, void, unknown> {
-	const { username, numGames, since, until } = config;
+	const { username, numGames: numGamesToFetch, since, until } = config;
 
 	// Build API parameters
 	const params = new URLSearchParams({
 		rated: "true",
 		perfType: "blitz,rapid,classical",
-		max: numGames.toString(),
+		max: numGamesToFetch.toString(),
 		moves: "false",
 		opening: "true",
+		tags: "false",
 	});
 
 	// Add optional timestamp params if provided
