@@ -114,7 +114,7 @@ export async function processLichessUsername(formData: FormData) {
 		for await (const game of streamLichessGames({
 			username,
 			color: COLOR,
-			numGames: 100,
+			numGames: 1000,
 		})) {
 			gameCount++;
 			validationStats.totalGamesProcessed++;
