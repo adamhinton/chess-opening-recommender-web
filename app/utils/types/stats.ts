@@ -41,7 +41,7 @@ export const PlayerDataSchema = z.object({
 	lichessUsername: z.string(),
 	rating: z.number().nonnegative(),
 	color: ColorSchema,
-	openingStats: z.map(z.string(), RawOpeningStatsSchema), // key is opening name
+	openingStats: z.record(z.string(), RawOpeningStatsSchema), // key is opening name
 });
 
 /**
@@ -131,16 +131,14 @@ export class OpeningStatsUtils {
 			lichess_username: playerData.lichessUsername,
 			rating: playerData.rating,
 			color: playerData.color,
-			opening_stats: Array.from(playerData.openingStats.values()).map(
-				(stat) => ({
-					opening_name: stat.openingName,
-					eco: stat.eco,
-					num_games: stat.numGames,
-					num_wins: stat.numWins,
-					num_draws: stat.numDraws,
-					num_losses: stat.numLosses,
-				})
-			),
+			opening_stats: Object.values(playerData.openingStats).map((stat) => ({
+				opening_name: stat.openingName,
+				eco: stat.eco,
+				num_games: stat.numGames,
+				num_wins: stat.numWins,
+				num_draws: stat.numDraws,
+				num_losses: stat.numLosses,
+			})),
 		};
 	}
 
@@ -156,7 +154,7 @@ export class OpeningStatsUtils {
 			lichessUsername,
 			rating,
 			color,
-			openingStats: new Map(),
+			openingStats: {},
 		};
 	}
 
@@ -170,7 +168,7 @@ export class OpeningStatsUtils {
 		eco: string,
 		result: GameResult
 	): void {
-		const existing = playerData.openingStats.get(openingName);
+		const existing = playerData.openingStats[openingName];
 
 		if (existing) {
 			// Update existing stats
@@ -185,14 +183,14 @@ export class OpeningStatsUtils {
 			}
 		} else {
 			// Add new stats entry for this opening
-			playerData.openingStats.set(openingName, {
+			playerData.openingStats[openingName] = {
 				openingName,
 				eco,
 				numGames: 1,
 				numWins: result === "win" ? 1 : 0,
 				numDraws: result === "draw" ? 1 : 0,
 				numLosses: result === "loss" ? 1 : 0,
-			});
+			};
 		}
 	}
 }
