@@ -1,3 +1,4 @@
+import { LichessGame } from "../../types/lichess";
 import { Color } from "../../types/stats";
 
 /**
@@ -9,32 +10,6 @@ export interface StreamLichessGamesConfig {
 	numGames: number;
 	since?: number; // Unix timestamp in milliseconds
 	until?: number; // Unix timestamp in milliseconds
-}
-
-/**
- * Represents a single game from Lichess API (NDJSON format).
- * Only includes fields we care about for opening stats.
- */
-export interface LichessGame {
-	id: string;
-	rated: boolean;
-	speed: string;
-	players: {
-		white: {
-			user: { name: string };
-			rating: number;
-		};
-		black: {
-			user: { name: string };
-			rating: number;
-		};
-	};
-	opening?: {
-		eco: string;
-		name: string;
-	};
-	winner?: "white" | "black";
-	status: string;
 }
 
 /**
