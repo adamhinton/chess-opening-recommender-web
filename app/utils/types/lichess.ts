@@ -35,14 +35,14 @@ export interface LichessGame {
 }
 
 /**
- * Rating info for a single time control
+ * Rating info for a single time control (raw Lichess API format)
  */
 export const LichessRatingInfoSchema = z.object({
-	numGames: z.number().nonnegative(),
+	games: z.number().nonnegative(),
 	rating: z.number().nonnegative(),
-	ratingDeviation: z.number().nonnegative(),
-	ratingProgress: z.number().optional(),
-	isProvisional: z.boolean().optional(),
+	rd: z.number().nonnegative(),
+	prog: z.number().optional(),
+	prov: z.boolean().optional(),
 });
 
 export type LichessRatingInfo = z.infer<typeof LichessRatingInfoSchema>;
@@ -109,10 +109,11 @@ function extractRatingInfo(
 	const perf = perfs[timeControl];
 	if (!perf) return null;
 
+	// Mapping some of these keys to better variable names
 	return {
 		rating: perf.rating,
-		ratingDeviation: perf.ratingDeviation,
-		numGames: perf.numGames,
+		ratingDeviation: perf.rd,
+		numGames: perf.games,
 	};
 }
 
