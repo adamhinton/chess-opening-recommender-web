@@ -7,6 +7,13 @@ import {
 	selectPlayerRating,
 } from "../utils/types/lichess";
 import { Color, OpeningStatsUtils } from "../utils/types/stats";
+import { loadOpeningNamesForColor } from "../utils/rawOpeningStats/modelArtifacts/modelArtifactUtils";
+import {
+	GameValidationFilters,
+	isValidLichessGame,
+	createValidationStats,
+	logValidationStats,
+} from "../utils/rawOpeningStats/isValidLichessGame/mainGameValidationFn";
 
 export async function processLichessUsername(formData: FormData) {
 	const username = formData.get("username");
@@ -19,9 +26,8 @@ export async function processLichessUsername(formData: FormData) {
 	}
 
 	// TODO:
-	// Load list of training openings
 	// Filter out invalid games
-	// -- rating delta >100, opening not in training set, other stuff I can't remember
+	// -- rating delta >100, other stuff I can't remember
 	// Wake up HF space
 	// Log memory usage
 	// Log games per
@@ -30,7 +36,23 @@ export async function processLichessUsername(formData: FormData) {
 	// -- Download games while processing previous batch
 
 	try {
-		// Step 1: Check if we already have this lichess username's data in localStorage
+		// Step 1: Load valid opening names for filtering (based on COLOR)
+		console.log(`Loading valid opening names for ${COLOR} player...`);
+		/**
+		 * The list of opening names we used when training the model.
+		 * We will ignore any games that aren't in one of these openings. The model wouldn't recognize them.
+		 */
+		const trainingOpenings = await loadOpeningNamesForColor(COLOR);
+
+		// Create game validation filters
+		const filters: GameValidationFilters = {
+			validOpenings: trainingOpenings,
+		};
+
+		// Create stats tracker for monitoring filter effectiveness
+		const validationStats = createValidationStats();
+
+		// Step 2: Check if we already have this lichess username's data in localStorage
 		const existingStats = StatsLocalStorageUtils.getExistingStats(username);
 
 		if (existingStats) {
@@ -86,6 +108,7 @@ export async function processLichessUsername(formData: FormData) {
 			OpeningStatsUtils.createEmptyPlayerData(username, rating, COLOR);
 
 		let gameCount = 0;
+		let validGameCount = 0;
 
 		// Stream games one at a time
 		for await (const game of streamLichessGames({
@@ -94,13 +117,36 @@ export async function processLichessUsername(formData: FormData) {
 			numGames: 100,
 		})) {
 			gameCount++;
-			console.log(`Processing game ${gameCount}:`, game.id);
+			validationStats.totalGamesProcessed++;
+
+			// Validate game against all filters
+			// TODO important maybe delete some of this later
+			if (!isValidLichessGame(game, filters)) {
+				// Track why the game was filtered
+				if (!game.opening || !trainingOpenings.has(game.opening.name)) {
+					validationStats.filteredByOpening++;
+				}
+				continue;
+			}
+
+			// Now we know it's a valid game and passed all filters to be included in our stats
+			validGameCount++;
+			validationStats.validGames++;
+
+			console.log(
+				`Processing valid game ${validGameCount}/${gameCount}:`,
+				game.id,
+				game.opening?.name
+			);
 			// TODO: Process game and accumulate opening stats
 		}
 
+		// Log validation statistics
+		logValidationStats(validationStats);
+
 		// Save to localStorage
 		const saveResult = StatsLocalStorageUtils.saveStats(playerData, {
-			fetchProgress: gameCount,
+			fetchProgress: validGameCount,
 			isComplete: true,
 		});
 
@@ -108,16 +154,16 @@ export async function processLichessUsername(formData: FormData) {
 			console.error("Failed to save to localStorage:", saveResult.error);
 		}
 
-		if (gameCount === 0) {
+		if (validGameCount === 0) {
 			return {
 				success: false,
-				message: `No rated games found for ${username} in blitz, rapid, or classical time controls.`,
+				message: `No valid games found for ${username}. Processed ${gameCount} games total, but none passed validation filters.`,
 			};
 		}
 
 		return {
 			success: true,
-			message: `Successfully processed ${gameCount} games for ${username}`,
+			message: `Successfully processed ${validGameCount} valid games out of ${gameCount} total games for ${username}`,
 			gameData: playerData,
 		};
 	} catch (error) {
