@@ -1,13 +1,62 @@
-// While training my chess opening recommender AI model, I saved various artifacts to help with foldin inference.
-// One was a list of openings we used in training.
-// That list has been saved in this repo.
-// When compiling raw opening stats, we will ignore openings that aren't in that list.
+/**
+ * Utilities for loading and managing model artifacts from training.
+ *
+ * During model training, we saved artifacts including the list of openings used.
+ * When compiling raw opening stats, we filter out games with openings not in our training set.
+ *
+ * This file handles:
+ * 1. Loading opening name → training ID mappings (JSON files)
+ * 2. Extracting just the opening names into a Set for O(1) lookup
+ * 3. Providing that Set for game filtering
+ */
 
-// This file will help with the following tasks:
-// 1. Load the files with the list of openings
-// 2. Save said openings to memory
-//   probably a Set of opening names?
+import { Color } from "../../types/stats";
 
-// Then, for each game streamed from the Lichess API, it will be compared against our list of training openings, and the game will be ignored if its opening isn't on the list.
+/**
+ * Type for the JSON structure: { "Opening Name": training_id, ... }
+ */
+type OpeningNameToTrainingId = Record<string, number>;
 
-// Note that there are other model artifacts, but I *think* the openings list is all we need in this repo. However, if we discover more we need, this file can also handle those.
+/**
+ * Loads the valid opening names for a specific color from model artifacts.
+ *
+ * The JSON files map opening names to training IDs, but we only need the names
+ * for filtering. Returns a Set for O(1) lookup performance.
+ *
+ * @param color - The color to load openings for ('white' or 'black')
+ * @returns Promise resolving to a Set of valid opening names
+ * @throws Error if the JSON file fails to load or parse
+ *
+ * @example
+ * const validOpenings = await loadOpeningNamesForColor('white');
+ * const isValid = validOpenings.has('Sicilian Defense'); // O(1) lookup
+ */
+export async function loadOpeningNamesForColor(
+	color: Color
+): Promise<Set<string>> {
+	try {
+		const jsonModule = await import(
+			`./${color}ModelArtifacts/opening_name_to_training_id_${color}.json`
+		);
+
+		// The default export is the JSON object
+		const openingMap: OpeningNameToTrainingId = jsonModule.default;
+
+		// Extract just the opening names (keys) into a Set
+		// The opening IDs in the artifact aren't used here
+		const openingNames = new Set(Object.keys(openingMap));
+
+		console.log(
+			`Loaded ${openingNames.size} valid opening names for ${color} player`
+		);
+
+		return openingNames;
+	} catch (error) {
+		// Fail loudly - if we can't load openings, we shouldn't proceed
+		throw new Error(
+			`Failed to load opening names for ${color}: ${
+				error instanceof Error ? error.message : String(error)
+			}`
+		);
+	}
+}
