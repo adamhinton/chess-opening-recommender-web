@@ -1,6 +1,8 @@
 import { LichessGameAPIResponse } from "../../types/lichess";
 import { Color } from "../../types/stats";
 
+//lichess.org/api#tag/games/GET/api/games/user/{username}
+
 /**
  * Configuration for streaming Lichess games.
  */
@@ -43,6 +45,7 @@ export async function* streamLichessGames(
 		moves: "false",
 		opening: "true",
 		tags: "false",
+		clocks: "true",
 	});
 
 	// Add optional timestamp params if provided

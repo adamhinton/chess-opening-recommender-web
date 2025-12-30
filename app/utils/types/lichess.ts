@@ -18,6 +18,7 @@ export interface LichessGameAPIResponse {
 		createdAt: number; // unix MS time
 		lasteMoveAt: number; // unix MS time
 	};
+	clocks: number[]; // each entry here denotes one ply; use that to determine how many moves the game had - clocks.length // 2 is the number of game moves
 	rated: boolean;
 	speed: "blitz" | "rapid" | "classical";
 	players: {
