@@ -176,10 +176,13 @@ export class OpeningStatsUtils {
 			switch (result) {
 				case "win":
 					existing.numWins++;
+					break;
 				case "draw":
 					existing.numDraws++;
+					break;
 				case "loss":
 					existing.numLosses++;
+					break;
 			}
 		} else {
 			// Add new stats entry for this opening
