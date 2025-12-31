@@ -1,5 +1,7 @@
 import { LichessPlayerFromAPI } from "../../types/lichess";
 
+export const MAX_RATING_DELTA_BETWEEN_PLAYERS = 100;
+
 /**
  * Validates that the rating difference between players is within acceptable limits.
  *

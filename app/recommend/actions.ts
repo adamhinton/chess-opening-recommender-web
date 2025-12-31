@@ -14,6 +14,7 @@ import {
 	createValidationStats,
 	logValidationStats,
 } from "../utils/rawOpeningStats/isValidLichessGame/mainGameValidationFn";
+import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isValidLichessGame/isValidRating";
 
 export async function processLichessUsername(formData: FormData) {
 	const username = formData.get("username");
@@ -47,6 +48,7 @@ export async function processLichessUsername(formData: FormData) {
 		// Create game validation filters
 		const filters: GameValidationFilters = {
 			validOpenings: trainingOpenings,
+			maxRatingDeltaBetweenPlayers: MAX_RATING_DELTA_BETWEEN_PLAYERS,
 		};
 
 		// Create stats tracker for monitoring filter effectiveness
