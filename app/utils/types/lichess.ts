@@ -33,7 +33,10 @@ export interface LichessGameAPIResponse {
 	opening?: {
 		eco: string;
 		name: string;
-		ply: Dont_Use_This_It_Isnt_What_You_Think; // DO NOT USE THE PLY FIELD. This is how many moves the OPENING has, not how many moves the game has. DO NOT USE THIS TO COUNT HOW MANY MOVES THE GAME HAS. I made it `never` to raise an error if we ever try to use it.
+		/**DO NOT USE THE PLY FIELD. This is how many moves the OPENING has, not how many moves the game has.
+		 * DO NOT USE THIS TO COUNT HOW MANY MOVES THE GAME HAS.
+		 * I made it `never` to raise an error if we ever try to use it. */
+		ply: Dont_Use_This_It_Isnt_What_You_Think;
 	};
 	winner?: "white" | "black"; // if this doesn't exist you know it's a draw
 	status: string; // we want mate, resign, stalemate, timeout, outoftime, draw
