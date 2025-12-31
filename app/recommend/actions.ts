@@ -18,7 +18,7 @@ import {
 import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isValidLichessGame/isValidRating";
 
 // Configuration Constants
-const MAX_GAMES_TO_FETCH = 50;
+const MAX_GAMES_TO_FETCH = 5_000;
 const PLAYER_COLOR: Color = "white";
 
 export async function processLichessUsername(formData: FormData) {
