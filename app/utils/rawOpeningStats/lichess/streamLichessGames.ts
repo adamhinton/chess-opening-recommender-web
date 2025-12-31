@@ -1,5 +1,6 @@
 import { LichessGameAPIResponse } from "../../types/lichess";
 import { Color } from "../../types/stats";
+import { fetchWithBackoff } from "../../network/fetchWithBackoff";
 
 //lichess.org/api#tag/games/GET/api/games/user/{username}
 
@@ -12,6 +13,8 @@ export interface StreamLichessGamesConfig {
 	numGames: number;
 	since?: number; // Unix timestamp in milliseconds
 	until?: number; // Unix timestamp in milliseconds
+	/**Lets this function pass up a user-friendly message to the UI informing them that there's a delay */
+	onWait?: (message: string) => void;
 }
 
 /**
@@ -35,7 +38,14 @@ export interface StreamLichessGamesConfig {
 export async function* streamLichessGames(
 	config: StreamLichessGamesConfig
 ): AsyncGenerator<LichessGameAPIResponse, void, unknown> {
-	const { username, color, numGames: numGamesToFetch, since, until } = config;
+	const {
+		username,
+		color,
+		numGames: numGamesToFetch,
+		since,
+		until,
+		onWait,
+	} = config;
 
 	// Build API parameters
 	const params = new URLSearchParams({
@@ -58,14 +68,15 @@ export async function* streamLichessGames(
 	}
 
 	// Make API request
-	const response = await fetch(
-		`https://lichess.org/api/games/user/${username}?${params.toString()}`,
-		{
+	const response = await fetchWithBackoff({
+		url: `https://lichess.org/api/games/user/${username}?${params.toString()}`,
+		options: {
 			headers: {
 				Accept: "application/x-ndjson",
 			},
-		}
-	);
+		},
+		onRetry: onWait,
+	});
 
 	// Handle errors
 	if (!response.ok) {

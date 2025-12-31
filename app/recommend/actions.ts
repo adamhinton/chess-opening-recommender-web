@@ -42,7 +42,10 @@ import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isVal
 const MAX_GAMES_TO_FETCH = 5_000;
 const PLAYER_COLOR: Color = "white";
 
-export async function processLichessUsername(formData: FormData) {
+export async function processLichessUsername(
+	formData: FormData,
+	onStatusUpdate?: (message: string) => void
+) {
 	const username = formData.get("username");
 
 	if (!username || typeof username !== "string") {
@@ -86,6 +89,7 @@ export async function processLichessUsername(formData: FormData) {
 			username,
 			color: PLAYER_COLOR,
 			numGames: MAX_GAMES_TO_FETCH,
+			onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
 		});
 
 		for await (const game of stream) {
