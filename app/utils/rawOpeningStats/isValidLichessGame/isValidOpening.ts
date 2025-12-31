@@ -8,42 +8,30 @@
 
 import { LichessGameAPIResponse } from "../../types/lichess";
 
+type OpeningName = NonNullable<LichessGameAPIResponse["opening"]>["name"];
+
 /**
  * Checks if a Lichess game's opening is in the valid training set.
  *
  * Filters out games where:
- * - The opening field is undefined (rare games without recognized openings)
+ * - The opening name is undefined
  * - The opening name is not in our training set
  *
- * @param game - The Lichess game to validate
+ * @param openingName - The name of the opening from the game
  * @param validOpenings - Set of opening names from model artifacts (O(1) lookup)
  * @returns true if the game's opening is valid, false otherwise
- *
- * @example
- * const validOpenings = await loadOpeningNamesForColor('white');
- * const game = { opening: { name: 'Sicilian Defense', eco: 'B20' }, ... };
- *
- * if (isValidOpening(game, validOpenings)) {
- *   // Process this game's stats
- * }
  */
 export function isValidOpening(
-	game: LichessGameAPIResponse,
+	openingName: OpeningName, // just a string lol
 	validOpenings: Set<string>
 ): boolean {
 	// Filter out games without opening data
-	if (!game.opening) {
+	if (!openingName) {
 		return false;
 	}
 
 	// Filter out games with openings not in our training set
-	const isValid = validOpenings.has(game.opening.name);
-
-	if (!isValid) {
-		console.debug(
-			`Filtered out game ${game.id}: opening "${game.opening.name}" not in training set`
-		);
-	}
+	const isValid = validOpenings.has(openingName);
 
 	return isValid;
 }
