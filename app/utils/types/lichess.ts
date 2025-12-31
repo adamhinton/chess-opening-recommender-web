@@ -39,7 +39,7 @@ export interface LichessGameAPIResponse {
  * The player data that comes with a game from a lichess API call
  * It has other fields too but these are the ones we need
  */
-type LichessPlayerFromAPI = {
+export type LichessPlayerFromAPI = {
 	user: {
 		name: string;
 	};

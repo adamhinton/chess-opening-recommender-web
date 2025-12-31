@@ -16,6 +16,8 @@
 
 import { LichessGameAPIResponse } from "../../types/lichess";
 import { isValidOpening } from "./isValidOpening";
+import { isValidRatingDeltaBetweenPlayers } from "./isValidRating";
+import { isValidGameStructure } from "./isValidGameStructure";
 
 /**
  * Configuration for all game validation filters.
@@ -26,11 +28,8 @@ import { isValidOpening } from "./isValidOpening";
 export interface GameValidationFilters {
 	/** Set of valid opening names from model artifacts */
 	validOpenings: Set<string>;
-
-	// Future filter configs:
-	// maxRatingDelta?: number;
-	// allowedSpeeds?: string[];
-	// allowedStatuses?: string[];
+	/** Maximum allowed rating difference between players */
+	maxRatingDeltaBetweenPlayers: number;
 }
 
 /**
@@ -46,7 +45,7 @@ export interface GameValidationFilters {
  *
  * @example
  * const validOpenings = await loadOpeningNamesForColor('white');
- * const filters: GameValidationFilters = { validOpenings };
+ * const filters: GameValidationFilters = { validOpenings, maxRatingDeltaBetweenPlayers: 100 };
  *
  * for (const game of lichessGames) {
  *   if (isValidLichessGame(game, filters)) {
@@ -58,18 +57,20 @@ export function isValidLichessGame(
 	game: LichessGameAPIResponse,
 	filters: GameValidationFilters
 ): boolean {
-	// Apply opening validation filter
-	if (!isValidOpening(game, filters.validOpenings)) {
-		return false;
-	}
-
-	// Future filters will be added here:
-	// if (!isValidRatingDelta(game, filters.maxRatingDelta)) {
-	//   return false;
-	// }
-
-	// Game passed all filters
-	return true;
+	// Short-circuit evaluation:
+	// 1. Rating check (cheapest)
+	// 2. Structure check (variant, moves, status)
+	// 3. Opening check (set lookup)
+	return (
+		isValidRatingDeltaBetweenPlayers(
+			game.players.white.rating,
+			game.players.black.rating,
+			filters.maxRatingDeltaBetweenPlayers
+		) &&
+		isValidGameStructure(game.variant, game.clocks, game.status) &&
+		game.opening?.name !== undefined && // can't use game if it doesn't have an opening
+		isValidOpening(game.opening?.name, filters.validOpenings)
+	);
 }
 
 /**
@@ -82,9 +83,8 @@ export interface GameValidationStats {
 	totalGamesProcessed: number;
 	validGames: number;
 	filteredByOpening: number;
-	// Future stats:
-	// filteredByRating: number;
-	// filteredBySpeed: number;
+	filteredByRating: number;
+	filteredByStructure: number;
 }
 
 /**
@@ -97,6 +97,8 @@ export function createValidationStats(): GameValidationStats {
 		totalGamesProcessed: 0,
 		validGames: 0,
 		filteredByOpening: 0,
+		filteredByRating: 0,
+		filteredByStructure: 0,
 	};
 }
 
@@ -109,14 +111,20 @@ export function createValidationStats(): GameValidationStats {
  */
 export function logValidationStats(stats: GameValidationStats): void {
 	const filterRate =
-		((stats.totalGamesProcessed - stats.validGames) /
-			stats.totalGamesProcessed) *
-		100;
+		stats.totalGamesProcessed > 0
+			? ((stats.totalGamesProcessed - stats.validGames) /
+					stats.totalGamesProcessed) *
+			  100
+			: 0;
 
 	console.log("=== Game Validation Statistics ===");
 	console.log(`Total games processed: ${stats.totalGamesProcessed}`);
 	console.log(`Valid games: ${stats.validGames}`);
 	console.log(`Filter rate: ${filterRate.toFixed(1)}%`);
 	console.log(`Filtered by opening: ${stats.filteredByOpening}`);
+	console.log(`Filtered by rating delta: ${stats.filteredByRating}`);
+	console.log(
+		`Filtered by structure (moves/status/variant): ${stats.filteredByStructure}`
+	);
 	console.log("=================================");
 }
