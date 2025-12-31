@@ -28,7 +28,7 @@ export interface LichessGameAPIResponse {
 	opening?: {
 		eco: string;
 		name: string;
-		ply: never; // THIS IS MISLEADING. This is how many moves the OPENING has, not how many moves the game has. DO NOT USE THIS TO COUNT HOW MANY MOVES THE GAME HAS. I made it never to raise an error if we ever try to use it. This would filter out a lot of games.
+		ply: never; // THIS IS MISLEADING. This is how many moves the OPENING has, not how many moves the game has. DO NOT USE THIS TO COUNT HOW MANY MOVES THE GAME HAS. I made it never to raise an error if we ever try to use it.
 	};
 	winner?: "white" | "black"; // if this doesn't exist you know it's a draw
 	status: string; // we want mate, resign, stalemate, timeout, outoftime, draw
