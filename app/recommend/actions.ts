@@ -1,5 +1,26 @@
 "use client";
 
+// TODO:
+// Exponential backoff
+// Memory tracking
+// -- Check how much memory we're using, that it doesn't increase O(n) with num games, etc
+// -- This is very important. We'll stream potentially tens of thousands of games; gotta make sure they're all garbage collected after parsing. If we have some sort of leak and the client tries to store them all the entire time, that's a disaster.
+// localStorage stuff:
+// -- Figure out how often to save ongoing stats to localStorage
+// -- Figure out why UI freezes when I try to accumulate while I already have stats in localStorage
+// Wake up HF space
+// Progress bar
+// Try to convince user not to close the page
+// Backend stuff:
+// -- Save generated recs
+// -- Save ongoing stats instead of localStorage?
+// UI to:
+// -- Advise user what they have in localStorage
+// -- Buttons to delete it etc
+// --Date picker, time control picker etc
+// Enhancements to processing:
+// -- Weight slower time controls? Like x2 games for rapid, x4 for classical?
+
 import { streamLichessGames } from "../utils/rawOpeningStats/lichess/streamLichessGames";
 import { StatsLocalStorageUtils } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import {
