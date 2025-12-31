@@ -8,9 +8,8 @@ import z from "zod";
 
 // Note that I alraedy have this defined in another repo as a python class; should be fairly simple to convert to TS
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ResultTypeSchema = z.enum(["win", "draw", "loss"]);
-type GameResult = z.infer<typeof ResultTypeSchema>;
+export const ResultTypeSchema = z.enum(["win", "draw", "loss"]);
+export type GameResult = z.infer<typeof ResultTypeSchema>;
 
 const ColorSchema = z.enum(["white", "black"]);
 export type Color = z.infer<typeof ColorSchema>;
