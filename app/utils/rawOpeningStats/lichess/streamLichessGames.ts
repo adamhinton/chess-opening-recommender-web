@@ -35,10 +35,11 @@ export interface StreamLichessGamesConfig {
 export async function* streamLichessGames(
 	config: StreamLichessGamesConfig
 ): AsyncGenerator<LichessGameAPIResponse, void, unknown> {
-	const { username, numGames: numGamesToFetch, since, until } = config;
+	const { username, color, numGames: numGamesToFetch, since, until } = config;
 
 	// Build API parameters
 	const params = new URLSearchParams({
+		color: color,
 		rated: "true",
 		perfType: "blitz,rapid,classical",
 		max: numGamesToFetch.toString(),
@@ -124,7 +125,6 @@ export async function* streamLichessGames(
 
 				try {
 					const game = JSON.parse(trimmed) as LichessGameAPIResponse;
-					console.log("game:", game);
 					yield game;
 				} catch (error) {
 					console.error("Error parsing game line:", error);
