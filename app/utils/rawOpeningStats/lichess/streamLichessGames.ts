@@ -13,7 +13,7 @@ export interface StreamLichessGamesConfig {
 	numGames: number;
 	since?: number; // Unix timestamp in milliseconds
 	until?: number; // Unix timestamp in milliseconds
-	/**Lets this function pass up a user-friendly message to the UI informing them that there's a delay */
+	/**This passes up a user-friendly message to the UI informing them that there's a delay */
 	onWait?: (message: string) => void;
 }
 
@@ -30,8 +30,8 @@ export interface StreamLichessGamesConfig {
  * @example
  * ```typescript
  * for await (const game of streamLichessGames({ username: "player123", color: "white", numGames: 100 })) {
- *   // Process game
- *   // Previous games are automatically garbage collected
+ *    Process game
+ *    Previous games are automatically garbage collected
  * }
  * ```
  */
@@ -68,6 +68,7 @@ export async function* streamLichessGames(
 	}
 
 	// Make API request
+	// fetchWithBackOff (obviously) calls the Lichess API to get user's games, with exponential backoff to respect any rate limits etc
 	const response = await fetchWithBackoff({
 		url: `https://lichess.org/api/games/user/${username}?${params.toString()}`,
 		options: {
@@ -78,7 +79,6 @@ export async function* streamLichessGames(
 		onRetry: onWait,
 	});
 
-	// Handle errors
 	if (!response.ok) {
 		if (response.status === 404) {
 			throw new Error(
@@ -135,6 +135,8 @@ export async function* streamLichessGames(
 				if (!trimmed) continue;
 
 				try {
+					// Don't want to validate every single game here with Zod, that would get expensive with thousands of games
+					// But, the lichess API is very reliable so we'll assume data is valid
 					const game = JSON.parse(trimmed) as LichessGameAPIResponse;
 					yield game;
 				} catch (error) {

@@ -1,7 +1,6 @@
 "use client";
 
 // TODO:
-// Exponential backoff
 // Memory tracking
 // -- Check how much memory we're using, that it doesn't increase O(n) with num games, etc
 // -- This is very important. We'll stream potentially tens of thousands of games; gotta make sure they're all garbage collected after parsing. If we have some sort of leak and the client tries to store them all the entire time, that's a disaster.
