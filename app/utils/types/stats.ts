@@ -173,17 +173,17 @@ export class OpeningStatsUtils {
 		if (existing) {
 			// Update existing stats
 			existing.numGames++;
-			switch (result) {
-				case "win":
-					existing.numWins++;
-					break;
-				case "draw":
-					existing.numDraws++;
-					break;
-				case "loss":
-					existing.numLosses++;
-					break;
-			}
+
+			// Increments numWins in player's opening stats if it's a win, numDraws for draw, etc
+			const resultKeyMap: Record<
+				GameResult,
+				"numWins" | "numDraws" | "numLosses"
+			> = {
+				win: "numWins",
+				draw: "numDraws",
+				loss: "numLosses",
+			};
+			existing[resultKeyMap[result]]++;
 		} else {
 			// Add new stats entry for this opening
 			playerData.openingStats[openingName] = {
