@@ -1,3 +1,19 @@
+// __________________
+// Util to run in dev
+
+// Purpose: Ensure that browser memory usage does not increase with the number of Lichess games streamed
+
+// We've architected it so that memory only increases with the number of unique openings (200-600), leveling off as fewer new openings are revealed
+
+// Update: After running this utility, it appears we've succeeded in the above goal. See stats below from the console in testing, which show that processing more games does not increase memory usage.
+
+// [Memory] Games: 500 | Openings: 111 | Used: 63MB | Total: 66MB | Limit: 4096MB
+// [Memory] Games: 1000 | Openings: 149 | Used: 66MB | Total: 68MB | Limit: 4096MB
+// [Memory] Games: 1500 | Openings: 167 | Used: 66MB | Total: 69MB | Limit: 4096MB
+// [Memory] Games: 2000 | Openings: 178 | Used: 67MB | Total: 69MB | Limit: 4096MB
+
+// __________________
+
 /**
  * Extends the Performance interface for Chrome's non-standard memory API.
  * This API is only available in Chromium-based browsers (Chrome, Edge, etc).

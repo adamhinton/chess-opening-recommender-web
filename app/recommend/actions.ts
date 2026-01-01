@@ -95,7 +95,7 @@ export async function processLichessUsername(
 
 		// Initialize Memory Monitor
 		// We sample every 1000 games to avoid console spam
-		const memoryMonitor = new MemoryMonitor(SHOULD_TRACK_MEMORY_USAGE, 1000);
+		const memoryMonitor = new MemoryMonitor(SHOULD_TRACK_MEMORY_USAGE, 250);
 
 		// 4. Stream, Validate, and Accumulate
 		let validGameCount = 0;
