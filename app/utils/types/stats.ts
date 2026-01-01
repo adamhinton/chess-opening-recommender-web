@@ -1,12 +1,8 @@
-// Here we'll define the structure of our accumulator
+// Here we define the structure of our opening stats accumulator
 // The win rates etc per opening
 // Will be contained within a broader player object that also has very basic info such as rating and username
 
 import z from "zod";
-
-// We'll also define the types for the parsed opening stats that the server sends to the model after normalizing ratings, bayesian shrinkage of scores, etc
-
-// Note that I alraedy have this defined in another repo as a python class; should be fairly simple to convert to TS
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ResultTypeSchema = z.enum(["win", "draw", "loss"]);
@@ -172,7 +168,7 @@ export class OpeningStatsUtils {
 		 * Because slower games take longer and give higher quality data.
 		 * These weights can be changed.
 		 */
-		weight: number = 1
+		weight = 1
 	): void {
 		const existing = playerData.openingStats[openingName];
 

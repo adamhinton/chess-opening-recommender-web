@@ -15,14 +15,15 @@ type Dont_Use_This_It_Isnt_What_You_Think = never;
 
 /**
  * Represents a single game from Lichess API (NDJSON format).
+ *
  * There are more fields in the response; this only includes fields and values we care about for opening stats.
+ *
+ * This is how many moves the OPENING has, not how many moves the game has.
  */
 export interface LichessGameAPIResponse {
 	id: string;
-	clock: {
-		createdAt: number; // unix MS time
-		lasteMoveAt: number; // unix MS time
-	};
+	createdAt: number; // unix MS time
+	lastMoveAt: number; // unix MS time
 	clocks: number[]; // each entry here denotes one ply; use that to determine how many moves the game had - clocks.length // 2 is the number of game moves
 	rated: boolean;
 	speed: "blitz" | "rapid" | "classical";
@@ -33,9 +34,6 @@ export interface LichessGameAPIResponse {
 	opening?: {
 		eco: string;
 		name: string;
-		/**DO NOT USE THE PLY FIELD. This is how many moves the OPENING has, not how many moves the game has.
-		 * DO NOT USE THIS TO COUNT HOW MANY MOVES THE GAME HAS.
-		 * I made it `never` to raise an error if we ever try to use it. */
 		ply: Dont_Use_This_It_Isnt_What_You_Think;
 	};
 	winner?: "white" | "black"; // if this doesn't exist you know it's a draw

@@ -34,7 +34,12 @@ import {
 	LichessGameAPIResponse,
 } from "../utils/types/lichess";
 import { MemoryMonitor } from "../utils/memoryUsage/MemoryMonitor";
-import { Color, OpeningStatsUtils, GameResult } from "../utils/types/stats";
+import {
+	Color,
+	OpeningStatsUtils,
+	GameResult,
+	PlayerData,
+} from "../utils/types/stats";
 import { loadOpeningNamesForColor } from "../utils/rawOpeningStats/modelArtifacts/modelArtifactUtils";
 import {
 	GameValidationFilters,
@@ -84,11 +89,7 @@ export async function processLichessUsername(
 	console.log(`Starting processing for: ${username}`);
 
 	try {
-		// 1. Check Cache (Fast Return)
-		const cached = getCachedStats(username);
-		if (cached) return cached;
-
-		// 2. Prepare: Load Model Artifacts & User Rating
+		// 1. Prepare: Load Model Artifacts & User Rating
 		const [trainingOpenings, ratingInfo] = await Promise.all([
 			loadOpeningNamesForColor(PLAYER_COLOR),
 			fetchAndValidateRating(username),
@@ -98,12 +99,27 @@ export async function processLichessUsername(
 			return { success: false, message: ratingInfo.error };
 		}
 
-		// 3. Initialize Stats Containers
-		const playerData = OpeningStatsUtils.createEmptyPlayerData(
-			username,
-			ratingInfo.rating,
-			PLAYER_COLOR
-		);
+		// 2. Initialize Stats Containers (Resume if possible)
+		let playerData: PlayerData;
+		let oldestGameTimestampUnixMS: number | undefined; // Tracks the timestamp of the oldest game we've processed (for pagination)
+		let numGamesProcessedSoFar = 0;
+
+		const cachedCheck =
+			StatsLocalStorageUtils.checkExistingStatsByUsername(username);
+
+		if (cachedCheck.exists) {
+			console.log(`Resuming with cached data for ${username}`);
+			playerData = cachedCheck.data.playerData;
+			oldestGameTimestampUnixMS = cachedCheck.data.sinceUnixMS;
+			numGamesProcessedSoFar = cachedCheck.data.fetchProgress;
+		} else {
+			playerData = OpeningStatsUtils.createEmptyPlayerData(
+				username,
+				ratingInfo.rating,
+				PLAYER_COLOR
+			);
+		}
+
 		const validationStats = createValidationStats();
 		const filters: GameValidationFilters = {
 			validOpenings: trainingOpenings,
@@ -114,26 +130,54 @@ export async function processLichessUsername(
 		// We sample every 1000 games to avoid console spam
 		const memoryMonitor = new MemoryMonitor(SHOULD_TRACK_MEMORY_USAGE, 250);
 
-		// 4. Stream, Validate, and Accumulate
-		let validGameCount = 0;
-		let totalProcessed = 0;
+		// 3. Stream, Validate, and Accumulate
+		// Determine how many more games we need
+		const numGamesNeeded = Math.max(
+			0,
+			MAX_GAMES_TO_FETCH - numGamesProcessedSoFar
+		);
+
+		if (numGamesNeeded === 0) {
+			console.log("Max games reached in cache. Returning cached data.");
+			return {
+				success: true,
+				message: `Using cached data (${numGamesProcessedSoFar} games).`,
+				gameData: playerData,
+			};
+		}
+
+		let validGameCount = 0; // Count of valid games in THIS session
+		let totalGamesProcessed = 0;
+
+		// If we are resuming, we want games OLDER than the oldest one we have.
+		// Lichess 'until' is inclusive, so we subtract 1ms to avoid double counting the boundary game.
+		const untilTimestampUnixMS = oldestGameTimestampUnixMS
+			? oldestGameTimestampUnixMS - 1
+			: undefined;
 
 		const stream = streamLichessGames({
 			username,
 			color: PLAYER_COLOR,
-			numGames: MAX_GAMES_TO_FETCH,
+			numGames: numGamesNeeded,
+			untilUnixMS: untilTimestampUnixMS,
 			onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
 		});
 
 		for await (const game of stream) {
-			totalProcessed++;
+			totalGamesProcessed++;
 			validationStats.totalGamesProcessed++;
 
+			// Update the oldest timestamp seen. Since stream is newest->oldest, this naturally tracks the end of our window.
+			if (game.createdAt) {
+				const oldestToNumber = Number(game.createdAt);
+				oldestGameTimestampUnixMS = oldestToNumber;
+			}
+
 			// Check memory usage (sampled inside the class)
-			// We want to verify that heap size stays relatively flat (O(k) with k being the number of opening stats (200-600))
-			// as totalProcessed (O(n)) increases, with n being the number of processed games (10_000+).
+			// We want to verify that heap size stays relatively flat (O(k) with k being the number of unique openings)
+			// as totalProcessed (O(n)) increases.
 			memoryMonitor.check(
-				totalProcessed,
+				totalGamesProcessed,
 				Object.keys(playerData.openingStats).length // number of unique openings
 			);
 
@@ -169,25 +213,35 @@ export async function processLichessUsername(
 			);
 		}
 
-		// 5. Finalize
+		// 4. Finalize
 		logValidationStats(validationStats);
 
-		if (validGameCount === 0) {
+		const totalValidGames = numGamesProcessedSoFar + validGameCount;
+
+		if (totalValidGames === 0) {
 			return {
 				success: false,
-				message: `No valid games found for ${username} (checked ${totalProcessed}).`,
+				message: `No valid games found for ${username} (checked ${totalGamesProcessed}).`,
 			};
 		}
 
 		// Save to local storage
-		StatsLocalStorageUtils.saveStats(playerData, {
-			fetchProgress: validGameCount,
-			isComplete: true,
-		});
+		// We must provide sinceUnixMS (the timestamp of the oldest game in our dataset)
+		if (oldestGameTimestampUnixMS) {
+			StatsLocalStorageUtils.saveStats(playerData, {
+				fetchProgress: totalValidGames,
+				isComplete: true,
+				sinceUnixMS: oldestGameTimestampUnixMS,
+			});
+		} else {
+			console.warn(
+				"Skipping localStorage save: No oldestGameTimestamp available (likely no games processed)."
+			);
+		}
 
 		return {
 			success: true,
-			message: `Successfully processed ${validGameCount} games.`,
+			message: `Successfully processed ${totalValidGames} games.`,
 			gameData: playerData,
 		};
 	} catch (error) {
@@ -203,22 +257,6 @@ export async function processLichessUsername(
 // ============================================================================
 // Helpers
 // ============================================================================
-
-function getCachedStats(username: string) {
-	const existingStats = StatsLocalStorageUtils.getExistingStats(username);
-	if (existingStats) {
-		const check = StatsLocalStorageUtils.checkExistingStatsByUsername(username);
-		if (check.exists && !check.isStale && check.data.isComplete) {
-			return {
-				success: true,
-				message: `Using cached data for ${username}`,
-				gameData: existingStats,
-			};
-		}
-		console.log("Cache miss: Data is stale or incomplete.");
-	}
-	return null;
-}
 
 async function fetchAndValidateRating(username: string) {
 	const userProfile = await fetchLichessUserProfile(username);

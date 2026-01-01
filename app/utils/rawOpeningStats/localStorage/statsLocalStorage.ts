@@ -47,7 +47,7 @@ interface StoredPlayerData {
 	// When we last fetched games
 	lastFetchedUnixMS: number;
 	// Oldest game timestamp processed so far
-	sinceUnixMS?: number;
+	sinceUnixMS: number;
 	// Number of games processed so far
 	fetchProgress: number;
 	// Whether fetch completed successfully
@@ -216,7 +216,7 @@ export class StatsLocalStorageUtils {
 		playerData: PlayerData,
 		options: {
 			lastFetchedUnixMS?: number;
-			sinceUnixMS?: number;
+			sinceUnixMS: number;
 			fetchProgress: number;
 			isComplete: boolean;
 		}
