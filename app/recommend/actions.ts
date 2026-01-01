@@ -2,9 +2,7 @@
 
 // TODO:
 // localStorage stuff:
-// -- Figure out how often to save ongoing stats to localStorage
-// -- Figure out why UI freezes when I try to accumulate while I already have stats in localStorage
-// -- The UI just says "Using cached data for MrScribbles" and the console says "Starting processing for: MrScribbles". I see the data in localStorage. But it does nothing from there.
+// -- Decide how we want to structure the number of games to fetch - include the number we've already got in localStorage, or not?
 
 // Wake up HF space
 // -- Because it sleeps after inactivity, so we'll wake it up early to give time to get the sand out of its eyes
