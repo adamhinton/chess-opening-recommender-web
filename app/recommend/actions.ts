@@ -4,6 +4,7 @@
 // localStorage stuff:
 // -- Figure out how often to save ongoing stats to localStorage
 // -- Figure out why UI freezes when I try to accumulate while I already have stats in localStorage
+// -- The UI just says "Using cached data for MrScribbles" and the console says "Starting processing for: MrScribbles". I see the data in localStorage. But it does nothing from there.
 
 // Wake up HF space
 // -- Because it sleeps after inactivity, so we'll wake it up early to give time to get the sand out of its eyes
@@ -44,7 +45,7 @@ import {
 import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isValidLichessGame/isValidRating";
 
 // Configuration Constants
-const MAX_GAMES_TO_FETCH = 5_000;
+const MAX_GAMES_TO_FETCH = 500;
 const PLAYER_COLOR: Color = "white";
 
 /**
