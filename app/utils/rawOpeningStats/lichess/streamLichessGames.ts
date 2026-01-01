@@ -11,8 +11,8 @@ export interface StreamLichessGamesConfig {
 	username: string;
 	color: Color;
 	numGames: number;
-	since?: number; // Unix timestamp in milliseconds
-	until?: number; // Unix timestamp in milliseconds
+	sinceUnixMS?: number; // Unix timestamp in milliseconds
+	untilUnixMS?: number; // Unix timestamp in milliseconds
 	/**This passes up a user-friendly message to the UI informing them that there's a delay */
 	onWait?: (message: string) => void;
 }
@@ -42,8 +42,8 @@ export async function* streamLichessGames(
 		username,
 		color,
 		numGames: numGamesToFetch,
-		since,
-		until,
+		sinceUnixMS: since,
+		untilUnixMS: until,
 		onWait,
 	} = config;
 
