@@ -4,8 +4,15 @@
 // localStorage stuff:
 // -- Figure out how often to save ongoing stats to localStorage
 // -- Figure out why UI freezes when I try to accumulate while I already have stats in localStorage
+
 // Wake up HF space
+// -- Because it sleeps after inactivity, so we'll wake it up early to give time to get the sand out of its eyes
+
 // Progress bar
+// -- We won't be sure how many games we're downloading
+// -- So maybe, instead just detail how many games downloaded
+// -- maybe Option for user to stop downloading and begin inference, or save progress for later
+
 // Try to convince user not to close the page
 // Backend stuff:
 // -- Save generated recs
