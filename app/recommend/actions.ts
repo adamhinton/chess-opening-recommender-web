@@ -21,8 +21,9 @@
 // -- Advise user what they have in localStorage
 // -- Buttons to delete it etc
 // --Date picker, time control picker etc
+
 // Enhancements to processing:
-// -- Weight slower time controls? Like x2 games for rapid, x4 for classical?
+// Finished all of these so far
 
 import { streamLichessGames } from "../utils/rawOpeningStats/lichess/streamLichessGames";
 import { StatsLocalStorageUtils } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
