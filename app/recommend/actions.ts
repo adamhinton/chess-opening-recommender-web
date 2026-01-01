@@ -27,6 +27,7 @@ import {
 	selectPlayerRating,
 	LichessGameAPIResponse,
 } from "../utils/types/lichess";
+import { MemoryMonitor } from "../utils/memoryUsage/MemoryMonitor";
 import { Color, OpeningStatsUtils, GameResult } from "../utils/types/stats";
 import { loadOpeningNamesForColor } from "../utils/rawOpeningStats/modelArtifacts/modelArtifactUtils";
 import {
@@ -40,6 +41,18 @@ import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isVal
 // Configuration Constants
 const MAX_GAMES_TO_FETCH = 5_000;
 const PLAYER_COLOR: Color = "white";
+
+/**
+ * TOGGLE: Set to true to debug memory leaks.
+ *
+ * We want to ensure memory usage grows O(k) with number of unique openings,
+ * NOT O(n) with number of games processed.
+ *
+ * In prod, this should be false or process.env.NODE_ENV === 'development'
+ *
+ * TODO Can probably delete this later once we've solidified processes, or just set it permanently to false
+ */
+const SHOULD_TRACK_MEMORY_USAGE = process.env.NODE_ENV === "development";
 
 export async function processLichessUsername(
 	formData: FormData,
@@ -80,6 +93,10 @@ export async function processLichessUsername(
 			maxRatingDeltaBetweenPlayers: MAX_RATING_DELTA_BETWEEN_PLAYERS,
 		};
 
+		// Initialize Memory Monitor
+		// We sample every 1000 games to avoid console spam
+		const memoryMonitor = new MemoryMonitor(SHOULD_TRACK_MEMORY_USAGE, 1000);
+
 		// 4. Stream, Validate, and Accumulate
 		let validGameCount = 0;
 		let totalProcessed = 0;
@@ -94,6 +111,14 @@ export async function processLichessUsername(
 		for await (const game of stream) {
 			totalProcessed++;
 			validationStats.totalGamesProcessed++;
+
+			// Check memory usage (sampled inside the class)
+			// We want to verify that heap size stays relatively flat (O(k) with k being the number of opening stats (200-600))
+			// as totalProcessed (O(n)) increases, with n being the number of processed games (10_000+).
+			memoryMonitor.check(
+				totalProcessed,
+				Object.keys(playerData.openingStats).length
+			);
 
 			if (!isValidLichessGame(game, filters)) {
 				// Basic tracking of why it failed
