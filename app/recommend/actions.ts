@@ -47,6 +47,17 @@ const MAX_GAMES_TO_FETCH = 5_000;
 const PLAYER_COLOR: Color = "white";
 
 /**
+ * Heuristic weights for different time controls
+ * Classical games are higher quality data points than blitz
+ * So, slower time controls add more games to the total.
+ */
+const TIME_CONTROL_WEIGHTS: Record<LichessGameAPIResponse["speed"], number> = {
+	blitz: 1,
+	rapid: 2,
+	classical: 3,
+};
+
+/**
  * TOGGLE: Set to true to debug memory leaks.
  *
  * We want to ensure memory usage grows O(k) with number of unique openings,
@@ -121,11 +132,11 @@ export async function processLichessUsername(
 			// as totalProcessed (O(n)) increases, with n being the number of processed games (10_000+).
 			memoryMonitor.check(
 				totalProcessed,
-				Object.keys(playerData.openingStats).length
+				Object.keys(playerData.openingStats).length // number of unique openings
 			);
 
 			if (!isValidLichessGame(game, filters)) {
-				// Basic tracking of why it failed
+				// Basic tracking of why game wasn't accepted
 				if (!game.opening || !trainingOpenings.has(game.opening.name)) {
 					validationStats.filteredByOpening++;
 				}
@@ -134,11 +145,19 @@ export async function processLichessUsername(
 
 			// Game is valid: Accumulate stats
 			const result = getGameResult(game, PLAYER_COLOR);
+
+			/**
+			 * Determine weight based on speed
+			 * Slow games are higher quality data and so add more to the total
+			 */
+			const weight = TIME_CONTROL_WEIGHTS[game.speed] || 1;
+
 			OpeningStatsUtils.accumulateOpeningStats(
 				playerData,
 				game.opening!.name, // Safe because isValidLichessGame checks this
 				game.opening!.eco,
-				result
+				result,
+				weight
 			);
 
 			validGameCount++;

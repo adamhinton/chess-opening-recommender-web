@@ -166,13 +166,19 @@ export class OpeningStatsUtils {
 		playerData: PlayerData,
 		openingName: string,
 		eco: string,
-		result: GameResult
+		result: GameResult,
+		/**
+		 * Adds 1 game for blitz, two for Rapid, 4 for Classical.
+		 * Because slower games take longer and give higher quality data.
+		 * These weights can be changed.
+		 */
+		weight: number = 1
 	): void {
 		const existing = playerData.openingStats[openingName];
 
 		if (existing) {
 			// Update existing stats
-			existing.numGames++;
+			existing.numGames += weight; // more for slower games
 
 			// Increments numWins in player's opening stats if it's a win, numDraws for draw, etc
 			const resultKeyMap: Record<
@@ -183,16 +189,16 @@ export class OpeningStatsUtils {
 				draw: "numDraws",
 				loss: "numLosses",
 			};
-			existing[resultKeyMap[result]]++;
+			existing[resultKeyMap[result]] += weight;
 		} else {
 			// Add new stats entry for this opening
 			playerData.openingStats[openingName] = {
 				openingName,
 				eco,
-				numGames: 1,
-				numWins: result === "win" ? 1 : 0,
-				numDraws: result === "draw" ? 1 : 0,
-				numLosses: result === "loss" ? 1 : 0,
+				numGames: weight, // more for slower games
+				numWins: result === "win" ? weight : 0,
+				numDraws: result === "draw" ? weight : 0,
+				numLosses: result === "loss" ? weight : 0,
 			};
 		}
 	}
