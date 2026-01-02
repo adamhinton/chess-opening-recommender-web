@@ -100,6 +100,7 @@ export async function processLichessUsername(
 		// 2. Initialize Stats Containers (Resume if possible)
 		let playerData: PlayerData;
 		let oldestGameTimestampUnixMS: number | undefined; // Tracks the timestamp of the oldest game we've processed (for pagination)
+		// Todo could maybe find a way to not update this on every game we process
 		let numGamesProcessedSoFar = 0;
 
 		const cachedCheck =
