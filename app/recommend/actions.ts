@@ -46,6 +46,7 @@ import {
 	logValidationStats,
 } from "../utils/rawOpeningStats/isValidLichessGame/mainGameValidationFn";
 import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isValidLichessGame/isValidRating";
+import wakeUpHuggingFaceSpace from "../utils/rawOpeningStats/huggingFace/wakeUpHuggingFaceSpace";
 
 // Configuration Constants
 const MAX_GAMES_TO_FETCH = 500;
@@ -87,6 +88,19 @@ export async function processLichessUsername(
 	console.log(`Starting processing for: ${username}`);
 
 	try {
+		// Wake up HF space early (non-blocking) because it sleeps after inactivity
+		// Don't need to await this
+		wakeUpHuggingFaceSpace().then((result) => {
+			if (result.success) {
+				console.log("[HF Space] Wake-up successful");
+			} else {
+				console.warn(
+					"[HF Space] Wake-up failed, but continuing:",
+					result.message
+				);
+			}
+		});
+
 		// 1. Prepare: Load Model Artifacts & User Rating
 		const [trainingOpenings, ratingInfo] = await Promise.all([
 			loadOpeningNamesForColor(PLAYER_COLOR),
