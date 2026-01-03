@@ -39,14 +39,13 @@ const wakeUpHuggingFaceSpace = async (): Promise<{
 			"Content-Type": "application/json",
 		};
 
-		// Add authentication if token is available (optional but recommended)
 		if (process.env.HF_API_TOKEN) {
 			headers["Authorization"] = `Bearer ${process.env.HF_API_TOKEN}`;
 		}
 
 		// Ping the health endpoint with a reasonable timeout
 		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+		const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
 		const response = await fetch(`${spaceUrl}/health`, {
 			method: "GET",

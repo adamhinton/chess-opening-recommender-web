@@ -4,9 +4,6 @@
 // localStorage stuff:
 // -- Decide how we want to structure the number of games to fetch - include the number we've already got in localStorage, or not?
 
-// Wake up HF space
-// -- Because it sleeps after inactivity, so we'll wake it up early to give time to get the sand out of its eyes
-
 // Progress bar
 // -- We won't be sure how many games we're downloading
 // -- So maybe, instead just detail how many games downloaded
@@ -159,11 +156,15 @@ export async function processLichessUsername(
 			};
 		}
 
-		let validGameCount = 0; // Count of valid games in THIS session
+		/** Count of valid games in THIS session */
+		let validGameCount = 0;
+		/**Count of valid games including any retrieved from localStorage */
 		let totalGamesProcessed = 0;
 
-		// If we are resuming, we want games OLDER than the oldest one we have.
-		// Lichess 'until' is inclusive, so we subtract 1ms to avoid double counting the boundary game.
+		/**
+		 * If we are resuming, we want games OLDER than the oldest one we have.
+		 * Lichess 'until' is inclusive, so we subtract 1ms to avoid double counting the boundary game.
+		 */
 		const untilTimestampUnixMS = oldestGameTimestampUnixMS
 			? oldestGameTimestampUnixMS - 1
 			: undefined;

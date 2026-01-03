@@ -164,7 +164,7 @@ export class OpeningStatsUtils {
 		eco: string,
 		result: GameResult,
 		/**
-		 * Adds 1 game for blitz, two for Rapid, 4 for Classical.
+		 * Adds 1 game for blitz, two for Rapid, 3 for Classical.
 		 * Because slower games take longer and give higher quality data.
 		 * These weights can be changed.
 		 */
