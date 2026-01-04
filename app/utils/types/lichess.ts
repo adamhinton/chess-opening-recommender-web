@@ -8,6 +8,8 @@ import { z } from "zod";
 // Lichess User Profile API Types
 // ============================================================================
 
+export type AllowedTimeControl = "blitz" | "rapid" | "classical";
+
 /**
  * Semantic way to tell people never to use game.opening.ply because it's a misleading name and will cause errors
  */
@@ -26,7 +28,7 @@ export interface LichessGameAPIResponse {
 	lastMoveAt: number; // unix MS time
 	clocks: number[]; // each entry here denotes one ply; use that to determine how many moves the game had - clocks.length // 2 is the number of game moves
 	rated: boolean;
-	speed: "blitz" | "rapid" | "classical";
+	speed: AllowedTimeControl;
 	players: {
 		white: LichessPlayerFromAPI;
 		black: LichessPlayerFromAPI;
@@ -84,9 +86,46 @@ export const LichessUserProfileSchema = z.object({
 	id: z.string(),
 	username: z.string(),
 	perfs: LichessPerformanceSchema,
+	createdAt: z.number(), // Unix MS
 });
 
 export type LichessUserProfile = z.infer<typeof LichessUserProfileSchema>;
+
+/**
+ * Estimates how many games we’ll stream for progress tracking.
+
+ * This is intentionally approximate.
+
+ * Returns at least 1 to keep progress math safe.
+ */
+export function estimateNumGamesToStream(params: {
+	userProfile: LichessUserProfile;
+	allowedTimeControls: AllowedTimeControl[];
+	sinceUnixMS?: number;
+}): number {
+	const { userProfile, allowedTimeControls, sinceUnixMS } = params;
+
+	const totalGamesAllColors = allowedTimeControls.reduce((sum, tc) => {
+		return sum + (userProfile.perfs[tc]?.games ?? 0);
+	}, 0);
+
+	// Divide by 2 because we're only streaming games where the user is the chosen color.
+	let estimatedOneColorGames = Math.floor(totalGamesAllColors / 2);
+
+	if (sinceUnixMS !== undefined) {
+		const now = Date.now();
+		const accountAgeMS = now - userProfile.createdAt;
+		const sinceWindowMS = now - sinceUnixMS;
+
+		// Guard against weird clocks / future `since` / invalid profile values
+		if (accountAgeMS > 0 && sinceWindowMS > 0) {
+			const proportion = Math.min(1, sinceWindowMS / accountAgeMS);
+			estimatedOneColorGames = Math.floor(estimatedOneColorGames * proportion);
+		}
+	}
+
+	return Math.max(1, estimatedOneColorGames);
+}
 
 // ============================================================================
 // Rating Selection Logic
@@ -122,7 +161,7 @@ interface RatingWithRD {
  */
 function extractRatingInfo(
 	perfs: LichessPerformance,
-	timeControl: "blitz" | "rapid" | "classical"
+	timeControl: AllowedTimeControl
 ): RatingWithRD | null {
 	const perf = perfs[timeControl];
 	if (!perf) return null;
@@ -154,7 +193,7 @@ export type RatingSelectionResult =
 type RatingSelectionSuccess = {
 	isValid: true;
 	rating: number;
-	timeControl: "blitz" | "rapid" | "classical";
+	timeControl: AllowedTimeControl;
 	ratingDeviation: number;
 };
 

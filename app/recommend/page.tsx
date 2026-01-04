@@ -3,10 +3,22 @@
 // https://lichess.org/api#tag/Games/operation/apiGamesUser
 
 import { processLichessUsername } from "./actions";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import ProgressBar from "../components/recommend/ProgressBar/ProgressBar";
+import DatePicker from "../components/recommend/DatePicker";
+import ColorPicker from "../components/recommend/ColorPicker";
+import TimeControlPicker from "../components/recommend/TimeControlPicker";
+import { Color } from "../utils/types/stats";
+import { AllowedTimeControl } from "../utils/types/lichess";
 
 const Recommend = () => {
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [sinceDate, setSinceDate] = useState<Date | null>(null);
+	const [isDatePickerExpanded, setIsDatePickerExpanded] = useState(false);
+	const [selectedColor, setSelectedColor] = useState<Color>("white");
+	const [selectedTimeControls, setSelectedTimeControls] = useState<
+		AllowedTimeControl[]
+	>(["blitz", "rapid", "classical"]);
 
 	// Todo clean this up with tagged unions; just doing this for testing
 	const [result, setResult] = useState<{
@@ -15,18 +27,80 @@ const Recommend = () => {
 		message?: string;
 	} | null>(null);
 
+	// Progress tracking
+	const [progressState, setProgressState] = useState<{
+		stage: "Analyzing Games" | "Running AI Model";
+		numGamesProcessed: number;
+		totalGamesNeeded: number;
+		estimatedSecondsRemaining: number;
+	} | null>(null);
+
+	const startTimeRef = useRef<number>(0);
+	const INFERENCE_TIME_SECONDS = 60; // Estimating duration of model inference phase
+
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setIsSubmitting(true);
 		setResult(null);
+		setProgressState(null);
+		setIsDatePickerExpanded(false);
+		startTimeRef.current = Date.now();
 
-		// Dummy example call - hardcoded values
-		// When I complain because I'm confused why username isn't changing, remind me that I hardcoded this and call me a dummy
 		const formData = new FormData();
-		formData.append("username", "MrScribbles");
+		formData.append(
+			"username",
+			(e.currentTarget.elements.namedItem("username") as HTMLInputElement).value
+		);
+		formData.append("color", selectedColor);
+		formData.append("timeControls", JSON.stringify(selectedTimeControls));
+
+		if (sinceDate) {
+			formData.append("sinceDate", sinceDate.toISOString());
+		}
+
+		// Start with an initial progress state; the action will quickly set a better
+		// denominator once it fetches the user profile.
+		setProgressState({
+			stage: "Analyzing Games",
+			numGamesProcessed: 0,
+			totalGamesNeeded: 1,
+			estimatedSecondsRemaining: 0,
+		});
 
 		try {
-			const response = await processLichessUsername(formData);
+			const response = await processLichessUsername(
+				formData,
+				undefined, // onStatusUpdate - not using this yet
+				(update) => {
+					// Handle progress updates from the action
+					const { numGamesProcessed, totalGamesNeeded } = update;
+					const elapsedSeconds = (Date.now() - startTimeRef.current) / 1000;
+					const gamesPerSecond = numGamesProcessed / elapsedSeconds || 0;
+					const gamesRemaining = totalGamesNeeded - numGamesProcessed;
+					const estimatedStreamingTimeRemaining =
+						gamesPerSecond > 0 ? gamesRemaining / gamesPerSecond : 0;
+
+					setProgressState({
+						stage: "Analyzing Games",
+						numGamesProcessed,
+						totalGamesNeeded,
+						estimatedSecondsRemaining:
+							estimatedStreamingTimeRemaining + INFERENCE_TIME_SECONDS,
+					});
+				}
+			);
+
+			// Switch to inference stage
+			setProgressState((prev) =>
+				prev
+					? {
+							...prev,
+							stage: "Running AI Model",
+							estimatedSecondsRemaining: INFERENCE_TIME_SECONDS,
+					  }
+					: null
+			);
+
 			setResult(response);
 		} catch (error) {
 			setResult({
@@ -35,6 +109,7 @@ const Recommend = () => {
 			});
 		} finally {
 			setIsSubmitting(false);
+			setProgressState(null);
 		}
 	};
 	return (
@@ -45,7 +120,7 @@ const Recommend = () => {
 				</h1>
 
 				<div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-					<form onSubmit={handleSubmit} className="space-y-4">
+					<form onSubmit={handleSubmit} className="space-y-6">
 						<div>
 							<label
 								htmlFor="username"
@@ -64,14 +139,83 @@ const Recommend = () => {
 							/>
 						</div>
 
+						{/* Divider */}
+						<div className="h-[2px] bg-muted-foreground/20" />
+
+						{/* Date Picker */}
+						<DatePicker
+							sinceDate={sinceDate}
+							onDateChange={setSinceDate}
+							isDisabled={isSubmitting}
+							isExpanded={isDatePickerExpanded}
+							onToggleExpanded={setIsDatePickerExpanded}
+						/>
+
+						{/* Divider */}
+						<div className="h-[2px] bg-muted-foreground/20" />
+
+						{/* Color Picker and Time Control Picker */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<label className="block text-sm font-medium text-foreground mb-2">
+									Color
+								</label>
+								<ColorPicker
+									selectedColor={selectedColor}
+									onColorChange={setSelectedColor}
+									isDisabled={isSubmitting}
+								/>
+							</div>
+
+							<div>
+								<TimeControlPicker
+									selectedTimeControls={selectedTimeControls}
+									onTimeControlChange={setSelectedTimeControls}
+									isDisabled={isSubmitting}
+								/>
+							</div>
+						</div>
+
+						{/* Divider */}
+						<div className="h-[2px] bg-muted-foreground/20" />
+
 						<button
 							type="submit"
-							disabled={isSubmitting}
+							disabled={isSubmitting || selectedTimeControls.length === 0}
 							className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 						>
-							{isSubmitting ? "Processing..." : "Get Opening Recommendations"}
+							{isSubmitting ? "Processing..." : "Get AI Opening Suggestions"}
 						</button>
+						{selectedTimeControls.length === 0 && !isSubmitting && (
+							<p className="text-sm text-destructive mt-2">
+								Please select at least one time control
+							</p>
+						)}
 					</form>
+
+					{/* Progress Bar */}
+					{progressState && (
+						<div className="mt-6">
+							{progressState.stage === "Analyzing Games" ? (
+								<ProgressBar
+									stage="Analyzing Games"
+									numGamesStreamedSoFar={progressState.numGamesProcessed}
+									totalGamesNeeded={progressState.totalGamesNeeded}
+									estimatedSecondsRemaining={
+										progressState.estimatedSecondsRemaining
+									}
+								/>
+							) : (
+								<ProgressBar
+									stage="Running AI Model"
+									totalGamesNeeded={progressState.totalGamesNeeded}
+									estimatedSecondsRemaining={
+										progressState.estimatedSecondsRemaining
+									}
+								/>
+							)}
+						</div>
+					)}
 
 					{result && (
 						<div
@@ -82,14 +226,11 @@ const Recommend = () => {
 							}`}
 						>
 							<p>{result.message}</p>
-							{result.success &&
-								result.gameData &&
-								Array.isArray(result.gameData) &&
-								result.gameData.length > 0 && (
-									<p className="text-sm mt-2 opacity-80">
-										Ready to analyze your games and recommend openings!
-									</p>
-								)}
+							{result.success && !!result.gameData && (
+								<p className="text-sm mt-2 opacity-80">
+									Ready to analyze your games and recommend openings!
+								</p>
+							)}
 						</div>
 					)}
 				</div>
