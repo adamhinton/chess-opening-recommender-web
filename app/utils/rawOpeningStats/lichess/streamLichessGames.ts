@@ -1,4 +1,7 @@
-import { LichessGameAPIResponse } from "../../types/lichess";
+import {
+	LichessGameAPIResponse,
+	AllowedTimeControl,
+} from "../../types/lichess";
 import { Color } from "../../types/stats";
 import { fetchWithBackoff } from "../../network/fetchWithBackoff";
 
@@ -11,10 +14,11 @@ export interface StreamLichessGamesConfig {
 	username: string;
 	color: Color;
 	numGames: number;
+	allowedTimeControls: AllowedTimeControl[];
 	sinceUnixMS?: number; // Unix timestamp in milliseconds
-	untilUnixMS?: number; // Unix timestamp in milliseconds
 	/**This passes up a user-friendly message to the UI informing them that there's a delay */
 	onWait?: (message: string) => void;
+	// Note, not including an `	until`, we'll just always stream up to current day.
 }
 
 /**
@@ -42,8 +46,8 @@ export async function* streamLichessGames(
 		username,
 		color,
 		numGames: numGamesToFetch,
+		allowedTimeControls,
 		sinceUnixMS: since,
-		untilUnixMS: until,
 		onWait,
 	} = config;
 
@@ -51,7 +55,7 @@ export async function* streamLichessGames(
 	const params = new URLSearchParams({
 		color: color,
 		rated: "true",
-		perfType: "blitz,rapid,classical",
+		perfType: allowedTimeControls.join(","),
 		max: numGamesToFetch.toString(),
 		moves: "false",
 		opening: "true",
@@ -62,9 +66,6 @@ export async function* streamLichessGames(
 	// Add optional timestamp params if provided
 	if (since !== undefined) {
 		params.append("since", since.toString());
-	}
-	if (until !== undefined) {
-		params.append("until", until.toString());
 	}
 
 	// Make API request

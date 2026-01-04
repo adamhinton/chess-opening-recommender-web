@@ -4,11 +4,6 @@
 // localStorage stuff:
 // -- Decide how we want to structure the number of games to fetch - include the number we've already got in localStorage, or not?
 
-// Progress bar
-// -- We won't be sure how many games we're downloading
-// -- So maybe, instead just detail how many games downloaded
-// -- maybe Option for user to stop downloading and begin inference, or save progress for later
-
 // Try to convince user not to close the page
 // Backend stuff:
 // -- Save generated recs
@@ -18,14 +13,13 @@
 // -- Buttons to delete it etc
 // --Date picker, time control picker etc
 
-// Enhancements to processing:
-// Finished all of these so far
-
 import { streamLichessGames } from "../utils/rawOpeningStats/lichess/streamLichessGames";
 import { StatsLocalStorageUtils } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import {
 	fetchLichessUserProfile,
+	estimateNumGamesToStream,
 	selectPlayerRating,
+	AllowedTimeControl,
 	LichessGameAPIResponse,
 } from "../utils/types/lichess";
 import { MemoryMonitor } from "../utils/memoryUsage/MemoryMonitor";
@@ -46,8 +40,7 @@ import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isVal
 import wakeUpHuggingFaceSpace from "../utils/rawOpeningStats/huggingFace/wakeUpHuggingFaceSpace";
 
 // Configuration Constants
-const MAX_GAMES_TO_FETCH = 500;
-const PLAYER_COLOR: Color = "white";
+export const MAX_GAMES_TO_FETCH = 500;
 
 /**
  * Heuristic weights for different time controls
@@ -74,12 +67,55 @@ const SHOULD_TRACK_MEMORY_USAGE = process.env.NODE_ENV === "development";
 
 export async function processLichessUsername(
 	formData: FormData,
-	onStatusUpdate?: (message: string) => void
+	onStatusUpdate?: (message: string) => void,
+	onProgressUpdate?: (progress: {
+		numGamesProcessed: number;
+		totalGamesNeeded: number;
+	}) => void
 ) {
 	const username = formData.get("username");
+	const sinceDateString = formData.get("sinceDate");
+	const colorString = formData.get("color");
+	const timeControlsString = formData.get("timeControls");
 
 	if (!username || typeof username !== "string") {
 		throw new Error("Username is required");
+	}
+
+	// Validate and extract color
+	const playerColor: Color =
+		colorString === "black" || colorString === "white" ? colorString : "white";
+
+	// Parse and validate time controls
+	let allowedTimeControls: AllowedTimeControl[] = [
+		"blitz",
+		"rapid",
+		"classical",
+	];
+	if (timeControlsString && typeof timeControlsString === "string") {
+		try {
+			const parsed = JSON.parse(timeControlsString);
+			if (Array.isArray(parsed) && parsed.length > 0) {
+				allowedTimeControls = parsed.filter((tc): tc is AllowedTimeControl =>
+					["blitz", "rapid", "classical"].includes(tc)
+				);
+			}
+		} catch (error) {
+			console.error("Error parsing time controls:", error);
+			// Fall back to default
+		}
+	}
+
+	// Ensure at least one time control is selected
+	if (allowedTimeControls.length === 0) {
+		throw new Error("At least one time control must be selected");
+	}
+
+	// Parse sinceDate if provided
+	let sinceUnixMS: number | undefined;
+	if (sinceDateString && typeof sinceDateString === "string") {
+		const sinceDate = new Date(sinceDateString);
+		sinceUnixMS = sinceDate.getTime();
 	}
 
 	console.log(`Starting processing for: ${username}`);
@@ -98,20 +134,33 @@ export async function processLichessUsername(
 			}
 		});
 
-		// 1. Prepare: Load Model Artifacts & User Rating
-		const [trainingOpenings, ratingInfo] = await Promise.all([
-			loadOpeningNamesForColor(PLAYER_COLOR),
-			fetchAndValidateRating(username),
+		// 1. Prepare: Load Model Artifacts & User Profile (+ derived rating)
+		const [trainingOpenings, userInfo] = await Promise.all([
+			loadOpeningNamesForColor(playerColor),
+			fetchUserRatingAndProfile(username),
 		]);
 
-		if (!ratingInfo.isValid) {
-			return { success: false, message: ratingInfo.error };
+		if (!userInfo.isValid) {
+			return { success: false, message: userInfo.error };
+		}
+
+		const estimatedTotalGamesNeeded = estimateNumGamesToStream({
+			userProfile: userInfo.userProfile,
+			allowedTimeControls,
+			sinceUnixMS,
+		});
+
+		// Send an early update so the progress bar has the right denominator ASAP.
+		if (onProgressUpdate) {
+			onProgressUpdate({
+				numGamesProcessed: 0,
+				totalGamesNeeded: estimatedTotalGamesNeeded,
+			});
 		}
 
 		// 2. Initialize Stats Containers (Resume if possible)
 		let playerData: PlayerData;
 		let oldestGameTimestampUnixMS: number | undefined; // Tracks the timestamp of the oldest game we've processed (for pagination)
-		// Todo could maybe find a way to not update this on every game we process
 		let numGamesProcessedSoFar = 0;
 
 		const cachedCheck =
@@ -125,8 +174,8 @@ export async function processLichessUsername(
 		} else {
 			playerData = OpeningStatsUtils.createEmptyPlayerData(
 				username,
-				ratingInfo.rating,
-				PLAYER_COLOR
+				userInfo.rating,
+				playerColor
 			);
 		}
 
@@ -137,11 +186,13 @@ export async function processLichessUsername(
 		};
 
 		// Initialize Memory Monitor
-		// We sample every 1000 games to avoid console spam
+		// We sample every x games to avoid console spam
 		const memoryMonitor = new MemoryMonitor(SHOULD_TRACK_MEMORY_USAGE, 250);
 
 		// 3. Stream, Validate, and Accumulate
 		// Determine how many more games we need
+		// We still cap by MAX_GAMES_TO_FETCH for now (keeps cost/time bounded),
+		// but the progress bar denominator should reflect the user's estimated total.
 		const numGamesNeeded = Math.max(
 			0,
 			MAX_GAMES_TO_FETCH - numGamesProcessedSoFar
@@ -161,19 +212,12 @@ export async function processLichessUsername(
 		/**Count of valid games including any retrieved from localStorage */
 		let totalGamesProcessed = 0;
 
-		/**
-		 * If we are resuming, we want games OLDER than the oldest one we have.
-		 * Lichess 'until' is inclusive, so we subtract 1ms to avoid double counting the boundary game.
-		 */
-		const untilTimestampUnixMS = oldestGameTimestampUnixMS
-			? oldestGameTimestampUnixMS - 1
-			: undefined;
-
 		const stream = streamLichessGames({
 			username,
-			color: PLAYER_COLOR,
+			color: playerColor,
 			numGames: numGamesNeeded,
-			untilUnixMS: untilTimestampUnixMS,
+			allowedTimeControls: allowedTimeControls,
+			sinceUnixMS: sinceUnixMS,
 			onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
 		});
 
@@ -204,7 +248,7 @@ export async function processLichessUsername(
 			}
 
 			// Game is valid: Accumulate stats
-			const result = getGameResult(game, PLAYER_COLOR);
+			const result = getGameResult(game, playerColor);
 
 			/**
 			 * Determine weight based on speed
@@ -222,9 +266,17 @@ export async function processLichessUsername(
 
 			validGameCount++;
 			validationStats.validGames++;
-			console.log(
-				`Processed ${validGameCount}: ${game.opening?.name} (${result})`
-			);
+			if (totalGamesProcessed % 50 === 0) {
+				console.log(`Processed ${totalGamesProcessed} games`);
+			}
+
+			// Report progress to UI
+			if (onProgressUpdate) {
+				onProgressUpdate({
+					numGamesProcessed: numGamesProcessedSoFar + validGameCount,
+					totalGamesNeeded: estimatedTotalGamesNeeded,
+				});
+			}
 		}
 
 		// 4. Finalize
@@ -255,7 +307,7 @@ export async function processLichessUsername(
 
 		return {
 			success: true,
-			message: `Successfully processed ${totalValidGames} games.`,
+			message: `Successfully processed games.`,
 			gameData: playerData,
 		};
 	} catch (error) {
@@ -272,7 +324,20 @@ export async function processLichessUsername(
 // Helpers
 // ============================================================================
 
-async function fetchAndValidateRating(username: string) {
+async function fetchUserRatingAndProfile(username: string): Promise<
+	| {
+			isValid: true;
+			rating: number;
+			error: "";
+			userProfile: Awaited<ReturnType<typeof fetchLichessUserProfile>>;
+	  }
+	| {
+			isValid: false;
+			rating: 0;
+			error: string;
+			userProfile: Awaited<ReturnType<typeof fetchLichessUserProfile>>;
+	  }
+> {
 	const userProfile = await fetchLichessUserProfile(username);
 	const ratingSelection = selectPlayerRating(userProfile.perfs);
 
@@ -283,13 +348,18 @@ async function fetchAndValidateRating(username: string) {
 		} else if (ratingSelection.reason === "all_unreliable") {
 			error = `User ${username} has unreliable ratings (RD too high). Play more games.`;
 		}
-		return { isValid: false, error, rating: 0 };
+		return { isValid: false, error, rating: 0, userProfile };
 	}
 
 	console.log(
 		`Selected ${ratingSelection.timeControl} rating: ${ratingSelection.rating}`
 	);
-	return { isValid: true, rating: ratingSelection.rating, error: "" };
+	return {
+		isValid: true,
+		rating: ratingSelection.rating,
+		error: "",
+		userProfile,
+	};
 }
 
 function getGameResult(
