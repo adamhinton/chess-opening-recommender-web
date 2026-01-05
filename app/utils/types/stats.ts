@@ -3,6 +3,7 @@
 // Will be contained within a broader player object that also has very basic info such as rating and username
 
 import z from "zod";
+import { AllowedTimeControl } from "./lichess";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ResultTypeSchema = z.enum(["win", "draw", "loss"]);
@@ -38,6 +39,7 @@ export const PlayerDataSchema = z.object({
 	rating: z.number().nonnegative(),
 	color: ColorSchema,
 	openingStats: z.record(z.string(), RawOpeningStatsSchema), // key is opening name
+	allowedTimeControls: z.array(z.enum(["blitz", "rapid", "classical"])),
 });
 
 /**
@@ -144,12 +146,14 @@ export class OpeningStatsUtils {
 	static createEmptyPlayerData(
 		lichessUsername: string,
 		rating: number,
-		color: Color
+		color: Color,
+		allowedTimeControls: AllowedTimeControl[]
 	): PlayerData {
 		return {
 			lichessUsername,
 			rating,
 			color,
+			allowedTimeControls,
 			openingStats: {},
 		};
 	}

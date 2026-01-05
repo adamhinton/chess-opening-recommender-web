@@ -12,6 +12,7 @@
 // VALIDATION: All retrieved data validated with Zod schemas
 // =========================================
 
+import { AllowedTimeControl } from "../../types/lichess";
 import { PlayerData, PlayerDataSchema } from "../../types/stats";
 
 // ============================================================================
@@ -55,6 +56,7 @@ interface StoredPlayerData {
 	// Schema version for migrations
 	schemaVersion: 1.0; // update to union type if/when we get different version numbers
 	createdAtUnixMS: number;
+	allowedTimeControls: AllowedTimeControl[];
 }
 
 /**
@@ -246,6 +248,7 @@ export class StatsLocalStorageUtils {
 			isComplete: options.isComplete,
 			schemaVersion: CONFIG.CURRENT_SCHEMA_VERSION,
 			createdAtUnixMS: Date.now(),
+			allowedTimeControls: playerData.allowedTimeControls,
 		};
 
 		const key = this.getPlayerKey(playerData.lichessUsername);

@@ -95,6 +95,8 @@ export async function processLichessUsername(
 		"rapid",
 		"classical",
 	];
+
+	// Eliminate time controls user didn't select
 	if (timeControlsString && typeof timeControlsString === "string") {
 		try {
 			const parsed = JSON.parse(timeControlsString);
@@ -166,6 +168,7 @@ export async function processLichessUsername(
 		let oldestGameTimestampUnixMS: number | undefined; // Tracks the timestamp of the oldest game we've processed (for pagination)
 		let numGamesProcessedSoFar = 0;
 
+		// Have we already started processing this user?
 		const cachedCheck =
 			StatsLocalStorageUtils.checkExistingStatsByUsername(username);
 
@@ -178,7 +181,8 @@ export async function processLichessUsername(
 			playerData = OpeningStatsUtils.createEmptyPlayerData(
 				username,
 				userInfo.rating,
-				playerColor
+				playerColor,
+				allowedTimeControls
 			);
 		}
 
