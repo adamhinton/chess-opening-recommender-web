@@ -40,7 +40,10 @@ import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isVal
 import wakeUpHuggingFaceSpace from "../utils/rawOpeningStats/huggingFace/wakeUpHuggingFaceSpace";
 
 // Configuration Constants
-export const MAX_GAMES_TO_FETCH = 500;
+// Much lower number for testing so I don't get IPbanned by Lichess
+// The most active player on lichess has about 400,000 games, so 200k for one color
+export const MAX_GAMES_TO_FETCH =
+	process.env.NODE_ENV === "development" ? 500 : 200_000;
 
 /**
  * Heuristic weights for different time controls
