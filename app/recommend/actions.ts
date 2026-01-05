@@ -163,21 +163,62 @@ export async function processLichessUsername(
 			});
 		}
 
-		// 2. Initialize Stats Containers (Resume if possible)
+		// 2. Initialize Stats Containers (Handle conflicts & Resume if possible)
 		let playerData: PlayerData;
 		let oldestGameTimestampUnixMS: number | undefined; // Tracks the timestamp of the oldest game we've processed (for pagination)
 		let numGamesProcessedSoFar = 0;
 
-		// Have we already started processing this user?
-		const cachedCheck =
-			StatsLocalStorageUtils.checkExistingStatsByUsername(username);
+		// =====================================================================
+		// CONFLICT RESOLUTION: Check if we have existing data and handle conflicts
+		// =====================================================================
+		// When user manually enters username (not via resume button), we check:
+		// 1. Time control conflict → delete cached data and restart
+		// 2. Date conflict → resume or restart based on date comparison
+		// See resolveStorageConflict() for full logic documentation.
+		const conflictResolution = StatsLocalStorageUtils.resolveStorageConflict({
+			username,
+			color: playerColor,
+			formTimeControls: allowedTimeControls,
+			formSinceUnixMS: sinceUnixMS,
+		});
 
-		if (cachedCheck.exists) {
-			console.log(`Resuming with cached data for ${username}`);
-			playerData = cachedCheck.data.playerData;
-			oldestGameTimestampUnixMS = cachedCheck.data.sinceUnixMS;
-			numGamesProcessedSoFar = cachedCheck.data.fetchProgress;
+		console.log(
+			`[Conflict Resolution] ${conflictResolution.action}: ${conflictResolution.reason}`
+		);
+
+		if (conflictResolution.action === "delete-and-restart") {
+			// Time controls changed - we can't merge stats from different filters
+			StatsLocalStorageUtils.deleteStatsByUsername(username, playerColor);
+			playerData = OpeningStatsUtils.createEmptyPlayerData(
+				username,
+				userInfo.rating,
+				playerColor,
+				allowedTimeControls
+			);
+		} else if (conflictResolution.action === "resume") {
+			// Resume from cached data
+			const cachedCheck = StatsLocalStorageUtils.checkExistingStatsByUsername(
+				username,
+				playerColor
+			);
+			if (cachedCheck.exists) {
+				console.log(
+					`Resuming with cached data for ${username} (${playerColor})`
+				);
+				playerData = cachedCheck.data.playerData;
+				oldestGameTimestampUnixMS = cachedCheck.data.sinceUnixMS;
+				numGamesProcessedSoFar = cachedCheck.data.fetchProgress;
+			} else {
+				// Shouldn't happen if resolveStorageConflict returned "resume", but handle gracefully
+				playerData = OpeningStatsUtils.createEmptyPlayerData(
+					username,
+					userInfo.rating,
+					playerColor,
+					allowedTimeControls
+				);
+			}
 		} else {
+			// Fresh start - no existing data
 			playerData = OpeningStatsUtils.createEmptyPlayerData(
 				username,
 				userInfo.rating,
@@ -284,6 +325,20 @@ export async function processLichessUsername(
 					totalGamesNeeded: estimatedTotalGamesNeeded,
 				});
 			}
+
+			// Save progress in localStorage every 500 valid games
+			if (validGameCount % 500 === 0 && oldestGameTimestampUnixMS) {
+				StatsLocalStorageUtils.saveStats(playerData, {
+					fetchProgress: numGamesProcessedSoFar + validGameCount,
+					isComplete: false, // Still streaming - not complete
+					sinceUnixMS: oldestGameTimestampUnixMS,
+				});
+				console.log(
+					`[Incremental Save] Saved progress at ${
+						numGamesProcessedSoFar + validGameCount
+					} games`
+				);
+			}
 		}
 
 		// 4. Finalize
@@ -303,7 +358,7 @@ export async function processLichessUsername(
 		if (oldestGameTimestampUnixMS) {
 			StatsLocalStorageUtils.saveStats(playerData, {
 				fetchProgress: totalValidGames,
-				isComplete: true,
+				isComplete: false, // Streaming done, but inference not yet complete
 				sinceUnixMS: oldestGameTimestampUnixMS,
 			});
 		} else {
