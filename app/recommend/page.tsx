@@ -8,6 +8,7 @@ import ProgressBar from "../components/recommend/ProgressBar/ProgressBar";
 import DatePicker from "../components/recommend/DatePicker";
 import ColorPicker from "../components/recommend/ColorPicker";
 import TimeControlPicker from "../components/recommend/TimeControlPicker";
+import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
 import { Color } from "../utils/types/stats";
 import { AllowedTimeControl } from "../utils/types/lichess";
 
@@ -37,6 +38,9 @@ const Recommend = () => {
 
 	const startTimeRef = useRef<number>(0);
 	const INFERENCE_TIME_SECONDS = 60; // Estimating duration of model inference phase
+
+	// Warn user before leaving during processing
+	useBeforeUnloadWarning(isSubmitting);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -214,6 +218,28 @@ const Recommend = () => {
 									}
 								/>
 							)}
+
+							{/* Warn that closing the page will pause analysis, though user can resume later*/}
+							<div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									className="h-4 w-4 flex-shrink-0 text-amber-500"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+								<span>
+									Closing this page will pause analysis. Your progress is saved
+									automatically—you can resume anytime.
+								</span>
+							</div>
 						</div>
 					)}
 
