@@ -11,8 +11,6 @@ import {
 	estimateNumGamesToStream,
 	AllowedTimeControl,
 	LichessGameAPIResponse,
-	fetchUserRatingAndProfile,
-	getGameResult,
 } from "../utils/types/lichessTypes";
 import { MemoryMonitor } from "../utils/memoryUsage/MemoryMonitor";
 import { Color, OpeningStatsUtils, PlayerData } from "../utils/types/stats";
@@ -25,6 +23,10 @@ import {
 } from "../utils/rawOpeningStats/isValidLichessGame/mainGameValidationFn";
 import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isValidLichessGame/isValidRating";
 import wakeUpHuggingFaceSpace from "../utils/rawOpeningStats/huggingFace/wakeUpHuggingFaceSpace";
+import {
+	fetchUserRatingAndProfile,
+	getGameResult,
+} from "../utils/rawOpeningStats/lichess/lichessUtils";
 
 // Much lower number for testing so I don't get IPbanned by Lichess
 // The most active player on lichess has about 400,000 games, so 200k for one color in prod
