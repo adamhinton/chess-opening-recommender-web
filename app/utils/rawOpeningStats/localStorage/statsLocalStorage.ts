@@ -12,7 +12,7 @@
 // VALIDATION: All retrieved data validated with Zod schemas
 // =========================================
 
-import { AllowedTimeControl } from "../../types/lichess";
+import { AllowedTimeControl } from "../../types/lichessTypes";
 import { Color, PlayerData, PlayerDataSchema } from "../../types/stats";
 
 // ============================================================================

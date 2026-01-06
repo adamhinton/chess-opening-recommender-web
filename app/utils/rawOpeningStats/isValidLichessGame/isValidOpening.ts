@@ -6,7 +6,7 @@
  * predictions for openings the model has never seen.
  */
 
-import { LichessGameAPIResponse } from "../../types/lichess";
+import { LichessGameAPIResponse } from "../../types/lichessTypes";
 
 type OpeningName = NonNullable<LichessGameAPIResponse["opening"]>["name"];
 

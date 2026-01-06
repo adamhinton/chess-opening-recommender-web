@@ -3,7 +3,7 @@
 // Will be contained within a broader player object that also has very basic info such as rating and username
 
 import z from "zod";
-import { AllowedTimeControl } from "./lichess";
+import { AllowedTimeControl } from "./lichessTypes";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ResultTypeSchema = z.enum(["win", "draw", "loss"]);

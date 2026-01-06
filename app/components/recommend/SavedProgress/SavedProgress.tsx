@@ -6,7 +6,7 @@ import {
 	StoredPlayerData,
 } from "../../../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import { Color } from "../../../utils/types/stats";
-import { AllowedTimeControl } from "../../../utils/types/lichess";
+import { AllowedTimeControl } from "../../../utils/types/lichessTypes";
 import ConfirmationDialog from "../../ConfirmationDialog";
 
 // ============================================================================

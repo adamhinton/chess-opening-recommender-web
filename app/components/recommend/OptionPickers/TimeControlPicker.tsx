@@ -1,6 +1,6 @@
 "use client";
 
-import { type AllowedTimeControl } from "@/app/utils/types/lichess";
+import { type AllowedTimeControl } from "@/app/utils/types/lichessTypes";
 
 type TimeControlPickerProps = {
 	selectedTimeControls: AllowedTimeControl[];

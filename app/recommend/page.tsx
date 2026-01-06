@@ -10,7 +10,7 @@ import TimeControlPicker from "../components/recommend/OptionPickers/TimeControl
 import SavedProgress from "../components/recommend/SavedProgress/SavedProgress";
 import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
 import { Color } from "../utils/types/stats";
-import { AllowedTimeControl } from "../utils/types/lichess";
+import { AllowedTimeControl } from "../utils/types/lichessTypes";
 import { StoredPlayerData } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import ColorPicker from "../components/recommend/OptionPickers/ColorPicker";
 

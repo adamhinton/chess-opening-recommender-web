@@ -14,7 +14,7 @@
  * - Game completion validation (no aborted/timeout games)
  */
 
-import { LichessGameAPIResponse } from "../../types/lichess";
+import { LichessGameAPIResponse } from "../../types/lichessTypes";
 import { isValidOpening } from "./isValidOpening";
 import { isValidRatingDeltaBetweenPlayers } from "./isValidRating";
 import { isValidGameStructure } from "./isValidGameStructure";

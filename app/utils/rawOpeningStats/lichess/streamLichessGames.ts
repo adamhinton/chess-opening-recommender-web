@@ -1,7 +1,7 @@
 import {
 	LichessGameAPIResponse,
 	AllowedTimeControl,
-} from "../../types/lichess";
+} from "../../types/lichessTypes";
 import { Color } from "../../types/stats";
 import { fetchWithBackoff } from "../../network/fetchWithBackoff";
 

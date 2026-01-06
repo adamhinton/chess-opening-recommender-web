@@ -3,6 +3,7 @@
  */
 
 import { z } from "zod";
+import { Color, GameResult } from "./stats";
 
 // ============================================================================
 // Lichess User Profile API Types
@@ -340,4 +341,51 @@ export async function fetchLichessUserProfile(
 	}
 
 	return parseResult.data;
+}
+
+/**Gets user profile with fetchLichessUserProfile, then decides which rating we want to use (blitz rapid or classical) */
+export async function fetchUserRatingAndProfile(username: string): Promise<
+	| {
+			isValid: true;
+			rating: number;
+			error: "";
+			userProfile: Awaited<ReturnType<typeof fetchLichessUserProfile>>;
+	  }
+	| {
+			isValid: false;
+			rating: 0;
+			error: string;
+			userProfile: Awaited<ReturnType<typeof fetchLichessUserProfile>>;
+	  }
+> {
+	const userProfile = await fetchLichessUserProfile(username);
+	const ratingSelection = selectPlayerRating(userProfile.perfs);
+
+	if (!ratingSelection.isValid) {
+		let error = `Unable to determine rating for ${username}`;
+		if (ratingSelection.reason === "no_ratings") {
+			error = `User ${username} has no rated games in standard time controls.`;
+		} else if (ratingSelection.reason === "all_unreliable") {
+			error = `User ${username} has unreliable ratings (RD too high). Play more games.`;
+		}
+		return { isValid: false, error, rating: 0, userProfile };
+	}
+
+	console.log(
+		`Selected ${ratingSelection.timeControl} rating: ${ratingSelection.rating}`
+	);
+	return {
+		isValid: true,
+		rating: ratingSelection.rating,
+		error: "",
+		userProfile,
+	};
+}
+
+export function getGameResult(
+	game: LichessGameAPIResponse,
+	myColor: Color
+): GameResult {
+	if (!game.winner) return "draw";
+	return game.winner === myColor ? "win" : "loss";
 }

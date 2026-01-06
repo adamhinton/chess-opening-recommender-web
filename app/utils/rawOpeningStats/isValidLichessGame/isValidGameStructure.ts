@@ -1,4 +1,4 @@
-import { LichessGameAPIResponse } from "../../types/lichess";
+import { LichessGameAPIResponse } from "../../types/lichessTypes";
 
 /**
  * Excludes games with ending that don't reflect a player's skill in the game, such as cheat detected, game aborted, server crash etc

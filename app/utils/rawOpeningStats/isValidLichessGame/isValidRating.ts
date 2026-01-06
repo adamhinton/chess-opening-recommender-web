@@ -1,4 +1,4 @@
-import { LichessPlayerFromAPI } from "../../types/lichess";
+import { LichessPlayerFromAPI } from "../../types/lichessTypes";
 
 export const MAX_RATING_DELTA_BETWEEN_PLAYERS = 100;
 

@@ -1,34 +1,21 @@
 "use client";
 
 // TODO:
-// localStorage stuff:
-// -- Decide how we want to structure the number of games to fetch - include the number we've already got in localStorage, or not?
-
-// Try to convince user not to close the page
 // Backend stuff:
 // -- Save generated recs
 // -- Save ongoing stats instead of localStorage?
-// UI to:
-// -- Advise user what they have in localStorage
-// -- Buttons to delete it etc
-// --Date picker, time control picker etc
 
 import { streamLichessGames } from "../utils/rawOpeningStats/lichess/streamLichessGames";
 import { StatsLocalStorageUtils } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import {
-	fetchLichessUserProfile,
 	estimateNumGamesToStream,
-	selectPlayerRating,
 	AllowedTimeControl,
 	LichessGameAPIResponse,
-} from "../utils/types/lichess";
+	fetchUserRatingAndProfile,
+	getGameResult,
+} from "../utils/types/lichessTypes";
 import { MemoryMonitor } from "../utils/memoryUsage/MemoryMonitor";
-import {
-	Color,
-	OpeningStatsUtils,
-	GameResult,
-	PlayerData,
-} from "../utils/types/stats";
+import { Color, OpeningStatsUtils, PlayerData } from "../utils/types/stats";
 import { loadOpeningNamesForColor } from "../utils/rawOpeningStats/modelArtifacts/modelArtifactUtils";
 import {
 	GameValidationFilters,
@@ -39,16 +26,18 @@ import {
 import { MAX_RATING_DELTA_BETWEEN_PLAYERS } from "../utils/rawOpeningStats/isValidLichessGame/isValidRating";
 import wakeUpHuggingFaceSpace from "../utils/rawOpeningStats/huggingFace/wakeUpHuggingFaceSpace";
 
-// Configuration Constants
 // Much lower number for testing so I don't get IPbanned by Lichess
-// The most active player on lichess has about 400,000 games, so 200k for one color
+// The most active player on lichess has about 400,000 games, so 200k for one color in prod
 export const MAX_GAMES_TO_FETCH =
-	process.env.NODE_ENV === "development" ? 500 : 200_000;
+	process.env.NODE_ENV === "development" ? 250 : 200_000;
+
+export const SAVE_LOCAL_STORAGE_EVERY_N_GAMES = 100;
+
+// ============================================================================
 
 /**
  * Heuristic weights for different time controls
  * Classical games are higher quality data points than blitz
- * So, slower time controls add more games to the total.
  */
 const TIME_CONTROL_WEIGHTS: Record<LichessGameAPIResponse["speed"], number> = {
 	blitz: 1,
@@ -57,14 +46,7 @@ const TIME_CONTROL_WEIGHTS: Record<LichessGameAPIResponse["speed"], number> = {
 };
 
 /**
- * TOGGLE: Set to true to debug memory leaks.
- *
- * We want to ensure memory usage grows O(k) with number of unique openings,
- * NOT O(n) with number of games processed.
- *
- * In prod, this should be false or process.env.NODE_ENV === 'development'
- *
- * TODO Can probably delete this later once we've solidified processes, or just set it permanently to false
+ * Tracks memory usage to make sure it doesn't increase O(n) with number of games processed.
  */
 const SHOULD_TRACK_MEMORY_USAGE = process.env.NODE_ENV === "development";
 
@@ -85,11 +67,10 @@ export async function processLichessUsername(
 		throw new Error("Username is required");
 	}
 
-	// Validate and extract color
 	const playerColor: Color =
 		colorString === "black" || colorString === "white" ? colorString : "white";
 
-	// Parse and validate time controls
+	// User picks these in form
 	let allowedTimeControls: AllowedTimeControl[] = [
 		"blitz",
 		"rapid",
@@ -111,7 +92,7 @@ export async function processLichessUsername(
 		}
 	}
 
-	// Ensure at least one time control is selected
+	// Ensure at least one time control is selected, though UI should prevent thiss
 	if (allowedTimeControls.length === 0) {
 		throw new Error("At least one time control must be selected");
 	}
@@ -127,21 +108,12 @@ export async function processLichessUsername(
 
 	try {
 		// Wake up HF space early (non-blocking) because it sleeps after inactivity
-		// Don't need to await this
-		wakeUpHuggingFaceSpace().then((result) => {
-			if (result.success) {
-				console.log("[HF Space] Wake-up successful");
-			} else {
-				console.warn(
-					"[HF Space] Wake-up failed, but continuing:",
-					result.message
-				);
-			}
-		});
+		// Async but we don't need to wait for it
+		wakeUpHuggingFaceSpace();
 
-		// 1. Prepare: Load Model Artifacts & User Profile (+ derived rating)
+		// 1. Load Model Artifacts & User Profile
 		const [trainingOpenings, userInfo] = await Promise.all([
-			loadOpeningNamesForColor(playerColor),
+			loadOpeningNamesForColor(playerColor), // training openings
 			fetchUserRatingAndProfile(username),
 		]);
 
@@ -327,7 +299,10 @@ export async function processLichessUsername(
 			}
 
 			// Save progress in localStorage every 500 valid games
-			if (validGameCount % 500 === 0 && oldestGameTimestampUnixMS) {
+			if (
+				validGameCount % SAVE_LOCAL_STORAGE_EVERY_N_GAMES === 0 &&
+				oldestGameTimestampUnixMS
+			) {
 				StatsLocalStorageUtils.saveStats(playerData, {
 					fetchProgress: numGamesProcessedSoFar + validGameCount,
 					isComplete: false, // Still streaming - not complete
@@ -354,7 +329,6 @@ export async function processLichessUsername(
 		}
 
 		// Save to local storage
-		// We must provide sinceUnixMS (the timestamp of the oldest game in our dataset)
 		if (oldestGameTimestampUnixMS) {
 			StatsLocalStorageUtils.saveStats(playerData, {
 				fetchProgress: totalValidGames,
@@ -385,49 +359,3 @@ export async function processLichessUsername(
 // ============================================================================
 // Helpers
 // ============================================================================
-
-async function fetchUserRatingAndProfile(username: string): Promise<
-	| {
-			isValid: true;
-			rating: number;
-			error: "";
-			userProfile: Awaited<ReturnType<typeof fetchLichessUserProfile>>;
-	  }
-	| {
-			isValid: false;
-			rating: 0;
-			error: string;
-			userProfile: Awaited<ReturnType<typeof fetchLichessUserProfile>>;
-	  }
-> {
-	const userProfile = await fetchLichessUserProfile(username);
-	const ratingSelection = selectPlayerRating(userProfile.perfs);
-
-	if (!ratingSelection.isValid) {
-		let error = `Unable to determine rating for ${username}`;
-		if (ratingSelection.reason === "no_ratings") {
-			error = `User ${username} has no rated games in standard time controls.`;
-		} else if (ratingSelection.reason === "all_unreliable") {
-			error = `User ${username} has unreliable ratings (RD too high). Play more games.`;
-		}
-		return { isValid: false, error, rating: 0, userProfile };
-	}
-
-	console.log(
-		`Selected ${ratingSelection.timeControl} rating: ${ratingSelection.rating}`
-	);
-	return {
-		isValid: true,
-		rating: ratingSelection.rating,
-		error: "",
-		userProfile,
-	};
-}
-
-function getGameResult(
-	game: LichessGameAPIResponse,
-	myColor: Color
-): GameResult {
-	if (!game.winner) return "draw";
-	return game.winner === myColor ? "win" : "loss";
-}
