@@ -1,6 +1,6 @@
 "use client";
 
-import { Color } from "../../utils/types/stats";
+import { type Color } from "@/app/utils/types/stats";
 
 type ColorPickerProps = {
 	selectedColor: Color;

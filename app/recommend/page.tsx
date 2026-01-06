@@ -3,17 +3,20 @@
 // https://lichess.org/api#tag/Games/operation/apiGamesUser
 
 import { processLichessUsername } from "./actions";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import ProgressBar from "../components/recommend/ProgressBar/ProgressBar";
-import DatePicker from "../components/recommend/DatePicker";
-import ColorPicker from "../components/recommend/ColorPicker";
-import TimeControlPicker from "../components/recommend/TimeControlPicker";
+import DatePicker from "../components/recommend/OptionPickers/DatePicker";
+import TimeControlPicker from "../components/recommend/OptionPickers/TimeControlPicker";
+import SavedProgress from "../components/recommend/SavedProgress/SavedProgress";
 import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
 import { Color } from "../utils/types/stats";
 import { AllowedTimeControl } from "../utils/types/lichess";
+import { StoredPlayerData } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
+import ColorPicker from "../components/recommend/OptionPickers/ColorPicker";
 
 const Recommend = () => {
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [username, setUsername] = useState("");
 	const [sinceDate, setSinceDate] = useState<Date | null>(null);
 	const [isDatePickerExpanded, setIsDatePickerExpanded] = useState(false);
 	const [selectedColor, setSelectedColor] = useState<Color>("white");
@@ -38,90 +41,160 @@ const Recommend = () => {
 
 	const startTimeRef = useRef<number>(0);
 	const INFERENCE_TIME_SECONDS = 60; // Estimating duration of model inference phase
+	// Key to force SavedProgress to refresh after submit completes
+	const [savedProgressKey, setSavedProgressKey] = useState(0);
 
 	// Warn user before leaving during processing
 	useBeforeUnloadWarning(isSubmitting);
 
+	/**
+	 * Core submission logic - can be called from form submit or resume button.
+	 * Takes explicit params so resume can pass saved values directly.
+	 */
+	const submitAnalysis = useCallback(
+		async (params: {
+			username: string;
+			color: Color;
+			timeControls: AllowedTimeControl[];
+			sinceDate: Date | null;
+		}) => {
+			setIsSubmitting(true);
+			setResult(null);
+			setProgressState(null);
+			setIsDatePickerExpanded(false);
+			startTimeRef.current = Date.now();
+
+			const formData = new FormData();
+			formData.append("username", params.username);
+			formData.append("color", params.color);
+			formData.append("timeControls", JSON.stringify(params.timeControls));
+
+			if (params.sinceDate) {
+				formData.append("sinceDate", params.sinceDate.toISOString());
+			}
+
+			// Start with an initial progress state
+			setProgressState({
+				stage: "Analyzing Games",
+				numGamesProcessed: 0,
+				totalGamesNeeded: 1,
+				estimatedSecondsRemaining: 0,
+			});
+
+			try {
+				const response = await processLichessUsername(
+					formData,
+					undefined, // onStatusUpdate - not using this yet
+					(update) => {
+						const { numGamesProcessed, totalGamesNeeded } = update;
+						const elapsedSeconds = (Date.now() - startTimeRef.current) / 1000;
+						const gamesPerSecond = numGamesProcessed / elapsedSeconds || 0;
+						const gamesRemaining = totalGamesNeeded - numGamesProcessed;
+						const estimatedStreamingTimeRemaining =
+							gamesPerSecond > 0 ? gamesRemaining / gamesPerSecond : 0;
+
+						setProgressState({
+							stage: "Analyzing Games",
+							numGamesProcessed,
+							totalGamesNeeded,
+							estimatedSecondsRemaining:
+								estimatedStreamingTimeRemaining + INFERENCE_TIME_SECONDS,
+						});
+					}
+				);
+
+				// Switch to inference stage
+				setProgressState((prev) =>
+					prev
+						? {
+								...prev,
+								stage: "Running AI Model",
+								estimatedSecondsRemaining: INFERENCE_TIME_SECONDS,
+						  }
+						: null
+				);
+
+				setResult(response);
+			} catch (error) {
+				setResult({
+					success: false,
+					message: error instanceof Error ? error.message : "An error occurred",
+				});
+			} finally {
+				setIsSubmitting(false);
+				setProgressState(null);
+				// Refresh SavedProgress to show updated data
+				setSavedProgressKey((k) => k + 1);
+			}
+		},
+		[INFERENCE_TIME_SECONDS]
+	);
+
+	/**
+	 * Handle form submission from the form itself.
+	 */
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setIsSubmitting(true);
-		setResult(null);
-		setProgressState(null);
-		setIsDatePickerExpanded(false);
-		startTimeRef.current = Date.now();
-
-		const formData = new FormData();
-		formData.append(
-			"username",
-			(e.currentTarget.elements.namedItem("username") as HTMLInputElement).value
-		);
-		formData.append("color", selectedColor);
-		formData.append("timeControls", JSON.stringify(selectedTimeControls));
-
-		if (sinceDate) {
-			formData.append("sinceDate", sinceDate.toISOString());
-		}
-
-		// Start with an initial progress state; the action will quickly set a better
-		// denominator once it fetches the user profile.
-		setProgressState({
-			stage: "Analyzing Games",
-			numGamesProcessed: 0,
-			totalGamesNeeded: 1,
-			estimatedSecondsRemaining: 0,
+		await submitAnalysis({
+			username,
+			color: selectedColor,
+			timeControls: selectedTimeControls,
+			sinceDate,
 		});
-
-		try {
-			const response = await processLichessUsername(
-				formData,
-				undefined, // onStatusUpdate - not using this yet
-				(update) => {
-					// Handle progress updates from the action
-					const { numGamesProcessed, totalGamesNeeded } = update;
-					const elapsedSeconds = (Date.now() - startTimeRef.current) / 1000;
-					const gamesPerSecond = numGamesProcessed / elapsedSeconds || 0;
-					const gamesRemaining = totalGamesNeeded - numGamesProcessed;
-					const estimatedStreamingTimeRemaining =
-						gamesPerSecond > 0 ? gamesRemaining / gamesPerSecond : 0;
-
-					setProgressState({
-						stage: "Analyzing Games",
-						numGamesProcessed,
-						totalGamesNeeded,
-						estimatedSecondsRemaining:
-							estimatedStreamingTimeRemaining + INFERENCE_TIME_SECONDS,
-					});
-				}
-			);
-
-			// Switch to inference stage
-			setProgressState((prev) =>
-				prev
-					? {
-							...prev,
-							stage: "Running AI Model",
-							estimatedSecondsRemaining: INFERENCE_TIME_SECONDS,
-					  }
-					: null
-			);
-
-			setResult(response);
-		} catch (error) {
-			setResult({
-				success: false,
-				message: error instanceof Error ? error.message : "An error occurred",
-			});
-		} finally {
-			setIsSubmitting(false);
-			setProgressState(null);
-		}
 	};
+
+	/**
+	 * Handle resume from SavedProgress component.
+	 * Sets form state and immediately submits with saved values.
+	 */
+	const handleResumePlayer = useCallback(
+		(params: {
+			username: string;
+			color: Color;
+			timeControls: AllowedTimeControl[];
+		}) => {
+			// Update form state to reflect what we're resuming
+			setUsername(params.username);
+			setSelectedColor(params.color);
+			setSelectedTimeControls(params.timeControls);
+			setSinceDate(null); // Resume from where we left off, no date filter
+
+			// Submit immediately with the saved values
+			submitAnalysis({
+				username: params.username,
+				color: params.color,
+				timeControls: params.timeControls,
+				sinceDate: null,
+			});
+		},
+		[submitAnalysis]
+	);
+
+	/**
+	 * Handle viewing stats for a finished player.
+	 * TODO: Implement stats display component.
+	 */
+	const handleViewStats = useCallback((playerData: StoredPlayerData) => {
+		// TODO: Show stats modal or navigate to stats page
+		console.log("View stats for:", playerData.playerData.lichessUsername);
+		alert(
+			`Stats viewer not yet implemented.\n\nPlayer: ${playerData.playerData.lichessUsername}\nColor: ${playerData.playerData.color}\nGames: ${playerData.fetchProgress}`
+		);
+	}, []);
 	return (
 		<div className="min-h-screen bg-background text-foreground p-8">
 			<div className="max-w-md mx-auto">
 				<h1 className="text-2xl font-bold mb-6 text-foreground">
 					Chess Opening Recommender
 				</h1>
+
+				{/* Saved Progress - shows if there are saved players */}
+				<SavedProgress
+					key={savedProgressKey}
+					onResumePlayer={handleResumePlayer}
+					onViewStats={handleViewStats}
+					isDisabled={isSubmitting}
+				/>
 
 				<div className="bg-card border border-border rounded-lg p-6 shadow-sm">
 					<form onSubmit={handleSubmit} className="space-y-6">
@@ -136,6 +209,8 @@ const Recommend = () => {
 								type="text"
 								id="username"
 								name="username"
+								value={username}
+								onChange={(e) => setUsername(e.target.value)}
 								placeholder="Enter your Lichess username"
 								className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
 								required
@@ -185,7 +260,11 @@ const Recommend = () => {
 
 						<button
 							type="submit"
-							disabled={isSubmitting || selectedTimeControls.length === 0}
+							disabled={
+								isSubmitting ||
+								selectedTimeControls.length === 0 ||
+								!username.trim()
+							}
 							className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							{isSubmitting ? "Processing..." : "Get AI Opening Suggestions"}
