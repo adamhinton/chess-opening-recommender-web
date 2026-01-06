@@ -208,37 +208,35 @@ export class StatsLocalStorageUtils {
 		}
 
 		const key = this.getPlayerKey(username, color);
-		const raw = localStorage.getItem(key);
+		const rawUserData = localStorage.getItem(key);
 
-		if (!raw) {
+		if (!rawUserData) {
 			return { exists: false };
 		}
 
 		try {
-			const stored = JSON.parse(raw) as StoredPlayerData;
+			const storedUserData = JSON.parse(rawUserData) as StoredPlayerData;
 
 			// Validate the player data with Zod
-			const parseResult = PlayerDataSchema.safeParse(stored.playerData);
+			const parseResult = PlayerDataSchema.safeParse(storedUserData.playerData);
 			if (!parseResult.success) {
 				console.error("Stored data validation failed:", parseResult.error);
-				// Delete corrupted data
 				this.deleteStatsByUsername(username, color);
 				return { exists: false };
 			}
 
-			const age = Date.now() - stored.lastFetchedUnixMS;
+			const age = Date.now() - storedUserData.lastFetchedUnixMS;
 			const isStale = age > CONFIG.MAX_AGE_MS;
-			const canResume = !stored.isComplete;
+			const canResume = !storedUserData.isComplete;
 
 			return {
 				exists: true,
-				data: stored,
+				data: storedUserData,
 				isStale,
 				canResume,
 			};
 		} catch (error) {
 			console.error("Error parsing stored data:", error);
-			// Delete corrupted data
 			this.deleteStatsByUsername(username, color);
 			return { exists: false };
 		}
@@ -501,7 +499,7 @@ export class StatsLocalStorageUtils {
 
 		// Case 2: TIME CONTROL CONFLICT
 		// If form time controls don't match saved time controls, we can't merge.
-		// We must delete and restart because the stats were accumulated with different filters.
+		// Delete and restart because the stats were accumulated with different filters.
 		const formTCSet = new Set(formTimeControls);
 		const savedTCSet = new Set(savedTimeControls);
 		const timeControlsMatch =
