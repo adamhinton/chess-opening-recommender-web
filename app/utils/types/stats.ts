@@ -72,7 +72,8 @@ export const HFInterfacePayloadSchema = z.object({
 	opening_stats: z.array(
 		z.object({
 			opening_name: z.string(),
-			training_id: z.number(),
+			// Sequential id we used in training
+			opening_id: z.number(),
 			eco: z.string(),
 			num_games: z.number().nonnegative(),
 			num_wins: z.number().nonnegative(),
@@ -137,7 +138,7 @@ export class OpeningStatsUtils {
 			color: playerData.color === "white" ? "w" : "b",
 			opening_stats: Object.values(playerData.openingStats).map((stat) => ({
 				opening_name: stat.openingName,
-				training_id: stat.trainingID,
+				opening_id: stat.trainingID,
 				eco: stat.eco,
 				num_games: stat.numGames,
 				num_wins: stat.numWins,

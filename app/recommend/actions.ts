@@ -347,6 +347,8 @@ export async function processLichessUsername(
 			);
 		}
 
+		// Now send to HF for inference
+
 		return {
 			success: true,
 			message: `Successfully processed games.`,
