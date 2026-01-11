@@ -57,6 +57,10 @@ export type PlayerData = z.infer<typeof PlayerDataSchema>;
 // We will convert player stats key names from camelCase to snake_case
 // Because the program that processes and mutates them on our HuggingFace space is written in python.
 
+/** Our TS program uses "white" and "black" but our python program uses "w" and "b" */
+const HFColorSchema = z.enum(["w", "b"]);
+export type HFColor = z.infer<typeof HFColorSchema>;
+
 /**
  * See docstring for HFInterfacePayload type.
  */
@@ -64,7 +68,7 @@ export const HFInterfacePayloadSchema = z.object({
 	/**Lichess username */
 	name: z.string(),
 	rating: z.number().nonnegative(),
-	color: ColorSchema,
+	color: HFColorSchema,
 	opening_stats: z.array(
 		z.object({
 			opening_name: z.string(),
@@ -129,7 +133,7 @@ export class OpeningStatsUtils {
 		return {
 			name: playerData.lichessUsername,
 			rating: playerData.rating,
-			color: playerData.color,
+			color: playerData.color === "white" ? "w" : "b",
 			opening_stats: Object.values(playerData.openingStats).map((stat) => ({
 				opening_name: stat.openingName,
 				eco: stat.eco,
