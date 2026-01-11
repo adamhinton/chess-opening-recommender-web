@@ -61,7 +61,8 @@ export type PlayerData = z.infer<typeof PlayerDataSchema>;
  * See docstring for HFInterfacePayload type.
  */
 export const HFInterfacePayloadSchema = z.object({
-	lichess_username: z.string(),
+	/**Lichess username */
+	name: z.string(),
 	rating: z.number().nonnegative(),
 	color: ColorSchema,
 	opening_stats: z.array(
@@ -126,7 +127,7 @@ export class OpeningStatsUtils {
 	 */
 	static convertToHFPayload(playerData: PlayerData): HFInterfacePayload {
 		return {
-			lichess_username: playerData.lichessUsername,
+			name: playerData.lichessUsername,
 			rating: playerData.rating,
 			color: playerData.color,
 			opening_stats: Object.values(playerData.openingStats).map((stat) => ({
