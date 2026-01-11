@@ -7,6 +7,7 @@
  */
 
 import { LichessGameAPIResponse } from "../../types/lichessTypes";
+import { type OpeningNamesToTrainingIDs } from "../modelArtifacts/modelArtifactUtils";
 
 type OpeningName = NonNullable<LichessGameAPIResponse["opening"]>["name"];
 
@@ -18,12 +19,12 @@ type OpeningName = NonNullable<LichessGameAPIResponse["opening"]>["name"];
  * - The opening name is not in our training set
  *
  * @param openingName - The name of the opening from the game
- * @param validOpenings - Set of opening names from model artifacts (O(1) lookup)
+ * @param openingNamesToTrainingIDs - Map of opening names → training IDs
  * @returns true if the game's opening is valid, false otherwise
  */
 export function isValidOpening(
 	openingName: OpeningName, // just a string lol
-	validOpenings: Set<string>
+	openingNamesToTrainingIDs: OpeningNamesToTrainingIDs
 ): boolean {
 	// Filter out games without opening data
 	if (!openingName) {
@@ -31,7 +32,5 @@ export function isValidOpening(
 	}
 
 	// Filter out games with openings not in our training set
-	const isValid = validOpenings.has(openingName);
-
-	return isValid;
+	return openingNamesToTrainingIDs.has(openingName);
 }

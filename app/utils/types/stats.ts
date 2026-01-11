@@ -18,6 +18,7 @@ export type Color = z.infer<typeof ColorSchema>;
 export const RawOpeningStatsSchema = z.object({
 	openingName: z.string(),
 	eco: z.string(),
+	trainingID: z.number(),
 	numGames: z.number().nonnegative(),
 	numWins: z.number().nonnegative(),
 	numDraws: z.number().nonnegative(),
@@ -72,6 +73,7 @@ export const HFInterfacePayloadSchema = z.object({
 	opening_stats: z.array(
 		z.object({
 			opening_name: z.string(),
+			training_id: z.number(),
 			eco: z.string(),
 			num_games: z.number().nonnegative(),
 			num_wins: z.number().nonnegative(),
@@ -136,6 +138,7 @@ export class OpeningStatsUtils {
 			color: playerData.color === "white" ? "w" : "b",
 			opening_stats: Object.values(playerData.openingStats).map((stat) => ({
 				opening_name: stat.openingName,
+				training_id: stat.trainingID,
 				eco: stat.eco,
 				num_games: stat.numGames,
 				num_wins: stat.numWins,
@@ -165,11 +168,12 @@ export class OpeningStatsUtils {
 
 	/**
 	 * Add or update opening stats (accumulator pattern).
-	 * If opening exists, adds to counts. If new openings, creates new entry.
+	 * If opening exists, adds to counts. If new opening, creates new entry.
 	 */
 	static accumulateOpeningStats(
 		playerData: PlayerData,
 		openingName: string,
+		trainingID: number,
 		eco: string,
 		result: GameResult,
 		/**
@@ -199,6 +203,7 @@ export class OpeningStatsUtils {
 			// Add new stats entry for this opening
 			playerData.openingStats[openingName] = {
 				openingName,
+				trainingID,
 				eco,
 				numGames: weight, // more for slower games
 				numWins: result === "win" ? weight : 0,

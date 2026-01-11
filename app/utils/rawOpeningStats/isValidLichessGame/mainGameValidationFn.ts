@@ -18,6 +18,7 @@ import { LichessGameAPIResponse } from "../../types/lichessTypes";
 import { isValidOpening } from "./isValidOpening";
 import { isValidRatingDeltaBetweenPlayers } from "./isValidRating";
 import { isValidGameStructure } from "./isValidGameStructure";
+import { OpeningNamesToTrainingIDs } from "../modelArtifacts/modelArtifactUtils";
 
 /**
  * Configuration for all game validation filters.
@@ -26,8 +27,8 @@ import { isValidGameStructure } from "./isValidGameStructure";
  * As we add more filters, extend this interface with additional config.
  */
 export interface GameValidationFilters {
-	/** Set of valid opening names from model artifacts */
-	validOpenings: Set<string>;
+	/** Map of valid opening names → training IDs from model artifacts */
+	openingNamesToTrainingIDs: OpeningNamesToTrainingIDs;
 	/** Maximum allowed rating difference between players */
 	maxRatingDeltaBetweenPlayers: number;
 }
@@ -69,7 +70,7 @@ export function isValidLichessGame(
 		) &&
 		isValidGameStructure(game.variant, game.clocks, game.status) &&
 		game.opening?.name !== undefined && // can't use game if it doesn't have an opening
-		isValidOpening(game.opening?.name, filters.validOpenings)
+		isValidOpening(game.opening?.name, filters.openingNamesToTrainingIDs)
 	);
 }
 

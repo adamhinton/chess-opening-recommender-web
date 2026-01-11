@@ -6,8 +6,7 @@
  *
  * This file handles:
  * 1. Loading opening name → training ID mappings (JSON files)
- * 2. Extracting just the opening names into a Set for O(1) lookup
- * 3. Providing that Set for game filtering
+ * 2. Providing a Map for O(1) lookup and training ID retrieval
  */
 
 import { Color } from "../../types/stats";
@@ -15,42 +14,51 @@ import { Color } from "../../types/stats";
 /**
  * Type for the JSON structure: { "Opening Name": training_id, ... }
  */
-type OpeningNameToTrainingId = Record<string, number>;
+type OpeningNameToTrainingIdJSON = Record<string, number>;
 
 /**
- * Loads the valid opening names for a specific color from model artifacts.
+ * Map from opening name to training ID (as string).
+ * Used for both validation that the opening exists in our training data, and training ID lookup.
+ */
+export type OpeningNamesToTrainingIDs = Map<string, number>;
+
+/**
+ * Loads the opening name → training ID mapping for a specific color.
  *
- * The JSON files map opening names to training IDs, but we only need the names
- * for filtering. Returns a Set for O(1) lookup performance.
+ * Returns a Map for instnat lookup.
+ * use .get() to retrieve the training ID when accumulating stats.
  *
  * @param color - The color to load openings for ('white' or 'black')
- * @returns Promise resolving to a Set of valid opening names
+ * @returns Promise resolving to a Map of opening names → training IDs
  * @throws Error if the JSON file fails to load or parse
  *
  * @example
- * const validOpenings = await loadOpeningNamesForColor('white');
- * const isValid = validOpenings.has('Sicilian Defense'); // O(1) lookup
+ * const openingNamesToTrainingIDs = await loadOpeningNamesForColor('white');
+ * if (openingNamesToTrainingIDs.has('Sicilian Defense')) {
+ *   const trainingID = openingNamesToTrainingIDs.get('Sicilian Defense')!;
+ * }
  */
 export async function loadOpeningNamesForColor(
 	color: Color
-): Promise<Set<string>> {
+): Promise<OpeningNamesToTrainingIDs> {
 	try {
 		const jsonModule = await import(
 			`./${color}ModelArtifacts/opening_name_to_training_id_${color}.json`
 		);
 
 		// The default export is the JSON object
-		const openingMap: OpeningNameToTrainingId = jsonModule.default;
+		const openingMap: OpeningNameToTrainingIdJSON = jsonModule.default;
 
-		// Extract just the opening names (keys) into a Set
-		// The opening IDs in the artifact aren't used here
-		const openingNames = new Set(Object.keys(openingMap));
-
-		console.log(
-			`Loaded ${openingNames.size} valid opening names for ${color} player`
+		// Convert to Map<string, string> for O(1) lookup and training ID access
+		const openingNamesToTrainingIDs: OpeningNamesToTrainingIDs = new Map(
+			Object.entries(openingMap).map(([name, id]) => [name, id])
 		);
 
-		return openingNames;
+		console.log(
+			`Loaded ${openingNamesToTrainingIDs.size} valid opening names for ${color} player`
+		);
+
+		return openingNamesToTrainingIDs;
 	} catch (error) {
 		// Fail loudly - if we can't load openings, we shouldn't proceed
 		throw new Error(

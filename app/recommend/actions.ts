@@ -114,8 +114,8 @@ export async function processLichessUsername(
 		wakeUpHuggingFaceSpace();
 
 		// 1. Load Model Artifacts & User Profile
-		const [trainingOpenings, userInfo] = await Promise.all([
-			loadOpeningNamesForColor(playerColor), // training openings
+		const [openingNamesToTrainingIDs, userInfo] = await Promise.all([
+			loadOpeningNamesForColor(playerColor), // Map: opening name → training ID
 			fetchUserRatingAndProfile(username),
 		]);
 
@@ -203,7 +203,7 @@ export async function processLichessUsername(
 
 		const validationStats = createValidationStats();
 		const filters: GameValidationFilters = {
-			validOpenings: trainingOpenings,
+			openingNamesToTrainingIDs,
 			maxRatingDeltaBetweenPlayers: MAX_RATING_DELTA_BETWEEN_PLAYERS,
 		};
 
@@ -263,7 +263,10 @@ export async function processLichessUsername(
 
 			if (!isValidLichessGame(game, filters)) {
 				// Basic tracking of why game wasn't accepted
-				if (!game.opening || !trainingOpenings.has(game.opening.name)) {
+				if (
+					!game.opening ||
+					!openingNamesToTrainingIDs.has(game.opening.name)
+				) {
 					validationStats.filteredByOpening++;
 				}
 				continue;
@@ -281,6 +284,7 @@ export async function processLichessUsername(
 			OpeningStatsUtils.accumulateOpeningStats(
 				playerData,
 				game.opening!.name, // Safe because isValidLichessGame checks this
+				openingNamesToTrainingIDs.get(game.opening!.name)!, // Safe because isValidLichessGame checks this
 				game.opening!.eco,
 				result,
 				weight
