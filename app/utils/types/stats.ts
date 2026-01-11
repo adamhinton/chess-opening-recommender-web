@@ -60,7 +60,6 @@ export type PlayerData = z.infer<typeof PlayerDataSchema>;
 
 /** Our TS program uses "white" and "black" but our python program uses "w" and "b" */
 const HFColorSchema = z.enum(["w", "b"]);
-export type HFColor = z.infer<typeof HFColorSchema>;
 
 /**
  * See docstring for HFInterfacePayload type.
