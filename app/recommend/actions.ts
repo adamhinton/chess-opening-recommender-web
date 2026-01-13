@@ -27,6 +27,7 @@ import {
 	fetchUserRatingAndProfile,
 	getGameResult,
 } from "../utils/rawOpeningStats/lichess/lichessUtils";
+import sendRawStatsToHF from "../utils/rawOpeningStats/huggingFace/sendRawStatsToHF";
 
 // Much lower number for testing so I don't get IPbanned by Lichess
 // The most active player on lichess has about 400,000 games, so 200k for one color in prod
@@ -348,12 +349,9 @@ export async function processLichessUsername(
 		}
 
 		// Now send to HF for inference
+		const response = await sendRawStatsToHF(playerData);
 
-		return {
-			success: true,
-			message: `Successfully processed games.`,
-			gameData: playerData,
-		};
+		return response;
 	} catch (error) {
 		console.error("Error processing username:", error);
 		return {

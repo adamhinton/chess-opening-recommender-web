@@ -56,10 +56,7 @@ export type PlayerData = z.infer<typeof PlayerDataSchema>;
 // ============================================================================
 
 // We will convert player stats key names from camelCase to snake_case
-// Because the program that processes and mutates them on our HuggingFace space is written in python.
-
-/** Our TS program uses "white" and "black" but our python program uses "w" and "b" */
-const HFColorSchema = z.enum(["w", "b"]);
+// Because the program that processes and mutates them on our HuggingFace space is written in python
 
 /**
  * See docstring for HFInterfacePayload type.
@@ -68,7 +65,7 @@ export const HFInterfacePayloadSchema = z.object({
 	/**Lichess username */
 	name: z.string(),
 	rating: z.number().nonnegative(),
-	color: HFColorSchema,
+	side: ColorSchema,
 	opening_stats: z.array(
 		z.object({
 			opening_name: z.string(),
@@ -88,6 +85,69 @@ export const HFInterfacePayloadSchema = z.object({
  * We will convert PlayerData (camelCase) to this (snake_case) because the program taking it in is written in python.
  */
 export type HFInterfacePayload = z.infer<typeof HFInterfacePayloadSchema>;
+
+// ============================================================================
+// HuggingFace Response Types (Inference Results)
+// ============================================================================
+
+/**
+ * Schema for a single opening recommendation from the model
+ */
+export const SingleOpeningRecommendationSchema = z.object({
+	opening_name: z.string(),
+	eco: z.string(),
+	predicted_score: z.number().min(0).max(1),
+});
+
+/**A single opening recommendation from the model */
+export type SingleOpeningRecommendation = z.infer<
+	typeof SingleOpeningRecommendationSchema
+>;
+
+/**
+ * Schema for statistics about the recommendations
+ */
+export const RecommendationStatsSchema = z.object({
+	num_openings_total: z.number().nonnegative(),
+	num_openings_played: z.number().nonnegative(),
+	num_openings_unplayed: z.number().nonnegative(),
+	predicted_min: z.number(),
+	predicted_max: z.number(),
+	predicted_mean: z.number(),
+});
+
+/**
+ * Statistics about the recommendations
+ */
+export type RecommendationStats = z.infer<typeof RecommendationStatsSchema>;
+
+export const InferencePredictResponseSchema = z.object({
+	request_id: z.string(),
+	side: ColorSchema,
+	recommendations: z.array(SingleOpeningRecommendationSchema),
+	stats: RecommendationStatsSchema,
+	model_loaded: z.boolean(),
+	model_version: z.string(),
+});
+
+/**
+ * Schema for the complete recommendation response from HuggingFace API
+ */
+export type InferencePredictResponse = z.infer<
+	typeof InferencePredictResponseSchema
+>;
+
+/**
+ * Validate HuggingFace prediction response
+ */
+export function isValidInferencePredictResponse(
+	data: unknown
+): data is InferencePredictResponse {
+	return InferencePredictResponseSchema.safeParse(data).success;
+}
+
+// ============================================================================
+// End HuggingFace Response Types
 
 // ============================================================================
 // UTILITY TYPE GUARDS
@@ -135,7 +195,7 @@ export class OpeningStatsUtils {
 		return {
 			name: playerData.lichessUsername,
 			rating: playerData.rating,
-			color: playerData.color === "white" ? "w" : "b",
+			side: playerData.color === "white" ? "white" : "black",
 			opening_stats: Object.values(playerData.openingStats).map((stat) => ({
 				opening_name: stat.openingName,
 				opening_id: stat.trainingID,
