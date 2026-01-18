@@ -9,7 +9,7 @@ import { AllowedTimeControl } from "./lichessTypes";
 const ResultTypeSchema = z.enum(["win", "draw", "loss"]);
 export type GameResult = z.infer<typeof ResultTypeSchema>;
 
-const ColorSchema = z.enum(["white", "black"]);
+export const ColorSchema = z.enum(["white", "black"]);
 export type Color = z.infer<typeof ColorSchema>;
 
 /**

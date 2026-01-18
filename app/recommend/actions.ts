@@ -13,7 +13,12 @@ import {
 	LichessGameAPIResponse,
 } from "../utils/types/lichessTypes";
 import { MemoryMonitor } from "../utils/memoryUsage/MemoryMonitor";
-import { Color, OpeningStatsUtils, PlayerData } from "../utils/types/stats";
+import {
+	Color,
+	OpeningStatsUtils,
+	PlayerData,
+	isValidInferencePredictResponse,
+} from "../utils/types/stats";
 import { loadOpeningNamesForColor } from "../utils/rawOpeningStats/modelArtifacts/modelArtifactUtils";
 import {
 	GameValidationFilters,
@@ -28,11 +33,12 @@ import {
 	getGameResult,
 } from "../utils/rawOpeningStats/lichess/lichessUtils";
 import sendRawStatsToHF from "../utils/rawOpeningStats/huggingFace/sendRawStatsToHF";
+import { RecommendationsLocalStorageUtils } from "../utils/recommendations/recommendationsLocalStorage";
 
 // Much lower number for testing so I don't get IPbanned by Lichess
 // The most active player on lichess has about 400,000 games, so 200k for one color in prod
 export const MAX_GAMES_TO_FETCH =
-	process.env.NODE_ENV === "development" ? 250 : 200_000;
+	process.env.NODE_ENV === "development" ? 250_000 : 200_000;
 
 export const SAVE_LOCAL_STORAGE_EVERY_N_GAMES = 100;
 
@@ -349,7 +355,36 @@ export async function processLichessUsername(
 		}
 
 		// Now send to HF for inference
+		// Takes 10 seconds or less when running both this app and the inference on local;
+		// Not sure how long in dev but probably not long
 		const response = await sendRawStatsToHF(playerData);
+
+		// Save recommendations to localStorage if inference was successful
+		if (isValidInferencePredictResponse(response)) {
+			const saveResult = RecommendationsLocalStorageUtils.saveRecommendations(
+				username,
+				playerColor,
+				response
+			);
+			if (saveResult.success) {
+				console.log(
+					`[Recommendations] Saved ${response.recommendations.length} recommendations for ${username} (${playerColor})`
+				);
+			} else {
+				console.warn(
+					`[Recommendations] Failed to save recommendations: ${saveResult.error}`
+				);
+			}
+
+			// Mark stats as complete now that inference is done
+			if (oldestGameTimestampUnixMS) {
+				StatsLocalStorageUtils.saveStats(playerData, {
+					fetchProgress: totalValidGames,
+					isComplete: true, // Both streaming and inference complete
+					sinceUnixMS: oldestGameTimestampUnixMS,
+				});
+			}
+		}
 
 		return response;
 	} catch (error) {

@@ -20,7 +20,7 @@ const sendRawStatsToHF = async (
 		return { error: "HuggingFace space URL not configured" };
 	}
 
-	const hfApiToken = process.env.HF_API_TOKEN;
+	const hfApiToken = process.env.HFPI_TOKEN;
 	if (!hfApiToken) {
 		return { error: "HuggingFace API token not configured" };
 	}
