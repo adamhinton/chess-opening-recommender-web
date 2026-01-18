@@ -84,6 +84,22 @@ export const Header: React.FC = () => {
 						isMobileMenuOpen ? "flex" : "hidden"
 					} sm:flex flex-col sm:flex-row items-center mt-4 sm:mt-0 space-y-4 sm:space-y-0 sm:space-x-6`}
 				>
+					{/* Page navigation links */}
+					<nav className="flex items-center space-x-4">
+						<Link
+							href="/recommend"
+							className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+						>
+							Analyze
+						</Link>
+						<Link
+							href="/view-recommendations"
+							className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+						>
+							Recommendations
+						</Link>
+					</nav>
+
 					{/* Social links */}
 					<div className="flex items-center space-x-3">
 						<Link
