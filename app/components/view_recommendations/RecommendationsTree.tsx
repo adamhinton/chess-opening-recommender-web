@@ -2,9 +2,9 @@
 // Recommendations Tree Container
 //
 // The main container that organizes model-generated opening recommendations into
-// a hierarchical tree structure: Letter (A-E) >> Number (00-99) >> Opening
+// a hierarchical tree structure: Letter (A-E) >> Opening
 //
-// Only displays letters/numbers that have recommendations.
+// Only displays letters that have recommendations.
 // =========================================
 
 "use client";
@@ -32,20 +32,17 @@ interface RecommendationsTreeProps {
  */
 interface ParsedECO {
 	letter: ECOLetter;
-	number: string; // Keep as string to preserve leading zeros
-	// TODO need to make all ECONumbers strings
 }
 
 /**
- * Parse an ECO code into its letter and number components
- * @example "B90" -> { letter: "B", number: "90" }
- * @example "A00" -> { letter: "A", number: "00" }
+ * Parse an ECO code to extract its letter component
+ * @example "B90" -> { letter: "B" }
+ * @example "A00" -> { letter: "A" }
  */
 function parseECO(eco: string): ParsedECO | null {
 	if (!eco || eco.length < 2) return null;
 
 	const letter = eco.charAt(0).toUpperCase();
-	const number = eco.slice(1).padStart(2, "0"); // Ensure 2 digits
 
 	// Validate letter is A-E
 	if (!["A", "B", "C", "D", "E"].includes(letter)) {
@@ -53,47 +50,30 @@ function parseECO(eco: string): ParsedECO | null {
 		return null;
 	}
 
-	// Validate number is numeric
-	if (!/^\d+$/.test(number)) {
-		console.warn(`Invalid ECO number: ${number} in ${eco}`);
-		return null;
-	}
-
 	return {
 		letter: letter as ECOLetter,
-		number: number.slice(0, 2), // Only keep first 2 digits
 	};
 }
 
 /**
- * Organize recommendations into a nested structure:
- * Letter -> Number -> Openings[]
+ * Organize recommendations by ECO letter
+ * Letter -> Openings[]
  */
 function organizeByECO(
-	recommendations: SingleOpeningRecommendation[]
-): Map<ECOLetter, Map<string, SingleOpeningRecommendation[]>> {
-	const result = new Map<
-		ECOLetter,
-		Map<string, SingleOpeningRecommendation[]>
-	>();
+	recommendations: SingleOpeningRecommendation[],
+): Map<ECOLetter, SingleOpeningRecommendation[]> {
+	const result = new Map<ECOLetter, SingleOpeningRecommendation[]>();
 
 	for (const rec of recommendations) {
 		const parsed = parseECO(rec.eco);
 		if (!parsed) continue;
 
-		// Initialize letter map if needed
+		// Initialize letter array if needed
 		if (!result.has(parsed.letter)) {
-			result.set(parsed.letter, new Map());
+			result.set(parsed.letter, []);
 		}
 
-		const letterMap = result.get(parsed.letter)!;
-
-		// Initialize number array if needed
-		if (!letterMap.has(parsed.number)) {
-			letterMap.set(parsed.number, []);
-		}
-
-		letterMap.get(parsed.number)!.push(rec);
+		result.get(parsed.letter)!.push(rec);
 	}
 
 	return result;
@@ -111,7 +91,7 @@ const RecommendationsTree = ({
 	// TODO not sure I needed to memoize here
 	const organizedData = useMemo(
 		() => organizeByECO(recommendations),
-		[recommendations]
+		[recommendations],
 	);
 
 	// Get letters that have recommendations, sorted A-E
@@ -144,11 +124,11 @@ const RecommendationsTree = ({
 			<div className="space-y-3">
 				{lettersWithData.map((letter) => (
 					<ECOLetterSection
+						openings={organizedData.get(letter)!}
 						key={letter}
 						letter={letter}
-						numberGroups={organizedData.get(letter)!}
 						showRanks={showRanks}
-						defaultExpanded={true} // TODO revisit default expanded behavior
+						defaultExpanded={false} // TODO revisit default expanded behavior
 					/>
 				))}
 			</div>

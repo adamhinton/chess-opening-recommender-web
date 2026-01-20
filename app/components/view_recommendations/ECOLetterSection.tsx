@@ -2,7 +2,7 @@
 // ECO Letter Section Component
 //
 // Collapsible section for a single ECO letter (A, B, C, D, or E).
-// Contains ECONumberSection components for each number within this letter.
+// Displays all openings within this letter category.
 //
 // Only displays if there are openings in this letter category.
 //
@@ -13,7 +13,7 @@
 
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
-import ECONumberSection from "./ECONumberSection";
+import SingleRecommendation from "./SingleRecommendation";
 import { SingleOpeningRecommendation } from "../../utils/types/stats";
 
 // ============================================================================
@@ -42,22 +42,11 @@ const ECO_LETTER_COLORS: Record<ECOLetter, string> = {
 
 interface ECOLetterSectionProps {
 	letter: ECOLetter;
-	/** Map of ECO numbers to their openings (e.g., "00" -> [...openings]) */
-	numberGroups: Map<string, SingleOpeningRecommendation[]>;
+	/** All openings in this letter category */
+	openings: SingleOpeningRecommendation[];
 	/** Whether to show rank numbers on individual openings - may add this feature later (TODO?) */
 	showRanks?: boolean;
 	defaultExpanded?: boolean;
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Sort ECO numbers numerically (e.g., "00", "01", "10", "90")
- */
-function sortECONumbers(numbers: string[]): string[] {
-	return [...numbers].sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 }
 
 // ============================================================================
@@ -66,20 +55,11 @@ function sortECONumbers(numbers: string[]): string[] {
 
 const ECOLetterSection = ({
 	letter,
-	numberGroups,
+	openings,
 	showRanks = false,
 	defaultExpanded = true,
 }: ECOLetterSectionProps) => {
 	const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-
-	/**Total openings in this letter section */
-	const totalOpenings = Array.from(numberGroups.values()).reduce(
-		(sum, openings) => sum + openings.length,
-		0
-	);
-
-	// Get sorted ECO numbers
-	const sortedECONumbers = sortECONumbers(Array.from(numberGroups.keys()));
 
 	const colorClasses = ECO_LETTER_COLORS[letter];
 	const description = ECO_LETTER_DESCRIPTIONS[letter];
@@ -110,28 +90,22 @@ const ECOLetterSection = ({
 				<div className="flex-1 min-w-0">
 					<div className="font-semibold text-foreground">{description}</div>
 					<div className="text-xs text-muted-foreground">
-						{totalOpenings} opening{totalOpenings !== 1 ? "s" : ""} •{" "}
-						{sortedECONumbers.length} ECO code
-						{sortedECONumbers.length !== 1 ? "s" : ""}
+						{openings.length} opening{openings.length !== 1 ? "s" : ""}
 					</div>
 				</div>
 			</button>
 
-			{/* Number sections */}
+			{/* Openings list */}
 			{isExpanded && (
-				<div className="px-4 pb-4 space-y-1">
-					{sortedECONumbers.map((ECONumber) => {
-						const openings = numberGroups.get(ECONumber) || [];
-						return (
-							<ECONumberSection
-								key={ECONumber}
-								fullEcoPrefix={`${letter}${ECONumber}`}
-								openings={openings}
-								showRanks={showRanks}
-								defaultExpanded={sortedECONumbers.length <= 3} // Auto-expand if few sections
-							/>
-						);
-					})}
+				<div className="px-4 pb-4 space-y-2">
+					{openings.map((opening, idx) => (
+						<SingleRecommendation
+							key={opening.opening_name}
+							openingName={opening.opening_name}
+							eco={opening.eco}
+							rank={showRanks ? idx + 1 : undefined}
+						/>
+					))}
 				</div>
 			)}
 		</div>
