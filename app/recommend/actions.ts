@@ -246,7 +246,7 @@ export async function processLichessUsername(
 			color: playerColor,
 			numGames: numGamesNeeded,
 			allowedTimeControls: allowedTimeControls,
-			sinceUnixMS: sinceUnixMS,
+			sinceUnixMS: oldestGameTimestampUnixMS || sinceUnixMS,
 			onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
 		});
 
