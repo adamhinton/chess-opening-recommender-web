@@ -240,94 +240,116 @@ export async function processLichessUsername(
 		let validGameCount = 0;
 		/**Count of valid games including any retrieved from localStorage */
 		let totalGamesProcessed = 0;
+		let currentSinceUnixMS = oldestGameTimestampUnixMS || sinceUnixMS;
 
-		const stream = streamLichessGames({
-			username,
-			color: playerColor,
-			numGames: numGamesNeeded,
-			allowedTimeControls: allowedTimeControls,
-			// TODO make sure this logic is right for picking up where we left off etc
-			sinceUnixMS: oldestGameTimestampUnixMS || sinceUnixMS,
-			onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
-		});
+		// Keep streaming in batches until we have enough valid games
+		while (validGameCount < numGamesNeeded) {
+			const stream = streamLichessGames({
+				username,
+				color: playerColor,
+				numGames: Math.min(5000, numGamesNeeded - validGameCount), // Fetch in chunks of up to 5000
+				allowedTimeControls: allowedTimeControls,
+				sinceUnixMS: currentSinceUnixMS,
+				onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
+			});
 
-		for await (const game of stream) {
-			totalGamesProcessed++;
-			validationStats.totalGamesProcessed++;
+			let gamesInThisBatch = 0;
 
-			// Update the oldest timestamp seen. Since stream is newest->oldest, this naturally tracks the end of our window.
-			if (game.createdAt) {
-				const oldestToNumber = Number(game.createdAt);
-				oldestGameTimestampUnixMS = oldestToNumber;
-			}
+			for await (const game of stream) {
+				totalGamesProcessed++;
+				gamesInThisBatch++;
+				validationStats.totalGamesProcessed++;
 
-			// Check memory usage (sampled inside the class)
-			// We want to verify that heap size stays relatively flat (O(k) with k being the number of unique openings)
-			// as totalProcessed (O(n)) increases.
-			memoryMonitor.check(
-				totalGamesProcessed,
-				Object.keys(playerData.openingStats).length, // number of unique openings
-			);
-
-			if (!isValidLichessGame(game, filters)) {
-				// Basic tracking of why game wasn't accepted
-				if (
-					!game.opening ||
-					!openingNamesToTrainingIDs.has(game.opening.name)
-				) {
-					validationStats.filteredByOpening++;
+				// Update the oldest timestamp seen. Since stream is newest->oldest, this naturally tracks the end of our window.
+				if (game.createdAt) {
+					const oldestToNumber = Number(game.createdAt);
+					oldestGameTimestampUnixMS = oldestToNumber;
+					currentSinceUnixMS = oldestToNumber;
 				}
-				continue;
-			}
 
-			// Game is valid: Accumulate stats
-			const result = getGameResult(game, playerColor);
-
-			/**
-			 * Determine weight based on speed
-			 * Slow games are higher quality data and so add more to the total
-			 */
-			const weight = TIME_CONTROL_WEIGHTS[game.speed] || 1;
-
-			OpeningStatsUtils.accumulateOpeningStats(
-				playerData,
-				game.opening!.name, // Safe because isValidLichessGame checks this
-				openingNamesToTrainingIDs.get(game.opening!.name)!, // Safe because isValidLichessGame checks this
-				game.opening!.eco,
-				result,
-				weight,
-			);
-
-			validGameCount++;
-			validationStats.validGames++;
-			if (totalGamesProcessed % 50 === 0) {
-				console.log(`Processed ${totalGamesProcessed} games`);
-			}
-
-			// Report progress to UI
-			if (onProgressUpdate) {
-				onProgressUpdate({
-					numGamesProcessed: numGamesProcessedSoFar + validGameCount,
-					totalGamesNeeded: estimatedTotalGamesNeeded,
-				});
-			}
-
-			// Save progress in localStorage every 500 valid games
-			if (
-				validGameCount % SAVE_LOCAL_STORAGE_EVERY_N_GAMES === 0 &&
-				oldestGameTimestampUnixMS
-			) {
-				StatsLocalStorageUtils.saveStats(playerData, {
-					fetchProgress: numGamesProcessedSoFar + validGameCount,
-					isComplete: false, // Still streaming - not complete
-					sinceUnixMS: oldestGameTimestampUnixMS,
-				});
-				console.log(
-					`[Incremental Save] Saved progress at ${
-						numGamesProcessedSoFar + validGameCount
-					} games`,
+				// Check memory usage (sampled inside the class)
+				// We want to verify that heap size stays relatively flat (O(k) with k being the number of unique openings)
+				// as totalProcessed (O(n)) increases.
+				memoryMonitor.check(
+					totalGamesProcessed,
+					Object.keys(playerData.openingStats).length, // number of unique openings
 				);
+
+				if (!isValidLichessGame(game, filters)) {
+					// Basic tracking of why game wasn't accepted
+					if (
+						!game.opening ||
+						!openingNamesToTrainingIDs.has(game.opening.name)
+					) {
+						validationStats.filteredByOpening++;
+					}
+					continue;
+				}
+
+				// Game is valid: Accumulate stats
+				const result = getGameResult(game, playerColor);
+
+				/**
+				 * Determine weight based on speed
+				 * Slow games are higher quality data and so add more to the total
+				 */
+				const weight = TIME_CONTROL_WEIGHTS[game.speed] || 1;
+
+				OpeningStatsUtils.accumulateOpeningStats(
+					playerData,
+					game.opening!.name, // Safe because isValidLichessGame checks this
+					openingNamesToTrainingIDs.get(game.opening!.name)!, // Safe because isValidLichessGame checks this
+					game.opening!.eco,
+					result,
+					weight,
+				);
+
+				validGameCount++;
+				validationStats.validGames++;
+				if (totalGamesProcessed % 50 === 0) {
+					console.log(`Processed ${totalGamesProcessed} games`);
+				}
+
+				// Report progress to UI
+				if (onProgressUpdate) {
+					onProgressUpdate({
+						numGamesProcessed: numGamesProcessedSoFar + validGameCount,
+						totalGamesNeeded: estimatedTotalGamesNeeded,
+					});
+				}
+
+				// Save progress in localStorage every 500 valid games
+				if (
+					validGameCount % SAVE_LOCAL_STORAGE_EVERY_N_GAMES === 0 &&
+					oldestGameTimestampUnixMS
+				) {
+					StatsLocalStorageUtils.saveStats(playerData, {
+						fetchProgress: numGamesProcessedSoFar + validGameCount,
+						isComplete: false, // Still streaming - not complete
+						sinceUnixMS: oldestGameTimestampUnixMS,
+					});
+					console.log(
+						`[Incremental Save] Saved progress at ${
+							numGamesProcessedSoFar + validGameCount
+						} games`,
+					);
+				}
+
+				// Stop if we've reached the target
+				if (validGameCount >= numGamesNeeded) {
+					break;
+				}
 			}
+
+			// If we got no games in this batch, the user has no more games to fetch
+			if (gamesInThisBatch === 0) {
+				console.log("No more games available from Lichess");
+				break;
+			}
+
+			console.log(
+				`[Batch Complete] Fetched ${gamesInThisBatch} games in this batch. Valid games so far: ${validGameCount}/${numGamesNeeded}`,
+			);
 		}
 
 		// 4. Finalize
