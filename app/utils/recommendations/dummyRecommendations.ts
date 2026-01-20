@@ -8,7 +8,7 @@
 //
 // This isn't intended to go to prod, but it's not a big deal if it does.
 //
-// TODO can delete this, along with /dev-utils, after testing and development
+// TODO stretch can delete this, along with /dev-utils, after testing and development
 // =========================================
 
 import {
@@ -111,7 +111,7 @@ function shuffleArray<T>(array: T[]): T[] {
  */
 export function generateDummyRecommendations(
 	count: number = 50,
-	color: Color = "white"
+	color: Color = "white",
 ): InferencePredictResponse {
 	const numToGenerate = Math.min(count, DUMMY_OPENINGS.length);
 
@@ -124,7 +124,7 @@ export function generateDummyRecommendations(
 			opening_name: opening.name,
 			eco: opening.eco,
 			predicted_score: randomScore(),
-		})
+		}),
 	);
 
 	// Sort by predicted score (highest first)

@@ -4,14 +4,6 @@
  * Coordinates all validation filters for Lichess games. As we stream games from
  * Lichess API, each game passes through these filters. Only games that pass all
  * filters are included in our opening statistics.
- *
- * Current filters:
- * - Opening validation (opening must be in training set)
- *
- * Future filters (TODO):
- * - Rating delta validation (opponent rating within threshold)
- * - Time control validation (appropriate speed for analysis)
- * - Game completion validation (no aborted/timeout games)
  */
 
 import { LichessGameAPIResponse } from "../../types/lichessTypes";
@@ -56,7 +48,7 @@ export interface GameValidationFilters {
  */
 export function isValidLichessGame(
 	game: LichessGameAPIResponse,
-	filters: GameValidationFilters
+	filters: GameValidationFilters,
 ): boolean {
 	// Short-circuit evaluation:
 	// 1. Rating check (cheapest)
@@ -66,7 +58,7 @@ export function isValidLichessGame(
 		isValidRatingDeltaBetweenPlayers(
 			game.players.white.rating,
 			game.players.black.rating,
-			filters.maxRatingDeltaBetweenPlayers
+			filters.maxRatingDeltaBetweenPlayers,
 		) &&
 		isValidGameStructure(game.variant, game.clocks, game.status) &&
 		game.opening?.name !== undefined && // can't use game if it doesn't have an opening
@@ -115,7 +107,7 @@ export function logValidationStats(stats: GameValidationStats): void {
 		stats.totalGamesProcessed > 0
 			? ((stats.totalGamesProcessed - stats.validGames) /
 					stats.totalGamesProcessed) *
-			  100
+				100
 			: 0;
 
 	console.log("=== Game Validation Statistics ===");
@@ -125,7 +117,7 @@ export function logValidationStats(stats: GameValidationStats): void {
 	console.log(`Filtered by opening: ${stats.filteredByOpening}`);
 	console.log(`Filtered by rating delta: ${stats.filteredByRating}`);
 	console.log(
-		`Filtered by structure (moves/status/variant): ${stats.filteredByStructure}`
+		`Filtered by structure (moves/status/variant): ${stats.filteredByStructure}`,
 	);
 	console.log("=================================");
 }

@@ -25,7 +25,6 @@ interface SavedProgressProps {
 	}) => void;
 	/**
 	 * Called when user clicks a finished player to view stats.
-	 * TODO: Implement stats display component.
 	 */
 	onViewStats: (playerData: StoredPlayerData) => void;
 	/** Disable interactions while form is submitting */
@@ -48,7 +47,7 @@ interface PlayerToDelete {
  * - Foldable section
  * - Separates ongoing (isComplete=false) vs finished (isComplete=true) players
  * - Resume button for ongoing players
- * - Click finished players to view stats (TODO)
+ * - Click finished players to view stat
  * - Delete with confirmation dialog
  */
 const SavedProgress = ({
@@ -59,7 +58,7 @@ const SavedProgress = ({
 	const [isExpanded, setIsExpanded] = useState(true);
 	const [storedPlayers, setStoredPlayers] = useState<StoredPlayerData[]>([]);
 	const [playerToDelete, setPlayerToDelete] = useState<PlayerToDelete | null>(
-		null
+		null,
 	);
 
 	// Load saved players on mount
@@ -86,7 +85,7 @@ const SavedProgress = ({
 
 		StatsLocalStorageUtils.deleteStatsByUsername(
 			playerToDelete.username,
-			playerToDelete.color
+			playerToDelete.color,
 		);
 		setPlayerToDelete(null);
 		refreshPlayers();

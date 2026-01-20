@@ -100,7 +100,7 @@ const Recommend = () => {
 							estimatedSecondsRemaining:
 								estimatedStreamingTimeRemaining + INFERENCE_TIME_SECONDS,
 						});
-					}
+					},
 				);
 
 				// Switch to inference stage
@@ -110,8 +110,8 @@ const Recommend = () => {
 								...prev,
 								stage: "Running AI Model",
 								estimatedSecondsRemaining: INFERENCE_TIME_SECONDS,
-						  }
-						: null
+							}
+						: null,
 				);
 
 				setResult(response);
@@ -127,7 +127,7 @@ const Recommend = () => {
 				setSavedProgressKey((k) => k + 1);
 			}
 		},
-		[INFERENCE_TIME_SECONDS]
+		[INFERENCE_TIME_SECONDS],
 	);
 
 	/**
@@ -167,18 +167,17 @@ const Recommend = () => {
 				sinceDate: null,
 			});
 		},
-		[submitAnalysis]
+		[submitAnalysis],
 	);
 
 	/**
 	 * Handle viewing stats for a finished player.
-	 * TODO: Implement stats display component.
 	 */
 	const handleViewStats = useCallback((playerData: StoredPlayerData) => {
 		// TODO: Show stats modal or navigate to stats page
 		console.log("View stats for:", playerData.playerData.lichessUsername);
 		alert(
-			`Stats viewer not yet implemented.\n\nPlayer: ${playerData.playerData.lichessUsername}\nColor: ${playerData.playerData.color}\nGames: ${playerData.fetchProgress}`
+			`Stats viewer not yet implemented.\n\nPlayer: ${playerData.playerData.lichessUsername}\nColor: ${playerData.playerData.color}\nGames: ${playerData.fetchProgress}`,
 		);
 	}, []);
 	return (

@@ -12,8 +12,6 @@
 // Not bothering with redux; when recommendations are generated, it'll save them to localStorage, then this page will read from localStorage to get the recommendations to display
 // Will display a list of users etc if there's more than one recommendation saved
 
-// TODO might componentize this further; we have SingleRecommendation.tsx for each individual recommendation; might want a component for each ECO letter section, and/or each ECO number subsection
-
 // ===============================
 
 const DisplayRecommendationsPage = () => {};
