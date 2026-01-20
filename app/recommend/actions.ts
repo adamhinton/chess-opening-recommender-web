@@ -33,7 +33,7 @@ import {
 	getGameResult,
 } from "../utils/rawOpeningStats/lichess/lichessUtils";
 import sendRawStatsToHF from "../utils/rawOpeningStats/huggingFace/sendRawStatsToHF";
-import { RecommendationsLocalStorageUtils } from "../utils/recommendations/recommendationsLocalStorage";
+import { RecommendationsLocalStorageUtils } from "../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
 
 // Much lower number for testing so I don't get IPbanned by Lichess
 // The most active player on lichess has about 400,000 games, so 200k for one color in prod
@@ -65,7 +65,7 @@ export async function processLichessUsername(
 	onProgressUpdate?: (progress: {
 		numGamesProcessed: number;
 		totalGamesNeeded: number;
-	}) => void
+	}) => void,
 ) {
 	const username = formData.get("username");
 	const sinceDateString = formData.get("sinceDate");
@@ -92,7 +92,7 @@ export async function processLichessUsername(
 			const parsed = JSON.parse(timeControlsString);
 			if (Array.isArray(parsed) && parsed.length > 0) {
 				allowedTimeControls = parsed.filter((tc): tc is AllowedTimeControl =>
-					["blitz", "rapid", "classical"].includes(tc)
+					["blitz", "rapid", "classical"].includes(tc),
 				);
 			}
 		} catch (error) {
@@ -164,7 +164,7 @@ export async function processLichessUsername(
 		});
 
 		console.log(
-			`[Conflict Resolution] ${conflictResolution.action}: ${conflictResolution.reason}`
+			`[Conflict Resolution] ${conflictResolution.action}: ${conflictResolution.reason}`,
 		);
 
 		if (conflictResolution.action === "delete-and-restart") {
@@ -174,17 +174,17 @@ export async function processLichessUsername(
 				username,
 				userInfo.rating,
 				playerColor,
-				allowedTimeControls
+				allowedTimeControls,
 			);
 		} else if (conflictResolution.action === "resume") {
 			// Resume from cached data
 			const cachedCheck = StatsLocalStorageUtils.checkExistingStatsByUsername(
 				username,
-				playerColor
+				playerColor,
 			);
 			if (cachedCheck.exists) {
 				console.log(
-					`Resuming with cached data for ${username} (${playerColor})`
+					`Resuming with cached data for ${username} (${playerColor})`,
 				);
 				playerData = cachedCheck.data.playerData;
 				oldestGameTimestampUnixMS = cachedCheck.data.sinceUnixMS;
@@ -195,7 +195,7 @@ export async function processLichessUsername(
 					username,
 					userInfo.rating,
 					playerColor,
-					allowedTimeControls
+					allowedTimeControls,
 				);
 			}
 		} else {
@@ -204,7 +204,7 @@ export async function processLichessUsername(
 				username,
 				userInfo.rating,
 				playerColor,
-				allowedTimeControls
+				allowedTimeControls,
 			);
 		}
 
@@ -224,7 +224,7 @@ export async function processLichessUsername(
 		// but the progress bar denominator should reflect the user's estimated total.
 		const numGamesNeeded = Math.max(
 			0,
-			MAX_GAMES_TO_FETCH - numGamesProcessedSoFar
+			MAX_GAMES_TO_FETCH - numGamesProcessedSoFar,
 		);
 
 		if (numGamesNeeded === 0) {
@@ -265,7 +265,7 @@ export async function processLichessUsername(
 			// as totalProcessed (O(n)) increases.
 			memoryMonitor.check(
 				totalGamesProcessed,
-				Object.keys(playerData.openingStats).length // number of unique openings
+				Object.keys(playerData.openingStats).length, // number of unique openings
 			);
 
 			if (!isValidLichessGame(game, filters)) {
@@ -294,7 +294,7 @@ export async function processLichessUsername(
 				openingNamesToTrainingIDs.get(game.opening!.name)!, // Safe because isValidLichessGame checks this
 				game.opening!.eco,
 				result,
-				weight
+				weight,
 			);
 
 			validGameCount++;
@@ -324,7 +324,7 @@ export async function processLichessUsername(
 				console.log(
 					`[Incremental Save] Saved progress at ${
 						numGamesProcessedSoFar + validGameCount
-					} games`
+					} games`,
 				);
 			}
 		}
@@ -350,7 +350,7 @@ export async function processLichessUsername(
 			});
 		} else {
 			console.warn(
-				"Skipping localStorage save: No oldestGameTimestamp available (likely no games processed)."
+				"Skipping localStorage save: No oldestGameTimestamp available (likely no games processed).",
 			);
 		}
 
@@ -364,15 +364,15 @@ export async function processLichessUsername(
 			const saveResult = RecommendationsLocalStorageUtils.saveRecommendations(
 				username,
 				playerColor,
-				response
+				response,
 			);
 			if (saveResult.success) {
 				console.log(
-					`[Recommendations] Saved ${response.recommendations.length} recommendations for ${username} (${playerColor})`
+					`[Recommendations] Saved ${response.recommendations.length} recommendations for ${username} (${playerColor})`,
 				);
 			} else {
 				console.warn(
-					`[Recommendations] Failed to save recommendations: ${saveResult.error}`
+					`[Recommendations] Failed to save recommendations: ${saveResult.error}`,
 				);
 			}
 

@@ -9,7 +9,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, RotateCcw } from "lucide-react";
-import { StoredRecommendationData } from "../../utils/recommendations/recommendationsLocalStorage";
+import { StoredRecommendationData } from "@/app/utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
 
 // ============================================================================
 // Types

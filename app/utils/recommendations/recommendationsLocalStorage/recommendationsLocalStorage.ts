@@ -17,7 +17,7 @@ import {
 	ColorSchema,
 	InferencePredictResponse,
 	InferencePredictResponseSchema,
-} from "../types/stats";
+} from "@/app/utils/types/stats";
 
 // ============================================================================
 // Configuration
@@ -131,7 +131,7 @@ export class RecommendationsLocalStorageUtils {
 		try {
 			localStorage.setItem(
 				CONFIG.LOCLASTORAGE_METADATA_KEY,
-				JSON.stringify(metadata)
+				JSON.stringify(metadata),
 			);
 		} catch (error) {
 			console.error("Error updating recommendations metadata:", error);
@@ -143,7 +143,7 @@ export class RecommendationsLocalStorageUtils {
 	 */
 	private static removeUsernameFromMetadata(
 		username: string,
-		color: Color
+		color: Color,
 	): void {
 		const metadata = this.getMetadata();
 		const metadataKey = `${username.toLowerCase()}:${color}`;
@@ -152,7 +152,7 @@ export class RecommendationsLocalStorageUtils {
 		try {
 			localStorage.setItem(
 				CONFIG.LOCLASTORAGE_METADATA_KEY,
-				JSON.stringify(metadata)
+				JSON.stringify(metadata),
 			);
 		} catch (error) {
 			console.error("Error updating recommendations metadata:", error);
@@ -165,7 +165,7 @@ export class RecommendationsLocalStorageUtils {
 	static saveRecommendations(
 		username: string,
 		color: Color,
-		recommendations: InferencePredictResponse
+		recommendations: InferencePredictResponse,
 	): SaveRecommendationsResult {
 		if (!this.isLocalStorageAvailable()) {
 			return { success: false, error: "localStorage is not available" };
@@ -202,7 +202,7 @@ export class RecommendationsLocalStorageUtils {
 	 */
 	static getStoredRecommendations(
 		username: string,
-		color: Color
+		color: Color,
 	): GetRecommendationsResult {
 		if (!this.isLocalStorageAvailable()) {
 			return { exists: false };
@@ -222,7 +222,7 @@ export class RecommendationsLocalStorageUtils {
 			if (!validation.success) {
 				console.warn(
 					"Invalid stored recommendations, removing:",
-					validation.error
+					validation.error,
 				);
 				this.deleteRecommendations(username, color);
 				return { exists: false };
