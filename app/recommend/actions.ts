@@ -240,7 +240,9 @@ export async function processLichessUsername(
 		let validGameCount = 0;
 		/**Count of valid games including any retrieved from localStorage */
 		let totalGamesProcessed = 0;
-		let currentSinceUnixMS = oldestGameTimestampUnixMS || sinceUnixMS;
+		// Pagination cursor: fetch games older than this timestamp
+		// When resuming, start from the oldest game we've already processed
+		let currentUntilUnixMS = oldestGameTimestampUnixMS;
 
 		// Keep streaming in batches until we have enough valid games
 		while (validGameCount < numGamesNeeded) {
@@ -249,7 +251,8 @@ export async function processLichessUsername(
 				color: playerColor,
 				numGames: Math.min(5000, numGamesNeeded - validGameCount), // Fetch in chunks of up to 5000
 				allowedTimeControls: allowedTimeControls,
-				sinceUnixMS: currentSinceUnixMS,
+				sinceUnixMS: sinceUnixMS, // User's date filter (constant)
+				untilUnixMS: currentUntilUnixMS, // The oldest timestamp already streamed (moves backwards)
 				onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
 			});
 
@@ -259,12 +262,16 @@ export async function processLichessUsername(
 				totalGamesProcessed++;
 				gamesInThisBatch++;
 				validationStats.totalGamesProcessed++;
+				// date in day month year
+				// TODO delete this after debugging
+				if (totalGamesProcessed % 50 === 0) {
+					console.log("created at:" + new Date(game.createdAt).toDateString());
+				}
 
-				// Update the oldest timestamp seen. Since stream is newest->oldest, this naturally tracks the end of our window.
+				// Track the oldest timestamp seen for pagination after this batch completes
 				if (game.createdAt) {
 					const oldestToNumber = Number(game.createdAt);
 					oldestGameTimestampUnixMS = oldestToNumber;
-					currentSinceUnixMS = oldestToNumber;
 				}
 
 				// Check memory usage (sampled inside the class)
@@ -347,6 +354,12 @@ export async function processLichessUsername(
 				break;
 			}
 
+			// Update pagination cursor for next batch: fetch games older than the oldest we just processed
+			// Subtract 1ms to avoid fetching the exact same game again
+			if (oldestGameTimestampUnixMS) {
+				currentUntilUnixMS = oldestGameTimestampUnixMS - 1;
+			}
+
 			console.log(
 				`[Batch Complete] Fetched ${gamesInThisBatch} games in this batch. Valid games so far: ${validGameCount}/${numGamesNeeded}`,
 			);
@@ -363,7 +376,6 @@ export async function processLichessUsername(
 				message: `No valid games found for ${username} (checked ${totalGamesProcessed}).`,
 			};
 		}
-
 		// Save to local storage
 		if (oldestGameTimestampUnixMS) {
 			StatsLocalStorageUtils.saveStats(playerData, {
@@ -377,13 +389,17 @@ export async function processLichessUsername(
 			);
 		}
 
-		// Now send to HF for inference
+		console.log("blah blah blah");
+
+		// 5.  Now send to HF for inference
 		// Takes 10 seconds or less when running both this app and the inference on local;
 		// Not sure how long in dev but probably not long
 		const response = await sendRawStatsToHF(playerData);
+		console.log("response:", response);
 
 		// Save recommendations to localStorage if inference was successful
 		if (isValidInferencePredictResponse(response)) {
+			console.log("blah blah blah it's a valid response");
 			const saveResult = RecommendationsLocalStorageUtils.saveRecommendations(
 				username,
 				playerColor,

@@ -15,10 +15,10 @@ export interface StreamLichessGamesConfig {
 	color: Color;
 	numGames: number;
 	allowedTimeControls: AllowedTimeControl[];
-	sinceUnixMS?: number; // Unix timestamp in milliseconds
+	sinceUnixMS?: number; // User's date filter from form (lower bound - stays constant)
+	untilUnixMS?: number; // Pagination cursor (upper bound - moves backwards each batch)
 	/**This passes up a user-friendly message to the UI informing them that there's a delay */
 	onWait?: (message: string) => void;
-	// Note, not including an `	until`, we'll just always stream up to current day.
 }
 
 /**
@@ -40,7 +40,7 @@ export interface StreamLichessGamesConfig {
  * ```
  */
 export async function* streamLichessGames(
-	config: StreamLichessGamesConfig
+	config: StreamLichessGamesConfig,
 ): AsyncGenerator<LichessGameAPIResponse, void, unknown> {
 	const {
 		username,
@@ -48,6 +48,7 @@ export async function* streamLichessGames(
 		numGames: numGamesToFetch,
 		allowedTimeControls,
 		sinceUnixMS: since,
+		untilUnixMS: until,
 		onWait,
 	} = config;
 
@@ -64,8 +65,13 @@ export async function* streamLichessGames(
 	});
 
 	// Add optional timestamp params if provided
+	// since = lower bound (user's form input, e.g., "only games after Jan 2024")
+	// until = upper bound (pagination, e.g., "only games before this timestamp")
 	if (since !== undefined) {
 		params.append("since", since.toString());
+	}
+	if (until !== undefined) {
+		params.append("until", until.toString());
 	}
 
 	// Make API request
@@ -83,7 +89,7 @@ export async function* streamLichessGames(
 	if (!response.ok) {
 		if (response.status === 404) {
 			throw new Error(
-				`User "${username}" not found on Lichess. Please check the username and try again.`
+				`User "${username}" not found on Lichess. Please check the username and try again.`,
 			);
 		} else if (response.status === 429) {
 			throw new Error("Too many requests. Please wait a moment and try again.");
@@ -91,7 +97,7 @@ export async function* streamLichessGames(
 			throw new Error("Lichess server error. Please try again later.");
 		}
 		throw new Error(
-			`Failed to fetch games: ${response.status} ${response.statusText}`
+			`Failed to fetch games: ${response.status} ${response.statusText}`,
 		);
 	}
 
