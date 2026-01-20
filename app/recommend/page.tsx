@@ -13,8 +13,10 @@ import { Color } from "../utils/types/stats";
 import { AllowedTimeControl } from "../utils/types/lichessTypes";
 import { StoredPlayerData } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import ColorPicker from "../components/recommend/OptionPickers/ColorPicker";
+import { useRouter } from "next/navigation";
 
 const Recommend = () => {
+	const router = useRouter();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [username, setUsername] = useState("");
 	const [sinceDate, setSinceDate] = useState<Date | null>(null);
@@ -173,13 +175,13 @@ const Recommend = () => {
 	/**
 	 * Handle viewing stats for a finished player.
 	 */
-	const handleViewStats = useCallback((playerData: StoredPlayerData) => {
-		// TODO: Show stats modal or navigate to stats page
-		console.log("View stats for:", playerData.playerData.lichessUsername);
-		alert(
-			`Stats viewer not yet implemented.\n\nPlayer: ${playerData.playerData.lichessUsername}\nColor: ${playerData.playerData.color}\nGames: ${playerData.fetchProgress}`,
-		);
-	}, []);
+	const handleViewStats = useCallback(
+		(playerData: StoredPlayerData) => {
+			console.log("View stats for:", playerData.playerData.lichessUsername);
+			router.push("view-recommendations");
+		},
+		[router],
+	);
 	return (
 		<div className="min-h-screen bg-background text-foreground p-8">
 			<div className="max-w-md mx-auto">
