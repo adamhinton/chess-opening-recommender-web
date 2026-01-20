@@ -44,15 +44,15 @@ function parseECO(eco: string): ParsedECO | null {
 
 	const letter = eco.charAt(0).toUpperCase();
 
-	// Validate letter is A-E
-	if (!["A", "B", "C", "D", "E"].includes(letter)) {
-		console.warn(`Invalid ECO letter: ${letter} in ${eco}`);
-		return null;
-	}
-
-	return {
-		letter: letter as ECOLetter,
+	const validateEcoLetter = (l: string): l is ECOLetter => {
+		return ["A", "B", "C", "D", "E"].includes(l);
 	};
+
+	// It has some letter that's not A-E
+	// This should never happen
+	if (!validateEcoLetter(letter)) return null;
+
+	return { letter };
 }
 
 /**
