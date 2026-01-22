@@ -8,7 +8,7 @@ import {
 } from "../../types/stats";
 
 const sendRawStatsToHF = async (
-	data: PlayerData
+	data: PlayerData,
 ): Promise<InferencePredictResponse | { error: string }> => {
 	// Step 1: Prepare to send
 	const hfSpaceApiUrl =
@@ -20,7 +20,7 @@ const sendRawStatsToHF = async (
 		return { error: "HuggingFace space URL not configured" };
 	}
 
-	const hfApiToken = process.env.HFPI_TOKEN;
+	const hfApiToken = process.env.HF_API_TOKEN;
 	if (!hfApiToken) {
 		return { error: "HuggingFace API token not configured" };
 	}
