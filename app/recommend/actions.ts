@@ -18,6 +18,7 @@ import {
 	OpeningStatsUtils,
 	PlayerData,
 	isValidInferencePredictResponse,
+	LICHESS_MIN_DATE_UNIX_MS,
 } from "../utils/types/stats";
 import { loadOpeningNamesForColor } from "../utils/rawOpeningStats/modelArtifacts/modelArtifactUtils";
 import {
@@ -38,7 +39,7 @@ import { RecommendationsLocalStorageUtils } from "../utils/recommendations/recom
 // Much lower number for testing so I don't get IPbanned by Lichess
 // The most active player on lichess has about 400,000 games, so 200k for one color in prod
 export const MAX_GAMES_TO_FETCH =
-	process.env.NODE_ENV === "development" ? 250_000 : 200_000;
+	process.env.NODE_ENV === "development" ? 200_000 : 200_000;
 
 export const SAVE_LOCAL_STORAGE_EVERY_N_GAMES = 100;
 
@@ -111,6 +112,10 @@ export async function processLichessUsername(
 	if (sinceDateString && typeof sinceDateString === "string") {
 		const sinceDate = new Date(sinceDateString);
 		sinceUnixMS = sinceDate.getTime();
+		// Silently enforce minimum date (Jan 1, 2019) - games before this lack needed move number data
+		if (sinceUnixMS < LICHESS_MIN_DATE_UNIX_MS) {
+			sinceUnixMS = LICHESS_MIN_DATE_UNIX_MS;
+		}
 	}
 
 	console.log(`Starting processing for: ${username}`);

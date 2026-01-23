@@ -2,7 +2,7 @@ import {
 	LichessGameAPIResponse,
 	AllowedTimeControl,
 } from "../../types/lichessTypes";
-import { Color } from "../../types/stats";
+import { Color, LICHESS_MIN_DATE_UNIX_MS } from "../../types/stats";
 import { fetchWithBackoff } from "../../network/fetchWithBackoff";
 
 //lichess.org/api#tag/games/GET/api/games/user/{username}
@@ -52,6 +52,14 @@ export async function* streamLichessGames(
 		onWait,
 	} = config;
 
+	/**
+	 * Enforced "since" timestamp ensuring we don't fetch games before LICHESS_MIN_DATE_UNIX_MS.
+	 */
+	const enforcedSince =
+		since !== undefined && since < LICHESS_MIN_DATE_UNIX_MS
+			? LICHESS_MIN_DATE_UNIX_MS
+			: since;
+
 	// Build API parameters
 	const params = new URLSearchParams({
 		color: color,
@@ -67,8 +75,8 @@ export async function* streamLichessGames(
 	// Add optional timestamp params if provided
 	// since = lower bound (user's form input, e.g., "only games after Jan 2024")
 	// until = upper bound (pagination, e.g., "only games before this timestamp")
-	if (since !== undefined) {
-		params.append("since", since.toString());
+	if (enforcedSince !== undefined) {
+		params.append("since", enforcedSince.toString());
 	}
 	if (until !== undefined) {
 		params.append("until", until.toString());

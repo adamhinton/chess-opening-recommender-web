@@ -5,6 +5,15 @@
 import z from "zod";
 import { AllowedTimeControl } from "./lichessTypes";
 
+/**
+ * Earliest date of games we'll fetch.
+ *
+ * Lichess games before March 2018 lack needed data about number of moves; for simplicity we'll just start from 2019. Data that old won't be very relevant anyway.
+ *
+ * This is January 1, 2019 00:00:00 UTC in Unix milliseconds.
+ */
+export const LICHESS_MIN_DATE_UNIX_MS = 1546320593000;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ResultTypeSchema = z.enum(["win", "draw", "loss"]);
 export type GameResult = z.infer<typeof ResultTypeSchema>;
@@ -76,7 +85,7 @@ export const HFInterfacePayloadSchema = z.object({
 			num_wins: z.number().nonnegative(),
 			num_draws: z.number().nonnegative(),
 			num_losses: z.number().nonnegative(),
-		})
+		}),
 	),
 });
 
@@ -141,7 +150,7 @@ export type InferencePredictResponse = z.infer<
  * Validate HuggingFace prediction response
  */
 export function isValidInferencePredictResponse(
-	data: unknown
+	data: unknown,
 ): data is InferencePredictResponse {
 	return InferencePredictResponseSchema.safeParse(data).success;
 }
@@ -215,7 +224,7 @@ export class OpeningStatsUtils {
 		lichessUsername: string,
 		rating: number,
 		color: Color,
-		allowedTimeControls: AllowedTimeControl[]
+		allowedTimeControls: AllowedTimeControl[],
 	): PlayerData {
 		return {
 			lichessUsername,
@@ -241,7 +250,7 @@ export class OpeningStatsUtils {
 		 * Because slower games take longer and give higher quality data.
 		 * These weights can be changed.
 		 */
-		weight = 1
+		weight = 1,
 	): void {
 		const existing = playerData.openingStats[openingName];
 

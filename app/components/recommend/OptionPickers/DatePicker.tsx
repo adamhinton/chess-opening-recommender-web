@@ -11,7 +11,8 @@ type DatePickerProps = {
 };
 
 const CURRENT_YEAR = new Date().getFullYear();
-const START_YEAR = 2010;
+// Lichess games before March 2018 lack needed data about number of moves; for simplicity we'll just start from 2019. Data that old won't be very relevant anyway.
+const START_YEAR = 2019;
 
 const MONTHS = [
 	{ value: 0, label: "January" },
@@ -51,7 +52,7 @@ const DatePicker = ({
 	const setIsExpanded = onToggleExpanded ?? setInternalIsExpanded;
 
 	// Extract current values from sinceDate or use defaults
-	const selectedYear = sinceDate?.getFullYear() ?? 2013;
+	const selectedYear = sinceDate?.getFullYear() ?? 2019;
 	const selectedMonth = sinceDate?.getMonth() ?? 0;
 	const selectedDay = sinceDate?.getDate() ?? 1;
 
@@ -83,13 +84,13 @@ const DatePicker = ({
 
 	const yearOptions = Array.from(
 		{ length: CURRENT_YEAR - START_YEAR + 1 },
-		(_, i) => CURRENT_YEAR - i
+		(_, i) => CURRENT_YEAR - i,
 	);
 
 	const daysInCurrentMonth = getDaysInMonth(selectedYear, selectedMonth);
 	const dayOptions = Array.from(
 		{ length: daysInCurrentMonth },
-		(_, i) => i + 1
+		(_, i) => i + 1,
 	);
 
 	return (
@@ -107,16 +108,16 @@ const DatePicker = ({
 								year: "numeric",
 								month: "long",
 								day: "numeric",
-						  })}`
+							})}`
 						: `Since: ${new Date(
 								selectedYear,
 								selectedMonth,
-								selectedDay
-						  ).toLocaleDateString("en-US", {
+								selectedDay,
+							).toLocaleDateString("en-US", {
 								year: "numeric",
 								month: "long",
 								day: "numeric",
-						  })}`}
+							})}`}
 				</span>
 				<svg
 					className={`w-4 h-4 transition-transform ${
