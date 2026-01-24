@@ -14,34 +14,12 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Github, Linkedin, User, LogIn } from "lucide-react";
+import { Menu, X, Github, Linkedin } from "lucide-react";
 
 export const Header: React.FC = () => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-	const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false);
-	const authMenuRef = useRef<HTMLDivElement>(null);
-
-	// Mock auth state - replace with real auth later
-	const isLoggedIn = false; // Placeholder for auth implementation
-
-	// Close auth menu when clicking outside
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				authMenuRef.current &&
-				!authMenuRef.current.contains(event.target as Node)
-			) {
-				setIsAuthMenuOpen(false);
-			}
-		};
-
-		document.addEventListener("mousedown", handleClickOutside);
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, []);
 
 	const toggleMobileMenu = () => {
 		setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -120,65 +98,6 @@ export const Header: React.FC = () => {
 						>
 							<Github className="h-5 w-5" />
 						</Link>
-					</div>
-
-					{/* Dark mode toggle placeholder */}
-					<div className="flex items-center space-x-2">
-						<span className="text-sm text-muted-foreground">Dark</span>
-						<div className="w-10 h-6 bg-muted rounded-full p-1 cursor-pointer">
-							<div className="w-4 h-4 bg-background rounded-full shadow-sm transition-transform duration-200"></div>
-						</div>
-					</div>
-
-					{/* Auth section placeholder */}
-					<div className="relative" ref={authMenuRef}>
-						{isLoggedIn ? (
-							// Logged in state placeholder
-							<button
-								onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
-								className="flex items-center space-x-2 text-foreground hover:text-primary transition-colors duration-200"
-							>
-								<User className="h-5 w-5" />
-								<span className="hidden sm:inline">Profile</span>
-							</button>
-						) : (
-							// Not logged in state placeholder
-							<Link
-								href="#"
-								className="flex items-center space-x-2 text-foreground hover:text-primary transition-colors duration-200"
-							>
-								<LogIn className="h-5 w-5" />
-								<span className="hidden sm:inline">Sign In</span>
-							</Link>
-						)}
-
-						{/* Auth dropdown placeholder */}
-						{isLoggedIn && isAuthMenuOpen && (
-							<div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-md shadow-lg py-1 z-50">
-								<Link
-									href="#"
-									className="block px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors duration-200"
-								>
-									Profile
-								</Link>
-								<Link
-									href="#"
-									className="block px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors duration-200"
-								>
-									Settings
-								</Link>
-								<hr className="my-1 border-border" />
-								<button
-									className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors duration-200"
-									onClick={() => {
-										// Placeholder for sign out logic
-										console.log("Sign out clicked");
-									}}
-								>
-									Sign Out
-								</button>
-							</div>
-						)}
 					</div>
 				</div>
 			</div>

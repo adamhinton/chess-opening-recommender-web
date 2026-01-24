@@ -212,7 +212,7 @@ const Recommend = () => {
 								name="username"
 								value={username}
 								onChange={(e) => setUsername(e.target.value)}
-								placeholder="Enter your Lichess username"
+								placeholder="Hikaru"
 								className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
 								required
 								disabled={isSubmitting}
