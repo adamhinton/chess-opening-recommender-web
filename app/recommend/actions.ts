@@ -267,11 +267,6 @@ export async function processLichessUsername(
 				totalGamesProcessed++;
 				gamesInThisBatch++;
 				validationStats.totalGamesProcessed++;
-				// date in day month year
-				// TODO delete this after debugging
-				if (totalGamesProcessed % 50 === 0) {
-					console.log("created at:" + new Date(game.createdAt).toDateString());
-				}
 
 				// Track the oldest timestamp seen for pagination after this batch completes
 				if (game.createdAt) {

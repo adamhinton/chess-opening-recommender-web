@@ -41,12 +41,8 @@ export function isValidGameStructure(
 		return false;
 	}
 
-	if (!clocks) {
-		debugger;
-	}
-
 	// 2. Move count is above a certain threshold, or there are no moves
-	if (!clocks || clocks.length <= MIN_NUM_PLY) {
+	if (clocks.length <= MIN_NUM_PLY || !clocks) {
 		return false;
 	}
 
