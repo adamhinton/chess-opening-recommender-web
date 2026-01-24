@@ -14,6 +14,8 @@ import { AllowedTimeControl } from "../utils/types/lichessTypes";
 import { StoredPlayerData } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import ColorPicker from "../components/recommend/OptionPickers/ColorPicker";
 import { useRouter } from "next/navigation";
+import { generateDummyRecommendations } from "../utils/recommendations/dummyRecommendations";
+import { RecommendationsLocalStorageUtils } from "../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
 
 const Recommend = () => {
 	const router = useRouter();
@@ -182,6 +184,37 @@ const Recommend = () => {
 		},
 		[router],
 	);
+
+	/**
+	 * Handle demo button click
+	 *
+	 * Generate dummy recommendations and show them to the user
+	 *
+	 * Great for e.g. recruiters who don't care about chess and just want to see how this works
+	 */
+	const handleViewDemo = useCallback(() => {
+		const dummyUsername = "example-player";
+		const dummyColor: Color = "white";
+		const dummyRecommendations = generateDummyRecommendations(50, dummyColor);
+
+		// Save to localStorage using the same utility as real recommendations
+		const saveResult = RecommendationsLocalStorageUtils.saveRecommendations(
+			dummyUsername,
+			dummyColor,
+			dummyRecommendations,
+		);
+
+		if (saveResult.success) {
+			console.log(
+				`[Demo] Saved dummy recommendations for ${dummyUsername} (${dummyColor})`,
+			);
+			// Redirect to view-recommendations page
+			router.push("/view-recommendations");
+		} else {
+			console.error(`[Demo] Failed to save: ${saveResult.error}`);
+		}
+	}, [router]);
+
 	return (
 		<div className="min-h-screen bg-background text-foreground p-8">
 			<div className="max-w-md mx-auto">
@@ -196,6 +229,17 @@ const Recommend = () => {
 					onViewStats={handleViewStats}
 					isDisabled={isSubmitting}
 				/>
+
+				{/* Demo Button */}
+				<div className="mb-6 text-center">
+					<button
+						onClick={handleViewDemo}
+						disabled={isSubmitting}
+						className="text-sm text-muted-foreground hover:text-foreground transition-colors underline decoration-dotted underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						View example recommendations
+					</button>
+				</div>
 
 				<div className="bg-card border border-border rounded-lg p-6 shadow-sm">
 					<form onSubmit={handleSubmit} className="space-y-6">
