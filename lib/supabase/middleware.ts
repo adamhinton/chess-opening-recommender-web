@@ -59,11 +59,13 @@ export async function updateSession(request: NextRequest) {
 	// 	return NextResponse.redirect(url);
 	// }
 
-	if (request.nextUrl.pathname === "/") {
-		const url = request.nextUrl.clone();
-		url.pathname = "/recommend";
-		return NextResponse.redirect(url);
-	}
+	// TODO work out routing on first page load
+	// Maybe save in a cookie whether user has seen intro
+	// if (request.nextUrl.pathname === "/") {
+	// 	const url = request.nextUrl.clone();
+	// 	url.pathname = "/recommend";
+	// 	return NextResponse.redirect(url);
+	// }
 	// IMPORTANT: You *must* return the supabaseResponse object as it is.
 	// If you're creating a new response object with NextResponse.next() make sure to:
 	// 1. Pass the request in it, like so:
