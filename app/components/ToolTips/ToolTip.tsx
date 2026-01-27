@@ -35,9 +35,9 @@ const ToolTip = ({ message }: { message: string }) => {
 
 			{isVisible && (
 				<div
-					className="absolute z-50 w-64 px-3 py-2 text-xs text-black bg-white border border-border rounded-md shadow-lg pointer-events-none"
+					className="absolute z-[100] w-60 px-5 py-4 text-sm font-medium text-foreground bg-slate-900 dark:bg-slate-100 dark:text-slate-900 border-2 border-slate-700 dark:border-slate-300 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-none"
 					style={{
-						bottom: "calc(100% + 8px)",
+						bottom: "calc(100% + 12px)",
 						left: "50%",
 						transform: "translateX(-50%)",
 					}}
@@ -45,9 +45,9 @@ const ToolTip = ({ message }: { message: string }) => {
 					{message}
 					{/* Arrow */}
 					<div
-						className="absolute w-2 h-2 bg-card border-r border-b border-border"
+						className="absolute w-4 h-4 bg-slate-900 dark:bg-slate-100 border-r-2 border-b-2 border-slate-700 dark:border-slate-300"
 						style={{
-							bottom: "-5px",
+							bottom: "-9px",
 							left: "50%",
 							transform: "translateX(-50%) rotate(45deg)",
 						}}
