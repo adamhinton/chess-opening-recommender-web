@@ -40,7 +40,7 @@ const ColorPicker = ({
 					checked={selectedColor === "white"}
 					onChange={() => !isDisabled && onColorChange("white")}
 					disabled={isDisabled}
-					className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer disabled:cursor-not-allowed"
+					className="w-4 h-4 text-primary  focus:ring-offset-2 cursor-pointer disabled:cursor-not-allowed focus:outline-none"
 				/>
 				<span className="text-sm font-medium text-foreground select-none">
 					White
@@ -65,7 +65,7 @@ const ColorPicker = ({
 					checked={selectedColor === "black"}
 					onChange={() => !isDisabled && onColorChange("black")}
 					disabled={isDisabled}
-					className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer disabled:cursor-not-allowed"
+					className="w-4 h-4 text-primary cursor-pointer disabled:cursor-not-allowed focus:outline-none"
 				/>
 				<span className="text-sm font-medium text-foreground select-none">
 					Black
