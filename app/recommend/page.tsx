@@ -16,13 +16,14 @@ import ColorPicker from "../components/recommend/OptionPickers/ColorPicker";
 import { useRouter } from "next/navigation";
 import { generateDummyRecommendations } from "../utils/recommendations/dummyRecommendations";
 import { RecommendationsLocalStorageUtils } from "../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
+import ToolTip from "../components/ToolTips/ToolTip";
+import NextStepsInformational from "../components/recommend/NextStepsInformational";
 
 const Recommend = () => {
 	const router = useRouter();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [username, setUsername] = useState("");
 	const [sinceDate, setSinceDate] = useState<Date | null>(null);
-	const [isDatePickerExpanded, setIsDatePickerExpanded] = useState(false);
 	const [selectedColor, setSelectedColor] = useState<Color>("white");
 	const [selectedTimeControls, setSelectedTimeControls] = useState<
 		AllowedTimeControl[]
@@ -44,7 +45,8 @@ const Recommend = () => {
 	} | null>(null);
 
 	const startTimeRef = useRef<number>(0);
-	const INFERENCE_TIME_SECONDS = 60; // Estimating duration of model inference phase
+	/**Estimated duration of model inference phase */
+	const INFERENCE_TIME_SECONDS = 10;
 	// Key to force SavedProgress to refresh after submit completes
 	const [savedProgressKey, setSavedProgressKey] = useState(0);
 
@@ -65,8 +67,6 @@ const Recommend = () => {
 			setIsSubmitting(true);
 			setResult(null);
 			setProgressState(null);
-			setIsDatePickerExpanded(false);
-			startTimeRef.current = Date.now();
 
 			const formData = new FormData();
 			formData.append("username", params.username);
@@ -145,6 +145,7 @@ const Recommend = () => {
 			timeControls: selectedTimeControls,
 			sinceDate,
 		});
+		router.push("/view-recommendations");
 	};
 
 	/**
@@ -177,13 +178,10 @@ const Recommend = () => {
 	/**
 	 * Handle viewing stats for a finished player.
 	 */
-	const handleViewStats = useCallback(
-		(playerData: StoredPlayerData) => {
-			console.log("View stats for:", playerData.playerData.lichessUsername);
-			router.push("view-recommendations");
-		},
-		[router],
-	);
+	const handleViewStats = (playerData: StoredPlayerData) => {
+		console.log("View stats for:", playerData.playerData.lichessUsername);
+		router.push("view-recommendations");
+	};
 
 	/**
 	 * Handle demo button click
@@ -192,12 +190,11 @@ const Recommend = () => {
 	 *
 	 * Great for e.g. recruiters who don't care about chess and just want to see how this works
 	 */
-	const handleViewDemo = useCallback(() => {
+	const handleViewDemo = () => {
 		const dummyUsername = "example-player";
 		const dummyColor: Color = "white";
 		const dummyRecommendations = generateDummyRecommendations(50, dummyColor);
 
-		// Save to localStorage using the same utility as real recommendations
 		const saveResult = RecommendationsLocalStorageUtils.saveRecommendations(
 			dummyUsername,
 			dummyColor,
@@ -213,7 +210,7 @@ const Recommend = () => {
 		} else {
 			console.error(`[Demo] Failed to save: ${saveResult.error}`);
 		}
-	}, [router]);
+	};
 
 	return (
 		<div className="min-h-screen bg-background text-foreground p-8">
@@ -229,79 +226,117 @@ const Recommend = () => {
 					onViewStats={handleViewStats}
 					isDisabled={isSubmitting}
 				/>
+				<Divider />
 
-				{/* Demo Button */}
-				<div className="mb-6 text-center">
+				{/* Section: See Example First */}
+				<section className="mb-6 bg-secondary/30 border border-secondary rounded-lg p-4">
+					<h2 className="text-lg font-semibold text-foreground mb-2">
+						See Example First
+					</h2>
+					<p className="text-sm text-muted-foreground mb-3">
+						Perfect if you don't play chess—no signup needed. See what
+						AI-generated opening recommendations look like.
+					</p>
 					<button
 						onClick={handleViewDemo}
 						disabled={isSubmitting}
-						className="text-sm text-muted-foreground hover:text-foreground transition-colors underline decoration-dotted underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed"
+						className="w-full px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm flex items-center justify-center gap-2"
 					>
-						View example recommendations
+						Try Example
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							className="w-4 h-4"
+						>
+							<path
+								fillRule="evenodd"
+								d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z"
+								clipRule="evenodd"
+							/>
+						</svg>
 					</button>
-				</div>
+				</section>
+
+				<Divider />
 
 				<div className="bg-card border border-border rounded-lg p-6 shadow-sm">
 					<form onSubmit={handleSubmit} className="space-y-6">
-						<div>
-							<label
-								htmlFor="username"
-								className="block text-sm font-medium text-foreground mb-2"
-							>
-								Lichess Username
-							</label>
-							<input
-								type="text"
-								id="username"
-								name="username"
-								value={username}
-								onChange={(e) => setUsername(e.target.value)}
-								placeholder="Hikaru"
-								className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-								required
-								disabled={isSubmitting}
-							/>
-						</div>
-
-						{/* Divider */}
-						<div className="h-[2px] bg-muted-foreground/20" />
-
-						{/* Date Picker */}
-						<DatePicker
-							sinceDate={sinceDate}
-							onDateChange={setSinceDate}
-							isDisabled={isSubmitting}
-							isExpanded={isDatePickerExpanded}
-							onToggleExpanded={setIsDatePickerExpanded}
-						/>
-
-						{/* Divider */}
-						<div className="h-[2px] bg-muted-foreground/20" />
-
-						{/* Color Picker and Time Control Picker */}
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						{/* Section: Your Lichess Account */}
+						<section>
+							<div className="flex items-center gap-2 mb-3">
+								<h2 className="text-lg font-semibold text-foreground">
+									Lichess Username
+									<ToolTip message="Lichess is the world's most popular 100% free (and ad-free) open source chess platform" />
+								</h2>
+							</div>
 							<div>
-								<label className="block text-sm font-medium text-foreground mb-2">
-									Color
-								</label>
-								<ColorPicker
-									selectedColor={selectedColor}
-									onColorChange={setSelectedColor}
+								<div className="flex items-center gap-2 mb-2"></div>
+								<input
+									type="text"
+									id="username"
+									name="username"
+									value={username}
+									onChange={(e) => setUsername(e.target.value)}
+									placeholder="Hikaru"
+									className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+									required
+									disabled={isSubmitting}
+								/>
+							</div>
+						</section>
+
+						<Divider />
+
+						{/* Section: Analysis Settings */}
+						<section>
+							<h2 className="text-lg font-semibold text-foreground mb-4">
+								Analysis Settings
+							</h2>
+
+							{/* Date Picker */}
+							<div className="mb-6">
+								<DatePicker
+									sinceDate={sinceDate}
+									onDateChange={setSinceDate}
 									isDisabled={isSubmitting}
 								/>
 							</div>
 
-							<div>
-								<TimeControlPicker
-									selectedTimeControls={selectedTimeControls}
-									onTimeControlChange={setSelectedTimeControls}
-									isDisabled={isSubmitting}
-								/>
-							</div>
-						</div>
+							<Divider />
 
-						{/* Divider */}
-						<div className="h-[2px] bg-muted-foreground/20" />
+							{/* Color Picker and Time Control Picker in single column */}
+							<div className="space-y-6">
+								<div>
+									<div className="flex items-center gap-2 mb-3">
+										<label className="block text-sm font-medium text-foreground">
+											Play as (choose one)
+										</label>
+										<ToolTip message="Openings differ for White (who moves first) vs Black (who responds). Choose which color you want to improve." />
+									</div>
+									<ColorPicker
+										selectedColor={selectedColor}
+										onColorChange={setSelectedColor}
+										isDisabled={isSubmitting}
+									/>
+								</div>
+
+								<Divider />
+
+								<div>
+									<TimeControlPicker
+										selectedTimeControls={selectedTimeControls}
+										onTimeControlChange={setSelectedTimeControls}
+										isDisabled={isSubmitting}
+									/>
+								</div>
+							</div>
+						</section>
+
+						<Divider />
+
+						{/* Displays info about what happens after submitting: 1. Compile opening stats, 2. AI analyzes your patterns, 3. Get personalized recommendations */}
+						<NextStepsInformational isSubmitting={isSubmitting} />
 
 						<button
 							type="submit"
@@ -310,7 +345,7 @@ const Recommend = () => {
 								selectedTimeControls.length === 0 ||
 								!username.trim()
 							}
-							className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+							className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
 						>
 							{isSubmitting ? "Processing..." : "Get AI Opening Suggestions"}
 						</button>
@@ -366,23 +401,6 @@ const Recommend = () => {
 							</div>
 						</div>
 					)}
-
-					{result && (
-						<div
-							className={`mt-4 p-4 rounded-md ${
-								result.success
-									? "bg-secondary text-secondary-foreground"
-									: "bg-destructive/10 text-destructive"
-							}`}
-						>
-							<p>{result.message}</p>
-							{result.success && !!result.gameData && (
-								<p className="text-sm mt-2 opacity-80">
-									Ready to analyze your games and recommend openings!
-								</p>
-							)}
-						</div>
-					)}
 				</div>
 			</div>
 		</div>
@@ -390,3 +408,6 @@ const Recommend = () => {
 };
 
 export default Recommend;
+
+/**Vertical dividing line between sections */
+const Divider = () => <div className="h-[2px] bg-muted-foreground/50 my-6" />;
