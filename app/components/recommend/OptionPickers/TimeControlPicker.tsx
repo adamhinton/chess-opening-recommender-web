@@ -1,6 +1,7 @@
 "use client";
 
 import { type AllowedTimeControl } from "@/app/utils/types/lichessTypes";
+import ToolTip from "../../ToolTips/ToolTip";
 
 type TimeControlPickerProps = {
 	selectedTimeControls: AllowedTimeControl[];
@@ -20,10 +21,26 @@ const TimeControlPicker = ({
 	onTimeControlChange,
 	isDisabled,
 }: TimeControlPickerProps) => {
-	const allowedTimeControls: AllowedTimeControl[] = [
-		"blitz",
-		"rapid",
-		"classical",
+	const allowedTimeControls: {
+		value: AllowedTimeControl;
+		label: string;
+		tooltip: string;
+	}[] = [
+		{
+			value: "blitz",
+			label: "Blitz",
+			tooltip: "Fast-paced games: 3-5 minutes per player",
+		},
+		{
+			value: "rapid",
+			label: "Rapid",
+			tooltip: "Medium-speed games: 5-15 minutes per player",
+		},
+		{
+			value: "classical",
+			label: "Classical",
+			tooltip: "Slower, thoughtful games: 15+ minutes per player",
+		},
 	];
 
 	const handleToggle = (tc: AllowedTimeControl) => {
@@ -39,30 +56,35 @@ const TimeControlPicker = ({
 		}
 	};
 
-	const capitalize = (str: string) =>
-		str.charAt(0).toUpperCase() + str.slice(1);
-
 	return (
-		<div className="flex flex-col gap-0.25">
+		<div className="flex flex-col gap-2">
+			<div className="flex items-center gap-2 mb-1">
+				<label className="block text-sm font-medium text-foreground">
+					Time Controls
+				</label>
+				<ToolTip message="Select which game speeds you want to analyze. You can choose multiple." />
+			</div>
+
 			{allowedTimeControls.map((tc) => {
-				const isSelected = selectedTimeControls.includes(tc);
+				const isSelected = selectedTimeControls.includes(tc.value);
 				return (
 					<label
-						key={tc}
-						className={`flex items-center gap-2 cursor-pointer ${
+						key={tc.value}
+						className={`flex items-center gap-3 cursor-pointer ${
 							isDisabled ? "opacity-50 cursor-not-allowed" : ""
 						}`}
 					>
 						<input
 							type="checkbox"
 							checked={isSelected}
-							onChange={() => handleToggle(tc)}
+							onChange={() => handleToggle(tc.value)}
 							disabled={isDisabled}
-							className="w-4 h- rounded border-border bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer disabled:cursor-not-allowed"
+							className="w-4 h-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer disabled:cursor-not-allowed"
 						/>
 						<span className="text-sm text-foreground select-none">
-							{capitalize(tc)}
+							{tc.label}
 						</span>
+						<ToolTip message={tc.tooltip} />
 					</label>
 				);
 			})}

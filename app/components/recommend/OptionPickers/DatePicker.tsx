@@ -1,13 +1,9 @@
 "use client";
 
-import { useState } from "react";
-
 type DatePickerProps = {
 	sinceDate: Date | null;
 	onDateChange: (date: Date | null) => void;
 	isDisabled: boolean;
-	isExpanded?: boolean;
-	onToggleExpanded?: (expanded: boolean) => void;
 };
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -42,15 +38,7 @@ const DatePicker = ({
 	sinceDate,
 	onDateChange,
 	isDisabled,
-	isExpanded: controlledIsExpanded,
-	onToggleExpanded,
 }: DatePickerProps) => {
-	const [internalIsExpanded, setInternalIsExpanded] = useState(false);
-
-	// Use controlled state if provided, otherwise use internal state
-	const isExpanded = controlledIsExpanded ?? internalIsExpanded;
-	const setIsExpanded = onToggleExpanded ?? setInternalIsExpanded;
-
 	// Extract current values from sinceDate or use defaults
 	const selectedYear = sinceDate?.getFullYear() ?? 2019;
 	const selectedMonth = sinceDate?.getMonth() ?? 0;
@@ -76,12 +64,6 @@ const DatePicker = ({
 		onDateChange(null);
 	};
 
-	const toggleExpanded = () => {
-		if (!isDisabled) {
-			setIsExpanded(!isExpanded);
-		}
-	};
-
 	const yearOptions = Array.from(
 		{ length: CURRENT_YEAR - START_YEAR + 1 },
 		(_, i) => CURRENT_YEAR - i,
@@ -94,58 +76,25 @@ const DatePicker = ({
 	);
 
 	return (
-		<div className="w-full space-y-2">
-			{/* Toggle Button */}
-			<button
-				type="button"
-				onClick={toggleExpanded}
-				disabled={isDisabled}
-				className="w-full flex items-center justify-between px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-			>
-				<span className="text-sm font-medium">
-					{sinceDate
-						? `Games since: ${sinceDate.toLocaleDateString("en-US", {
-								year: "numeric",
-								month: "long",
-								day: "numeric",
-							})}`
-						: `Since: ${new Date(
-								selectedYear,
-								selectedMonth,
-								selectedDay,
-							).toLocaleDateString("en-US", {
-								year: "numeric",
-								month: "long",
-								day: "numeric",
-							})}`}
-				</span>
-				<svg
-					className={`w-4 h-4 transition-transform ${
-						isExpanded ? "rotate-180" : ""
-					}`}
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={2}
-						d="M19 9l-7 7-7-7"
-					/>
-				</svg>
-			</button>
+		<div className="w-full space-y-3">
+			<label className="block text-sm font-medium text-foreground">
+				Analyze games since
+			</label>
 
-			{/* Expanded Date Selection */}
-			{isExpanded && (
-				<div className="p-4 bg-card border border-border rounded-md space-y-4">
-					<div className="text-sm text-muted-foreground mb-3">
-						Select games from a specific date to present. Leave empty for all
-						available games.
+			{sinceDate ? (
+				<div className="space-y-3">
+					<div className="px-4 py-3 bg-secondary/50 border border-border rounded-md">
+						<div className="text-sm font-medium text-foreground">
+							{sinceDate.toLocaleDateString("en-US", {
+								year: "numeric",
+								month: "long",
+								day: "numeric",
+							})}
+						</div>
 					</div>
 
 					{/* Date Selectors Grid */}
-					<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+					<div className="grid grid-cols-3 gap-3">
 						{/* Year Selector */}
 						<div className="space-y-1">
 							<label
@@ -159,7 +108,7 @@ const DatePicker = ({
 								value={selectedYear}
 								onChange={(e) => handleYearChange(Number(e.target.value))}
 								disabled={isDisabled}
-								className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full px-2 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								{yearOptions.map((year) => (
 									<option key={year} value={year}>
@@ -182,7 +131,7 @@ const DatePicker = ({
 								value={selectedMonth}
 								onChange={(e) => handleMonthChange(Number(e.target.value))}
 								disabled={isDisabled}
-								className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full px-2 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								{MONTHS.map((month) => (
 									<option key={month.value} value={month.value}>
@@ -205,7 +154,7 @@ const DatePicker = ({
 								value={selectedDay}
 								onChange={(e) => handleDayChange(Number(e.target.value))}
 								disabled={isDisabled}
-								className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full px-2 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								{dayOptions.map((day) => (
 									<option key={day} value={day}>
@@ -217,16 +166,34 @@ const DatePicker = ({
 					</div>
 
 					{/* Clear Button */}
-					{sinceDate && (
-						<button
-							type="button"
-							onClick={handleClearDate}
-							disabled={isDisabled}
-							className="w-full px-3 py-2 text-sm bg-destructive/10 text-destructive rounded-md hover:bg-destructive/20 focus:outline-none focus:ring-2 focus:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							Clear Date Filter
-						</button>
-					)}
+					<button
+						type="button"
+						onClick={handleClearDate}
+						disabled={isDisabled}
+						className="w-full px-3 py-2 text-sm bg-destructive/10 text-destructive rounded-md hover:bg-destructive/20 focus:outline-none focus:ring-2 focus:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						Use All Games (since 2019)
+					</button>
+				</div>
+			) : (
+				<div className="space-y-3">
+					<div className="px-4 py-3 bg-primary/10 border border-primary/30 rounded-md">
+						<div className="text-sm font-medium text-foreground mb-1">
+							All games (since 2019)
+						</div>
+						<div className="text-xs text-muted-foreground">
+							Using all-time data provides the best results for AI analysis
+						</div>
+					</div>
+
+					<button
+						type="button"
+						onClick={() => onDateChange(new Date(2019, 0, 1))}
+						disabled={isDisabled}
+						className="w-full px-3 py-2 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						Select a specific date
+					</button>
 				</div>
 			)}
 		</div>
