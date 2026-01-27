@@ -1,5 +1,10 @@
 // A UI component displaying an approximation of how much time remains to stream all Lichess games and return inference on recommended openings.
 
+/**
+ * While games are being streamed from Lichess and compiled in to opening stats
+ *
+ * This is the vast majority of the time taken
+ */
 type ProgressBarPropsStreaming = {
 	numGamesStreamedSoFar: number;
 	totalGamesNeeded: number;
@@ -7,6 +12,10 @@ type ProgressBarPropsStreaming = {
 	stage: "Analyzing Games";
 };
 
+/**While inference is currently running
+ *
+ * This is very quick, takes a couple seconds in dev, not sure about prod yet
+ */
 type ProgressBarPropsInference = {
 	totalGamesNeeded: number;
 	estimatedSecondsRemaining: number;
