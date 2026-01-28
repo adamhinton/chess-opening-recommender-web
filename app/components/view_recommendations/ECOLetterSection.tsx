@@ -15,6 +15,7 @@ import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import SingleRecommendation from "./SingleRecommendation";
 import { SingleOpeningRecommendation } from "../../utils/types/stats";
+import ToolTip from "../ToolTips/ToolTip";
 
 // ============================================================================
 // Types
@@ -22,13 +23,33 @@ import { SingleOpeningRecommendation } from "../../utils/types/stats";
 
 export type ECOLetter = "A" | "B" | "C" | "D" | "E";
 
-/** Description of what each ECO letter category covers */
-const ECO_LETTER_DESCRIPTIONS: Record<ECOLetter, string> = {
-	A: "Flank Openings",
-	B: "Semi-Open Games",
-	C: "Open Games",
-	D: "Closed Games",
-	E: "Indian Defenses",
+/** Description of what each ECO letter category covers - with friendly explanations */
+const ECO_DETAILS: Record<ECOLetter, { title: string; description: string }> = {
+	A: {
+		title: "Flank Openings",
+		description:
+			"Unconventional first moves (excluding 1.e4 and 1.d4) that allow you to control the center from the sides. Ideal for players who like flexibility and surprise.",
+	},
+	B: {
+		title: "Semi-Open Games",
+		description:
+			"Responses to White's 1.e4 other than 1...e5. These lead to unbalanced, fighting positions (e.g. Sicilian, French) where both sides have chances to win.",
+	},
+	C: {
+		title: "Open Games",
+		description:
+			"Classic games starting with 1.e4 e5. These often lead to sharp tactical battles and rapid piece development. Good for learning fundamentals.",
+	},
+	D: {
+		title: "Closed Games",
+		description:
+			"Games starting with 1.d4 d5. These tend to be more strategic and positional, focusing on long-term maneuvering rather than immediate tactics.",
+	},
+	E: {
+		title: "Indian Defenses",
+		description:
+			"Modern responses to 1.d4 (usu. 1...Nf6). Black allows White to take the center to counter-attack it later. Complex and dynamic.",
+	},
 };
 
 /** Colors for each ECO letter (for visual distinction) */
@@ -44,7 +65,7 @@ interface ECOLetterSectionProps {
 	letter: ECOLetter;
 	/** All openings in this letter category */
 	openings: SingleOpeningRecommendation[];
-	/** Whether to show rank numbers on individual openings - may add this feature later (TODO?) */
+	/** Whether to show rank numbers on individual openings */
 	showRanks?: boolean;
 	defaultExpanded?: boolean;
 }
@@ -62,25 +83,27 @@ const ECOLetterSection = ({
 	const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
 	const colorClasses = ECO_LETTER_COLORS[letter];
-	const description = ECO_LETTER_DESCRIPTIONS[letter];
+	const details = ECO_DETAILS[letter];
 
 	return (
-		<div className="rounded-xl border border-border bg-card/30 overflow-hidden">
+		<div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-all duration-200 hover:border-border/80">
 			{/* Letter header */}
-			<button
-				type="button"
-				onClick={() => setIsExpanded(!isExpanded)}
+			<div
 				className="flex items-center gap-3 w-full p-4 
-					hover:bg-accent/30 transition-colors text-left"
+					cursor-pointer hover:bg-muted/30 transition-colors"
+				onClick={() => setIsExpanded(!isExpanded)}
 			>
-				<ChevronRight
-					className={`w-5 h-5 text-muted-foreground transition-transform duration-200
+				<button
+					type="button"
+					className={`p-1 rounded-md text-muted-foreground hover:bg-muted/50 transition-colors duration-200
 						${isExpanded ? "rotate-90" : ""}`}
-				/>
+				>
+					<ChevronRight className="w-5 h-5" />
+				</button>
 
 				{/* Letter badge */}
 				<span
-					className={`flex-shrink-0 w-10 h-10 flex items-center justify-center
+					className={`flex-shrink-0 w-12 h-12 flex items-center justify-center
 						rounded-lg border text-xl font-bold ${colorClasses}`}
 				>
 					{letter}
@@ -88,24 +111,34 @@ const ECOLetterSection = ({
 
 				{/* Description and count */}
 				<div className="flex-1 min-w-0">
-					<div className="font-semibold text-foreground">{description}</div>
-					<div className="text-xs text-muted-foreground">
+					<div className="flex items-center gap-2">
+						<span className="font-semibold text-foreground text-lg">
+							{details.title}
+						</span>
+						{/* Info Tooltip Icon */}
+						<div onClick={(e) => e.stopPropagation()}>
+							<ToolTip message={details.description} />
+						</div>
+					</div>
+					<div className="text-sm text-muted-foreground">
 						{openings.length} opening{openings.length !== 1 ? "s" : ""}
 					</div>
 				</div>
-			</button>
+			</div>
 
 			{/* Openings list */}
 			{isExpanded && (
-				<div className="px-4 pb-4 space-y-2">
-					{openings.map((opening, idx) => (
-						<SingleRecommendation
-							key={opening.opening_name}
-							openingName={opening.opening_name}
-							eco={opening.eco}
-							rank={showRanks ? idx + 1 : undefined}
-						/>
-					))}
+				<div className="px-4 pb-4 animate-in slide-in-from-top-2 fade-in duration-200">
+					<div className="ml-[3.75rem] space-y-2 border-l-2 border-border/50 pl-4 py-1">
+						{openings.map((opening, idx) => (
+							<SingleRecommendation
+								key={opening.opening_name}
+								openingName={opening.opening_name}
+								eco={opening.eco}
+								rank={showRanks ? idx + 1 : undefined}
+							/>
+						))}
+					</div>
 				</div>
 			)}
 		</div>

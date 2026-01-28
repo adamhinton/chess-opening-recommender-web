@@ -8,8 +8,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, RotateCcw } from "lucide-react";
-import { StoredRecommendationData } from "@/app/utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
+import { ArrowLeft, RotateCcw, CheckCircle2, Sparkles } from "lucide-react";
+import {
+	RecommendationsLocalStorageUtils,
+	StoredRecommendationData,
+} from "@/app/utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
+import { Subtext } from "@/app/components/HeroPage/Subtext";
 
 // ============================================================================
 // Types
@@ -30,65 +34,82 @@ const RecommendationHeader = ({
 	const openingCount = recommendations.recommendations.length;
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-6">
 			{/* Navigation */}
 			<div className="flex items-center justify-between">
-				<Link
-					href="/recommend"
-					className="flex items-center gap-2 text-sm text-muted-foreground 
-						hover:text-foreground transition-colors"
-				>
-					<ArrowLeft className="w-4 h-4" />
-					<span>Back to Analyzer</span>
-				</Link>
+				{/* Only show this link if there are other recommendations */}
+				{RecommendationsLocalStorageUtils.getStoredCount() > 1 && (
+					<Link
+						href="/view-recommendations"
+						className="flex items-center gap-2 text-sm text-muted-foreground 
+						hover:text-foreground transition-colors group"
+					>
+						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+						<span>My other recommendations</span>
+					</Link>
+				)}
 
 				<Link
 					href="/recommend"
 					className="flex items-center gap-2 px-4 py-2 rounded-lg
-						bg-primary text-primary-foreground text-sm font-medium
-						hover:bg-primary/90 transition-colors"
+						bg-secondary hover:bg-secondary/80 text-secondary-foreground text-sm font-medium
+						transition-colors"
 				>
 					<RotateCcw className="w-4 h-4" />
 					<span>Analyze Another</span>
 				</Link>
 			</div>
 
-			{/* Header content */}
-			<div className="bg-gradient-to-br from-card to-card/50 border border-border rounded-xl p-6">
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-					{/* User info */}
-					<div>
-						<h1 className="text-2xl font-bold text-foreground">
-							Recommendations for{" "}
-							<span className="text-primary">{username}</span>
-						</h1>
-						<div className="flex items-center gap-3 mt-2">
-							<span
-								className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-									${
-										color === "white"
-											? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
-											: "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-									}`}
-							>
-								{color === "white" ? "♔ " : "♚ "}
-								Playing as {color}
-							</span>
-							<span className="text-sm text-muted-foreground">
-								{openingCount} opening{openingCount !== 1 ? "s" : ""}{" "}
-								recommended
-							</span>
+			{/* Hero / Header content */}
+			<div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card/50 to-background shadow-sm">
+				{/* Background decorative elements */}
+				<div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+					<Sparkles className="w-48 h-48 text-primary" />
+				</div>
+
+				<div className="relative p-8 flex flex-col gap-6">
+					{/* Status Badge */}
+					<div className="flex items-center gap-2 text-primary font-medium text-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+						<div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary">
+							<CheckCircle2 className="w-4 h-4" />
 						</div>
+						<span>AI Analysis Complete</span>
 					</div>
 
-					{/* Stats summary (optional, can expand later) */}
-					<div className="flex gap-4 text-center">
-						<div className="px-4 py-2 rounded-lg bg-primary/5 border border-primary/10">
-							<div className="text-2xl font-bold text-primary">
-								{openingCount}
-							</div>
-							<div className="text-xs text-muted-foreground">Openings</div>
-						</div>
+					<div className="space-y-4 max-w-2xl">
+						<h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+							Personalized Recommendations for{" "}
+							<span className="text-primary">{username}</span>
+						</h1>
+
+						<Subtext size="lg" className="text-muted-foreground/90">
+							Our model has analyzed {username}&apos;s games and identified{" "}
+							{openingCount} openings where this their playstyle indicates a
+							high probability of success. These are optimized for their {color}{" "}
+							repertoire.
+						</Subtext>
+					</div>
+
+					{/* Metadata Badges */}
+					<div className="flex flex-wrap gap-3 mt-2">
+						<span
+							className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border
+								${
+									color === "white"
+										? "bg-amber-100/50 text-amber-900 border-amber-200 dark:bg-amber-900/20 dark:text-amber-100 dark:border-amber-800"
+										: "bg-slate-200/50 text-slate-900 border-slate-300 dark:bg-slate-800/50 dark:text-slate-100 dark:border-slate-700"
+								}`}
+						>
+							<span className="text-lg leading-none pb-0.5">
+								{color === "white" ? "♔" : "♚"}
+							</span>
+							Playing as {color}
+						</span>
+
+						<span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/20">
+							<Sparkles className="w-3.5 h-3.5" />
+							{openingCount} recommended openings
+						</span>
 					</div>
 				</div>
 			</div>

@@ -109,26 +109,26 @@ const RecommendationsTree = ({
 	}
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
 			{/* Summary */}
-			<div className="flex items-center justify-between text-sm text-muted-foreground px-1">
-				<span>
-					{recommendations.length} opening
-					{recommendations.length !== 1 ? "s" : ""} across{" "}
-					{lettersWithData.length} ECO categor
-					{lettersWithData.length !== 1 ? "ies" : "y"}
+			<div className="flex items-center justify-between px-1">
+				<h2 className="text-lg font-semibold text-foreground">
+					Recommended Openings by Category
+				</h2>
+				<span className="text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">
+					{recommendations.length} total openings
 				</span>
 			</div>
 
 			{/* Tree sections */}
-			<div className="space-y-3">
-				{lettersWithData.map((letter) => (
+			<div className="space-y-4">
+				{lettersWithData.map((letter, index) => (
 					<ECOLetterSection
 						openings={organizedData.get(letter)!}
 						key={letter}
 						letter={letter}
 						showRanks={showRanks}
-						defaultExpanded={false} // TODO revisit default expanded behavior
+						defaultExpanded={false}
 					/>
 				))}
 			</div>
