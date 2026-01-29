@@ -5,8 +5,6 @@
 // Displays all openings within this letter category.
 //
 // Only displays if there are openings in this letter category.
-//
-// TODO default collapse behavior is weird; work on that
 // =========================================
 
 "use client";

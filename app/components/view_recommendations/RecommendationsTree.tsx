@@ -122,7 +122,7 @@ const RecommendationsTree = ({
 
 			{/* Tree sections */}
 			<div className="space-y-4">
-				{lettersWithData.map((letter, index) => (
+				{lettersWithData.map((letter) => (
 					<ECOLetterSection
 						openings={organizedData.get(letter)!}
 						key={letter}

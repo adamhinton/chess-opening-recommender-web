@@ -28,12 +28,12 @@ const Recommend = () => {
 		AllowedTimeControl[]
 	>(["blitz", "rapid", "classical"]);
 
-	// Todo clean this up with tagged unions; just doing this for testing
-	const [result, setResult] = useState<{
-		success: boolean;
-		gameData?: unknown;
-		message?: string;
-	} | null>(null);
+	// Todo can delete `result` I think; just commented it out for now
+	// const [result, setResult] = useState<{
+	// 	success: boolean;
+	// 	gameData?: unknown;
+	// 	message?: string;
+	// } | null>(null);
 
 	// Progress tracking
 	const [progressState, setProgressState] = useState<{
@@ -64,7 +64,7 @@ const Recommend = () => {
 			sinceDate: Date | null;
 		}) => {
 			setIsSubmitting(true);
-			setResult(null);
+			// setResult(null);
 			setProgressState(null);
 
 			const formData = new FormData();
@@ -117,12 +117,13 @@ const Recommend = () => {
 						: null,
 				);
 
-				setResult(response);
+				// setResult(response);
 			} catch (error) {
-				setResult({
-					success: false,
-					message: error instanceof Error ? error.message : "An error occurred",
-				});
+				// setResult({
+				// 	success: false,
+				// 	message: error instanceof Error ? error.message : "An error occurred",
+				// });
+				console.error("Error during analysis submission:", error);
 			} finally {
 				setIsSubmitting(false);
 				setProgressState(null);
