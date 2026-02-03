@@ -2,6 +2,14 @@
 
 A personalized recommendation engine that analyzes a player's chess games and suggests opening sequences that fit their specific playing style and skill level.
 
+## Table of Contents
+
+- [The Innovation](#the-innovation)
+- [For Non-Chess Players](#for-non-chess-players-the-spotify-analogy)
+- [Project Architecture](#project-architecture)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+
 ## The Innovation
 
 Most chess tools suggest moves based on what supercomputers or Grandmasters play. This project takes a different approach: **Data-Driven Style Matching.**
