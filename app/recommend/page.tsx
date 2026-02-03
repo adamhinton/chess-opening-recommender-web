@@ -66,6 +66,7 @@ const Recommend = () => {
 			setIsSubmitting(true);
 			// setResult(null);
 			setProgressState(null);
+			startTimeRef.current = Date.now();
 
 			const formData = new FormData();
 			formData.append("username", params.username);
