@@ -86,7 +86,7 @@ const Recommend = () => {
 			});
 
 			try {
-				const response = await processLichessUsername(
+				await processLichessUsername(
 					formData,
 					undefined, // onStatusUpdate - not using this yet
 					(update) => {
@@ -120,10 +120,9 @@ const Recommend = () => {
 
 				// setResult(response);
 			} catch (error) {
-				// setResult({
-				// 	success: false,
-				// 	message: error instanceof Error ? error.message : "An error occurred",
-				// });
+				throw Error(
+					"Analysis submission failed. ... did you forget to set up the prod secrets?",
+				);
 				console.error("Error during analysis submission:", error);
 			} finally {
 				setIsSubmitting(false);
