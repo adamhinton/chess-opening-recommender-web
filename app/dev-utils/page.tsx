@@ -7,6 +7,10 @@
 
 // TODO get rid of this; just commented it out because I'm lazy
 
+"use client";
+
+import React from "react";
+
 const DevUtilsPage = () => {
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-background p-8">
