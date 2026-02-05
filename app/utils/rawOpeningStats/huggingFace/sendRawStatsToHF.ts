@@ -11,7 +11,10 @@ const sendRawStatsToHF = async (
 	data: PlayerData,
 ): Promise<InferencePredictResponse | { error: string }> => {
 	// Step 1: Prepare to send
-	const hfSpaceApiUrl = process.env.HF_SPACE_URL_PROD;
+	const hfSpaceApiUrl =
+		process.env.NODE_ENV === "development"
+			? process.env.NEXT_PUBLIC_HF_SPACE_URL_DEV
+			: process.env.HF_SPACE_URL_PROD;
 
 	if (!hfSpaceApiUrl) {
 		return { error: "HuggingFace space URL not configured" };

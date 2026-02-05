@@ -17,7 +17,9 @@ const wakeUpHuggingFaceSpace = async (): Promise<{
 	try {
 		// Determine which space URL to use based on environment
 		const isDev = process.env.NODE_ENV === "development";
-		const spaceUrl = process.env.HF_SPACE_URL_PROD;
+		const spaceUrl = isDev
+			? process.env.NEXT_PUBLIC_HF_SPACE_URL_DEV
+			: process.env.HF_SPACE_URL_PROD;
 
 		if (!spaceUrl) {
 			const envVar = isDev
@@ -45,7 +47,7 @@ const wakeUpHuggingFaceSpace = async (): Promise<{
 		const controller = new AbortController();
 		const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
-		const response = await fetch(`${spaceUrl}/health/`, {
+		const response = await fetch(`${spaceUrl}/health`, {
 			method: "GET",
 			headers,
 			signal: controller.signal,
