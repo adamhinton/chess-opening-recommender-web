@@ -1,10 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Subtext } from "./Subtext";
 
 interface Feature {
 	title: string;
 	description: string;
-	placeholderText: string;
+	placeholderText?: string;
+	imageSrc?: string;
 	link: string;
 	linkText: string;
 }
@@ -14,7 +16,6 @@ const features: Feature[] = [
 		title: "Interactive Analysis",
 		description:
 			"Enter a Lichess username and watch real-time progress as the system analyzes their games, processes patterns, and recommends powerful chess opening sequences.",
-		placeholderText: "Screenshot: Game Analysis Interface",
 		link: "/recommend",
 		linkText: "Try It Now",
 	},
@@ -22,7 +23,7 @@ const features: Feature[] = [
 		title: "Beautiful Results Tree",
 		description:
 			"Explore personalized recommendations organized by ECO codes (A-E). Each opening links to detailed Lichess analysis.",
-		placeholderText: "Screenshot: Recommendations Tree View",
+		imageSrc: "/screenshots/results-tree-dark.png",
 		link: "/view-recommendations",
 		linkText: "View Example",
 	},
@@ -53,15 +54,34 @@ export function Features() {
               transition-all duration-200
             "
 					>
-						{/* Screenshot Placeholder */}
-						<div className="bg-muted/30 border-b-2 border-border p-12 sm:p-16 flex items-center justify-center">
-							<div className="text-center space-y-2">
-								<div className="text-4xl">📸</div>
-								<p className="text-sm font-mono text-muted-foreground">
-									{feature.placeholderText}
-								</p>
+						{/* Screenshot or Placeholder */}
+						{(feature.placeholderText || feature.imageSrc) && (
+							<div className="bg-muted/30 border-b-2 border-border overflow-hidden">
+								{feature.imageSrc ? (
+									<div className="p-6 sm:p-10 flex justify-center items-center">
+										<div className="relative w-full shadow-2xl rounded-lg border border-border/50 overflow-hidden">
+											<Image
+												src={feature.imageSrc}
+												alt={feature.title}
+												width={1782}
+												height={876}
+												className="w-full h-auto"
+												style={{ maxWidth: "100%" }}
+											/>
+										</div>
+									</div>
+								) : (
+									<div className="p-12 sm:p-16 flex items-center justify-center">
+										<div className="text-center space-y-2">
+											<div className="text-4xl">📸</div>
+											<p className="text-sm font-mono text-muted-foreground">
+												{feature.placeholderText}
+											</p>
+										</div>
+									</div>
+								)}
 							</div>
-						</div>
+						)}
 
 						{/* Content */}
 						<div className="p-6 sm:p-8 space-y-4">

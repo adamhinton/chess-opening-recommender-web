@@ -3,9 +3,9 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
 	// Maintenance mode logic
-	if (!request.nextUrl.pathname.startsWith("/maintenance")) {
-		return NextResponse.redirect(new URL("/maintenance", request.url));
-	}
+	// if (!request.nextUrl.pathname.startsWith("/maintenance")) {
+	// 	return NextResponse.redirect(new URL("/maintenance", request.url));
+	// }
 
 	return await updateSession(request);
 }
