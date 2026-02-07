@@ -65,6 +65,12 @@ export const Header: React.FC = () => {
 					{/* Page navigation links */}
 					<nav className="flex items-center space-x-4">
 						<Link
+							href="/"
+							className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+						>
+							About
+						</Link>
+						<Link
 							href="/recommend"
 							className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
 						>
