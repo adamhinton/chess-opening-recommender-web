@@ -20,13 +20,12 @@ type OpeningName = NonNullable<LichessGameAPIResponse["opening"]>["name"];
  *
  * @param openingName - The name of the opening from the game
  * @param openingNamesToTrainingIDs - Map of opening names → training IDs
- * @returns true if the game's opening is valid, false otherwise
+ * @returns true if the game's opening is in the training dataset, false otherwise
  */
 export function isValidOpening(
 	openingName: OpeningName, // just a string lol
-	openingNamesToTrainingIDs: OpeningNamesToTrainingIDs
+	openingNamesToTrainingIDs: OpeningNamesToTrainingIDs,
 ): boolean {
-	// Filter out games without opening data
 	if (!openingName) {
 		return false;
 	}
