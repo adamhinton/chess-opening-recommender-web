@@ -13,7 +13,7 @@ export const MAX_RATING_DELTA_BETWEEN_PLAYERS = 100;
 export function isValidRatingDeltaBetweenPlayers(
 	whiteRating: LichessPlayerFromAPI["rating"],
 	blackRating: LichessPlayerFromAPI["rating"],
-	maxRatingDeltaBetweenPlayers: number
+	maxRatingDeltaBetweenPlayers: number,
 ): boolean {
 	if (typeof whiteRating !== "number" || typeof blackRating !== "number") {
 		return false;
