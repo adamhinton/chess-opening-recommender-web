@@ -201,10 +201,12 @@ export class OpeningStatsUtils {
 	 * This is because our HF space is written in python
 	 */
 	static convertToHFPayload(playerData: PlayerData): HFInterfacePayload {
-		return {
+		const result = {
 			name: playerData.lichessUsername,
 			rating: playerData.rating,
-			side: playerData.color === "white" ? "white" : "black",
+			// not sure why TS isn't inferring that this is white or black
+			side:
+				playerData.color === "white" ? ("white" as unknown as Color) : "black",
 			opening_stats: Object.values(playerData.openingStats).map((stat) => ({
 				opening_name: stat.openingName,
 				opening_id: stat.trainingID,
@@ -215,8 +217,18 @@ export class OpeningStatsUtils {
 				num_losses: stat.numLosses,
 			})),
 		};
-	}
 
+		// If in dev and it doesn't saitisfy schema, throw. If in prod, don't bother; the HF API will reject it if it's malformed and we can catch it there.
+		if (process.env.NODE_ENV === "development") {
+			const parseResult = HFInterfacePayloadSchema.safeParse(result);
+			if (!parseResult.success) {
+				console.error("Invalid HFInterfacePayload:", parseResult.error);
+				throw new Error("HFInterfacePayload validation failed");
+			}
+		}
+
+		return result;
+	}
 	/**
 	 * Create empty PlayerData structure.
 	 */
@@ -226,18 +238,30 @@ export class OpeningStatsUtils {
 		color: Color,
 		allowedTimeControls: AllowedTimeControl[],
 	): PlayerData {
-		return {
+		const result = {
 			lichessUsername,
 			rating,
 			color,
 			allowedTimeControls,
 			openingStats: {},
 		};
+
+		// Validate the structure in dev to catch any mistakes early
+		if (process.env.NODE_ENV === "development") {
+			const parseResult = PlayerDataSchema.safeParse(result);
+			if (!parseResult.success) {
+				console.error("Invalid PlayerData:", parseResult.error);
+				throw new Error("PlayerData validation failed");
+			}
+		}
+
+		return result;
 	}
 
 	/**
 	 * Add or update opening stats (accumulator pattern).
 	 * If opening exists, adds to counts. If new opening, creates new entry.
+	 * At this point we already know it's a valid game and valid opening, so we can just accumulate stats without worrying about validation.
 	 */
 	static accumulateOpeningStats(
 		playerData: PlayerData,
