@@ -19,9 +19,5 @@ const tocSections = [
 import Hero from "./Hero";
 
 export default function Home() {
-	return (
-		<main className="min-h-screen pb-16">
-			<Hero />
-		</main>
-	);
+	return <Hero />;
 }
