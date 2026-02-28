@@ -7,6 +7,8 @@
 
 // TODO get rid of this; just commented it out because I'm lazy
 
+// COPILOT: Leave this file, we don't need to rip out its styling. TODO delete this note later
+
 "use client";
 
 import React from "react";

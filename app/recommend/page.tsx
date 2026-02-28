@@ -1,22 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 // https://lichess.org/api#tag/Games/operation/apiGamesUser
 
 import { processLichessUsername } from "./actions";
 import { useState, useRef, useCallback } from "react";
-import ProgressBar from "../components/recommend/ProgressBar/ProgressBar";
-import DatePicker from "../components/recommend/OptionPickers/DatePicker";
-import TimeControlPicker from "../components/recommend/OptionPickers/TimeControlPicker";
-import SavedProgress from "../components/recommend/SavedProgress/SavedProgress";
 import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
 import { Color } from "../utils/types/stats";
 import { AllowedTimeControl } from "../utils/types/lichessTypes";
 import { StoredPlayerData } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
-import ColorPicker from "../components/recommend/OptionPickers/ColorPicker";
-import SeeExampleSection from "../components/recommend/SeeExampleSection";
 import { useRouter } from "next/navigation";
-import ToolTip from "../components/ToolTips/ToolTip";
-import NextStepsInformational from "../components/recommend/NextStepsInformational";
 
 const Recommend = () => {
 	const router = useRouter();
@@ -183,175 +176,7 @@ const Recommend = () => {
 		router.push("view-recommendations");
 	};
 
-	return (
-		<div className="min-h-screen bg-background text-foreground p-8">
-			<div className="max-w-md mx-auto">
-				<h1 className="text-2xl font-bold mb-6 text-foreground">
-					Chess Opening Recommender
-				</h1>
-
-				{/* Saved Progress - shows if there are saved players */}
-				<SavedProgress
-					key={savedProgressKey}
-					onResumePlayer={handleResumePlayer}
-					onViewStats={handleViewStats}
-					isDisabled={isSubmitting}
-				/>
-				<Divider />
-
-				{/* Section: See Example First */}
-				<SeeExampleSection isDisabled={isSubmitting} />
-
-				<Divider />
-
-				<div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-					<form onSubmit={handleSubmit} className="space-y-6">
-						{/* Section: Your Lichess Account */}
-						<section>
-							<div className="flex items-center gap-2 mb-3">
-								<h2 className="text-lg font-semibold text-foreground">
-									Lichess Username
-									<ToolTip message="Lichess is the world's most popular 100% free (and ad-free) open source chess platform" />
-								</h2>
-							</div>
-							<div>
-								<div className="flex items-center gap-2 mb-2"></div>
-								<input
-									type="text"
-									id="username"
-									name="username"
-									value={username}
-									onChange={(e) => setUsername(e.target.value)}
-									placeholder="Hikaru"
-									className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-									required
-									disabled={isSubmitting}
-								/>
-							</div>
-						</section>
-
-						<Divider />
-
-						{/* Section: Analysis Settings */}
-						<section>
-							<h2 className="text-lg font-semibold text-foreground mb-4">
-								Analysis Settings
-							</h2>
-
-							{/* Date Picker */}
-							<div className="mb-6">
-								<DatePicker
-									sinceDate={sinceDate}
-									onDateChange={setSinceDate}
-									isDisabled={isSubmitting}
-								/>
-							</div>
-
-							<Divider />
-
-							{/* Color Picker and Time Control Picker in single column */}
-							<div className="space-y-6">
-								<div>
-									<div className="flex items-center gap-2 mb-3">
-										<label className="block text-sm font-medium text-foreground">
-											Play as (choose one)
-										</label>
-										<ToolTip message="Openings differ for White (who moves first) vs Black (who responds). Choose which color you want to improve." />
-									</div>
-									<ColorPicker
-										selectedColor={selectedColor}
-										onColorChange={setSelectedColor}
-										isDisabled={isSubmitting}
-									/>
-								</div>
-
-								<Divider />
-
-								<div>
-									<TimeControlPicker
-										selectedTimeControls={selectedTimeControls}
-										onTimeControlChange={setSelectedTimeControls}
-										isDisabled={isSubmitting}
-									/>
-								</div>
-							</div>
-						</section>
-
-						<Divider />
-
-						{/* Displays info about what happens after submitting: 1. Compile opening stats, 2. AI analyzes your patterns, 3. Get personalized recommendations */}
-						<NextStepsInformational isSubmitting={isSubmitting} />
-
-						<button
-							type="submit"
-							disabled={
-								isSubmitting ||
-								selectedTimeControls.length === 0 ||
-								!username.trim()
-							}
-							className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-						>
-							{isSubmitting ? "Processing..." : "Get AI Opening Suggestions"}
-						</button>
-						{selectedTimeControls.length === 0 && !isSubmitting && (
-							<p className="text-sm text-destructive mt-2">
-								Please select at least one time control
-							</p>
-						)}
-					</form>
-
-					{/* Progress Bar */}
-					{progressState && (
-						<div className="mt-6">
-							{progressState.stage === "Analyzing Games" ? (
-								<ProgressBar
-									stage="Analyzing Games"
-									numGamesStreamedSoFar={progressState.numGamesProcessed}
-									totalGamesNeeded={progressState.totalGamesNeeded}
-									estimatedSecondsRemaining={
-										progressState.estimatedSecondsRemaining
-									}
-								/>
-							) : (
-								<ProgressBar
-									stage="Running AI Model"
-									totalGamesNeeded={progressState.totalGamesNeeded}
-									estimatedSecondsRemaining={
-										progressState.estimatedSecondsRemaining
-									}
-								/>
-							)}
-
-							{/* Warn that closing the page will pause analysis, though user can resume later*/}
-							<div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									className="h-4 w-4 flex-shrink-0 text-amber-500"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-									/>
-								</svg>
-								<span>
-									Closing this page will pause analysis. Your progress is saved
-									automatically—you can resume anytime.
-								</span>
-							</div>
-						</div>
-					)}
-				</div>
-			</div>
-		</div>
-	);
+	return <div>Placeholder</div>;
 };
 
 export default Recommend;
-
-/**Vertical dividing line between sections */
-const Divider = () => <div className="h-[2px] bg-muted-foreground/50 my-6" />;
