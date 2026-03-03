@@ -1,10 +1,5 @@
 "use client";
 
-// TODO:
-// Backend stuff:
-// -- Save generated recs
-// -- Save ongoing stats instead of localStorage?
-
 import { streamLichessGames } from "../utils/rawOpeningStats/lichess/streamLichessGames";
 import { StatsLocalStorageUtils } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import {
