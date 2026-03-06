@@ -28,13 +28,6 @@ const Recommend = () => {
 		AllowedTimeControl[]
 	>(["blitz", "rapid", "classical"]);
 
-	// Todo can delete `result` I think; just commented it out for now
-	// const [result, setResult] = useState<{
-	// 	success: boolean;
-	// 	gameData?: unknown;
-	// 	message?: string;
-	// } | null>(null);
-
 	// Progress tracking
 	const [progressState, setProgressState] = useState<{
 		stage: "Analyzing Games" | "Running AI Model";

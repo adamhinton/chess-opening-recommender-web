@@ -5,8 +5,6 @@
 // // Shouldn't be deployed to prod (TODO), but doesn't really matter if it is.
 // // =========================================
 
-// TODO get rid of this; just commented it out because I'm lazy
-
 "use client";
 
 import React from "react";
