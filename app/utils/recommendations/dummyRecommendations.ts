@@ -7,8 +7,6 @@
 // Uses real opening names from our model artifacts.
 //
 // This isn't intended to go to prod, but it's not a big deal if it does.
-//
-// TODO stretch can delete this, along with /dev-utils, after testing and development
 // =========================================
 
 import {
