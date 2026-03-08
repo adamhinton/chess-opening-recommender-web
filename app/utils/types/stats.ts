@@ -5,6 +5,12 @@
 import z from "zod";
 import { AllowedTimeControl } from "./lichessTypes";
 
+/**This is just a string but we're putting a name on it for clarity when we use it as an object key */
+const OpeningNameSchema = z.string();
+
+/**This is just a string but we're putting a name on it for clarity when we use it as an object key */
+type OpeningName = z.infer<typeof OpeningNameSchema>;
+
 /**
  * Earliest date of games we'll fetch.
  *
@@ -48,7 +54,8 @@ export const PlayerDataSchema = z.object({
 	lichessUsername: z.string(),
 	rating: z.number().nonnegative(),
 	color: ColorSchema,
-	openingStats: z.record(z.string(), RawOpeningStatsSchema), // key is opening name
+	// OpeningNameSchema is just a string, but naming it makes it clear what its origin is
+	openingStats: z.record(OpeningNameSchema, RawOpeningStatsSchema),
 	allowedTimeControls: z.array(z.enum(["blitz", "rapid", "classical"])),
 });
 
@@ -238,7 +245,7 @@ export class OpeningStatsUtils {
 		color: Color,
 		allowedTimeControls: AllowedTimeControl[],
 	): PlayerData {
-		const result = {
+		const result: PlayerData = {
 			lichessUsername,
 			rating,
 			color,
@@ -265,7 +272,8 @@ export class OpeningStatsUtils {
 	 */
 	static accumulateOpeningStats(
 		playerData: PlayerData,
-		openingName: string,
+		openingName: OpeningName,
+		/**Its id in my internal model training database */
 		trainingID: number,
 		eco: string,
 		result: GameResult,

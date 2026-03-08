@@ -74,10 +74,10 @@ export function isValidLichessGame(
  */
 export interface GameValidationStats {
 	totalGamesProcessed: number;
-	validGames: number;
-	filteredByOpening: number;
-	filteredByRating: number;
-	filteredByStructure: number;
+	numValidGames: number;
+	numFilteredByOpening: number;
+	numFilteredByRating: number;
+	numFilteredByStructure: number;
 }
 
 /**
@@ -88,10 +88,10 @@ export interface GameValidationStats {
 export function createValidationStats(): GameValidationStats {
 	return {
 		totalGamesProcessed: 0,
-		validGames: 0,
-		filteredByOpening: 0,
-		filteredByRating: 0,
-		filteredByStructure: 0,
+		numValidGames: 0,
+		numFilteredByOpening: 0,
+		numFilteredByRating: 0,
+		numFilteredByStructure: 0,
 	};
 }
 
@@ -105,19 +105,19 @@ export function createValidationStats(): GameValidationStats {
 export function logValidationStats(stats: GameValidationStats): void {
 	const filterRate =
 		stats.totalGamesProcessed > 0
-			? ((stats.totalGamesProcessed - stats.validGames) /
+			? ((stats.totalGamesProcessed - stats.numValidGames) /
 					stats.totalGamesProcessed) *
 				100
 			: 0;
 
 	console.log("=== Game Validation Statistics ===");
 	console.log(`Total games processed: ${stats.totalGamesProcessed}`);
-	console.log(`Valid games: ${stats.validGames}`);
+	console.log(`Valid games: ${stats.numValidGames}`);
 	console.log(`Filter rate: ${filterRate.toFixed(1)}%`);
-	console.log(`Filtered by opening: ${stats.filteredByOpening}`);
-	console.log(`Filtered by rating delta: ${stats.filteredByRating}`);
+	console.log(`Filtered by opening: ${stats.numFilteredByOpening}`);
+	console.log(`Filtered by rating delta: ${stats.numFilteredByRating}`);
 	console.log(
-		`Filtered by structure (moves/status/variant): ${stats.filteredByStructure}`,
+		`Filtered by structure (moves/status/variant): ${stats.numFilteredByStructure}`,
 	);
 	console.log("=================================");
 }

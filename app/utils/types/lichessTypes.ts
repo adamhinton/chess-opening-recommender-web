@@ -112,7 +112,7 @@ export function estimateNumGamesToStream(params: {
 	}, 0);
 
 	// Divide by 2 because we're only streaming games where the user is the chosen color.
-	let estimatedOneColorGames = Math.floor(totalGamesAllColors / 2);
+	let numEstimatedOneColorGames = Math.floor(totalGamesAllColors / 2);
 
 	if (sinceUnixMS !== undefined) {
 		const now = Date.now();
@@ -122,9 +122,11 @@ export function estimateNumGamesToStream(params: {
 		// Guard against weird clocks / future `since` / invalid profile values
 		if (accountAgeMS > 0 && sinceWindowMS > 0) {
 			const proportion = Math.min(1, sinceWindowMS / accountAgeMS);
-			estimatedOneColorGames = Math.floor(estimatedOneColorGames * proportion);
+			numEstimatedOneColorGames = Math.floor(
+				numEstimatedOneColorGames * proportion,
+			);
 		}
 	}
 
-	return Math.max(1, estimatedOneColorGames);
+	return Math.max(3, numEstimatedOneColorGames);
 }

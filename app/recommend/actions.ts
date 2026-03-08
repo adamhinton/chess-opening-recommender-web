@@ -283,7 +283,7 @@ export async function processLichessUsername(
 						!game.opening ||
 						!openingNamesToTrainingIDs.has(game.opening.name)
 					) {
-						validationStats.filteredByOpening++;
+						validationStats.numFilteredByOpening++;
 					}
 					continue;
 				}
@@ -307,7 +307,7 @@ export async function processLichessUsername(
 				);
 
 				validGameCount++;
-				validationStats.validGames++;
+				validationStats.numValidGames++;
 				if (totalGamesProcessed % 50 === 0) {
 					console.log(`Processed ${totalGamesProcessed} games`);
 				}
