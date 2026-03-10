@@ -77,42 +77,51 @@ A lightweight Python API that hosts the pre-trained model. The Web Client sends 
 
 ## Getting Started
 
+This project is designed to be run with Docker.
+
 ### Prerequisites
 
 You will need:
 
-1.  Node.js 18+
-2.  A [Hugging Face](https://huggingface.co) account (to host the inference model).
+1.  [Docker](https://www.docker.com/get-started)
+2.  Node.js (to help pass environment variables during the build)
+3.  A [Hugging Face](https://huggingface.co) account (to host the inference model).
 
-### Installation
+### Setup and Running the Project
 
-1.  Clone the repository:
+1.  **Clone the repository:**
 
     ```bash
     git clone https://github.com/adamhinton/chess-opening-recommender-web.git
     cd chess-opening-recommender-web
     ```
 
-2.  Install dependencies:
+2.  **Configure Environment Variables:**
 
-    ```bash
-    npm install
-    ```
-
-3.  Configure Environment Variables:
-    Create a `.env.local` file in the root directory and add the following keys.
+    Create a `.env.local` file in the root directory. See the table below for the required keys.
 
     | Variable                                       | Description                                                             |
     | :--------------------------------------------- | :---------------------------------------------------------------------- |
-    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY` | Your Supabase public API key                                            |
+    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY` | Your Supabase public API key (if you are using Supabase)                |
     | `NEXT_PUBLIC_HF_SPACE_URL_DEV`                 | URL for local dev (likely localhost if running the python repo locally) |
     | `HF_SPACE_URL_PROD`                            | The full URL to your Hugging Face Space                                 |
     | `HF_API_TOKEN`                                 | Your Hugging Face Access Token                                          |
 
-4.  Run the development server:
+3.  **Build the Docker image:**
+
+    This command reads your `.env.local` file and securely passes the variables to the build process.
+
     ```bash
-    npm run dev
+    docker build $(xargs -a .env.local -I {} echo --build-arg \"{}\") -t chess-opening-recommender-web .
     ```
+
+4.  **Run the Docker container:**
+
+    ```bash
+    docker run --rm -p 3000:3000 --env-file .env.local chess-opening-recommender-web
+    ```
+
+    The application will be available at [http://localhost:3000](http://localhost:3000).
 
 ### Setting up the AI Model (Forking the Project)
 
