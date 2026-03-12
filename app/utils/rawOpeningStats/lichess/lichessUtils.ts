@@ -21,8 +21,8 @@ import { Color, GameResult } from "../../types/stats";
  * @returns Tagged union indicating success with rating details or failure with reason
  */
 export function selectPlayerRating(
-	perfs: LichessPerformance
-): RatingSelectionResult {
+	perfs: Readonly<LichessPerformance>,
+): Readonly<RatingSelectionResult> {
 	// Extract rating info for each time control
 	const blitz = extractRatingInfo(perfs, "blitz");
 	const rapid = extractRatingInfo(perfs, "rapid");
@@ -116,14 +116,14 @@ export function selectPlayerRating(
  * Fetch and validate Lichess user profile
  */
 export async function fetchLichessUserProfile(
-	username: string
-): Promise<LichessUserProfile> {
+	username: string,
+): Promise<Readonly<LichessUserProfile>> {
 	const response = await fetch(`https://lichess.org/api/user/${username}`);
 
 	if (!response.ok) {
 		if (response.status === 404) {
 			throw new Error(
-				`User "${username}" not found on Lichess. Please check the username and try again.`
+				`User "${username}" not found on Lichess. Please check the username and try again.`,
 			);
 		} else if (response.status === 429) {
 			throw new Error("Too many requests. Please wait a moment and try again.");
@@ -131,7 +131,7 @@ export async function fetchLichessUserProfile(
 			throw new Error("Lichess server error. Please try again later.");
 		}
 		throw new Error(
-			`Failed to fetch user profile: ${response.status} ${response.statusText}`
+			`Failed to fetch user profile: ${response.status} ${response.statusText}`,
 		);
 	}
 
@@ -140,7 +140,7 @@ export async function fetchLichessUserProfile(
 
 	if (!parseResult.success) {
 		throw new Error(
-			`Invalid Lichess API response: ${parseResult.error.message}`
+			`Invalid Lichess API response: ${parseResult.error.message}`,
 		);
 	}
 
@@ -176,7 +176,7 @@ export async function fetchUserRatingAndProfile(username: string): Promise<
 	}
 
 	console.log(
-		`Selected ${ratingSelection.timeControl} rating: ${ratingSelection.rating}`
+		`Selected ${ratingSelection.timeControl} rating: ${ratingSelection.rating}`,
 	);
 	return {
 		isValid: true,
@@ -187,8 +187,8 @@ export async function fetchUserRatingAndProfile(username: string): Promise<
 }
 
 export function getGameResult(
-	game: LichessGameAPIResponse,
-	myColor: Color
+	game: Readonly<LichessGameAPIResponse>,
+	myColor: Color,
 ): GameResult {
 	if (!game.winner) return "draw";
 	return game.winner === myColor ? "win" : "loss";
@@ -246,8 +246,8 @@ type RatingSelectionFailure = {
  * Extract rating info from perfs object
  */
 export function extractRatingInfo(
-	perfs: LichessPerformance,
-	timeControl: AllowedTimeControl
+	perfs: Readonly<LichessPerformance>,
+	timeControl: AllowedTimeControl,
 ): RatingWithRD | null {
 	const perf = perfs[timeControl];
 	if (!perf) return null;
@@ -263,7 +263,7 @@ export function extractRatingInfo(
 /**
  * Check if a rating is reliable based on RD threshold
  */
-function isReliableRating(ratingInfo: RatingWithRD): boolean {
+function isReliableRating(ratingInfo: Readonly<RatingWithRD>): boolean {
 	return (
 		ratingInfo.ratingDeviation < RATING_SELECTION_CONFIG.RELIABLE_RD_THRESHOLD
 	);

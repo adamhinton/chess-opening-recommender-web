@@ -59,10 +59,16 @@ export type StoredRecommendationData = z.infer<
  * Metadata tracking all stored recommendations.
  * Keys are in format "username:color" (e.g., "magnus:white")
  */
-interface RecommendationsMetadata {
+export const RecommendationsMetadataSchema = z.object({
 	/** Map of "username:color" to last save time */
-	entries: Record<string, number>;
-}
+	entries: z.record(z.string(), z.number()),
+});
+
+/**
+ * Metadata tracking all stored recommendations.
+ * Keys are in format "username:color" (e.g., "magnus:white")
+ */
+type RecommendationsMetadata = z.infer<typeof RecommendationsMetadataSchema>;
 
 // ============================================================================
 // Result Types (Tagged Unions)
@@ -107,11 +113,21 @@ export class RecommendationsLocalStorageUtils {
 	/**
 	 * Get or initialize metadata
 	 */
-	private static getMetadata(): RecommendationsMetadata {
+	private static getMetadata(): Readonly<RecommendationsMetadata> {
 		try {
 			const raw = localStorage.getItem(CONFIG.LOCLASTORAGE_METADATA_KEY);
 			if (raw) {
-				return JSON.parse(raw) as RecommendationsMetadata;
+				const parsed = JSON.parse(raw);
+				const validation = RecommendationsMetadataSchema.safeParse(parsed);
+				if (validation.success) {
+					return validation.data;
+				} else {
+					console.warn(
+						"Invalid recommendations metadata, resetting:",
+						validation.error,
+					);
+					localStorage.removeItem(CONFIG.LOCLASTORAGE_METADATA_KEY);
+				}
 			}
 		} catch (error) {
 			console.error("Error reading recommendations metadata:", error);
@@ -165,8 +181,8 @@ export class RecommendationsLocalStorageUtils {
 	static saveRecommendations(
 		username: string,
 		color: Color,
-		recommendations: InferencePredictResponse,
-	): SaveRecommendationsResult {
+		recommendations: Readonly<InferencePredictResponse>,
+	): Readonly<SaveRecommendationsResult> {
 		if (!this.isLocalStorageAvailable()) {
 			return { success: false, error: "localStorage is not available" };
 		}
@@ -203,7 +219,7 @@ export class RecommendationsLocalStorageUtils {
 	static getStoredRecommendations(
 		username: string,
 		color: Color,
-	): GetRecommendationsResult {
+	): Readonly<GetRecommendationsResult> {
 		if (!this.isLocalStorageAvailable()) {
 			return { exists: false };
 		}
@@ -317,7 +333,7 @@ export class RecommendationsLocalStorageUtils {
 	 * Find the most recently saved recommendation (if within the recent window)
 	 * This is used to auto-display when navigating from /recommend
 	 */
-	static getMostRecentRecommendation(): StoredRecommendationData | null {
+	static getMostRecentRecommendation(): Readonly<StoredRecommendationData> | null {
 		const all = this.getAllStoredRecommendations();
 		if (all.length === 0) return null;
 

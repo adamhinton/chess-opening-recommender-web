@@ -47,14 +47,15 @@ export interface GameValidationFilters {
  * }
  */
 export function isValidLichessGame(
-	game: LichessGameAPIResponse,
-	filters: GameValidationFilters,
+	game: Readonly<LichessGameAPIResponse>,
+	filters: Readonly<GameValidationFilters>,
 ): boolean {
 	// Short-circuit evaluation:
 	// 1. Rating check (cheapest)
 	// 2. Structure check (variant, moves, status)
 	// 3. Opening check (set lookup)
 	return (
+		// This is kinda hard to read; it returns true only if all four conditions are true
 		isValidRatingDeltaBetweenPlayers(
 			game.players.white.rating,
 			game.players.black.rating,

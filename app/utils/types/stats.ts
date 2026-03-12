@@ -207,7 +207,9 @@ export class OpeningStatsUtils {
 	 * All this does is change camelCase keys to snake_case
 	 * This is because our HF space is written in python
 	 */
-	static convertToHFPayload(playerData: PlayerData): HFInterfacePayload {
+	static convertToHFPayload(
+		playerData: Readonly<PlayerData>,
+	): Readonly<HFInterfacePayload> {
 		const result = {
 			name: playerData.lichessUsername,
 			rating: playerData.rating,

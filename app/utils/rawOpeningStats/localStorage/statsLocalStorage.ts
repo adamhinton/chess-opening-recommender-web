@@ -12,6 +12,7 @@
 // VALIDATION: All retrieved data validated with Zod schemas
 // =========================================
 
+import z from "zod";
 import { AllowedTimeControl } from "../../types/lichessTypes";
 import { Color, PlayerData, PlayerDataSchema } from "../../types/stats";
 
@@ -63,12 +64,17 @@ export interface StoredPlayerData {
  * Metadata tracking all stored players.
  * Keys are in format "username:color" (e.g., "magnus:white")
  */
-interface StorageMetadata {
-	// Map of "username:color" to last access time
-	players: Record<string, number>;
+export const StorageMetadataSchema = z.object({
+	players: z.record(z.string(), z.number()), // "username:color" → last access time
 	// Total storage used estimate (bytes)
-	totalStorageBytes: number;
-}
+	totalStorageBytes: z.number(),
+});
+
+/**
+ * Metadata tracking all stored players.
+ * Keys are in format "username:color" (e.g., "magnus:white")
+ */
+type StorageMetadata = z.infer<typeof StorageMetadataSchema>;
 
 /**
  * Result of checking for existing stats
@@ -166,7 +172,14 @@ export class StatsLocalStorageUtils {
 		try {
 			const raw = localStorage.getItem(CONFIG.METADATA_KEY);
 			if (raw) {
-				return JSON.parse(raw) as StorageMetadata;
+				const parsed = JSON.parse(raw);
+				const validation = StorageMetadataSchema.safeParse(parsed);
+				if (validation.success) {
+					return validation.data;
+				} else {
+					console.error("Metadata validation failed, resetting metadata.");
+					localStorage.removeItem(CONFIG.METADATA_KEY);
+				}
 			}
 		} catch (error) {
 			console.error("Error reading metadata:", error);
@@ -201,8 +214,8 @@ export class StatsLocalStorageUtils {
 	 */
 	static checkExistingStatsByUsername(
 		username: string,
-		color: Color
-	): ExistingStatsCheck {
+		color: Color,
+	): Readonly<ExistingStatsCheck> {
 		if (!this.isLocalStorageAvailable()) {
 			return { exists: false };
 		}
@@ -246,13 +259,13 @@ export class StatsLocalStorageUtils {
 	 * Save or update player stats
 	 */
 	static saveStats(
-		playerData: PlayerData,
-		options: {
+		playerData: Readonly<PlayerData>,
+		options: Readonly<{
 			lastFetchedUnixMS?: number;
 			sinceUnixMS: number;
 			fetchProgress: number;
 			isComplete: boolean;
-		}
+		}>,
 	): { success: true } | { success: false; error: string } {
 		if (!this.isLocalStorageAvailable()) {
 			return {
@@ -266,8 +279,8 @@ export class StatsLocalStorageUtils {
 		if (currentUsage > CONFIG.STORAGE_QUOTA_WARNING_BYTES) {
 			console.warn(
 				`Storage usage (${(currentUsage / 1024 / 1024).toFixed(
-					2
-				)}MB) exceeds warning threshold`
+					2,
+				)}MB) exceeds warning threshold`,
 			);
 		}
 
@@ -304,7 +317,10 @@ export class StatsLocalStorageUtils {
 	 * Get existing stats for a username and color.
 	 * Returns null if no stats exist.
 	 */
-	static getExistingStats(username: string, color: Color): PlayerData | null {
+	static getExistingStats(
+		username: string,
+		color: Color,
+	): Readonly<PlayerData> | null {
 		const check = this.checkExistingStatsByUsername(username, color);
 
 		if (check.exists && check.data) {
@@ -375,12 +391,14 @@ export class StatsLocalStorageUtils {
 	 * Parses the metadata key format "username:color".
 	 * This is just metadata; if you want full data, use getAllStoredPlayersFull().
 	 */
-	static getAllLocalStoragePlayers(): Array<{
-		username: string;
-		color: Color;
-		lastAccess: number;
-		isStale: boolean;
-	}> {
+	static getAllLocalStoragePlayers(): Readonly<
+		Array<{
+			username: string;
+			color: Color;
+			lastAccess: number;
+			isStale: boolean;
+		}>
+	> {
 		const metadata = this.getMetadata();
 		const now = Date.now();
 
@@ -446,12 +464,12 @@ export class StatsLocalStorageUtils {
 	/**
 	 * Get storage usage info
 	 */
-	static getStorageInfo(): {
+	static getStorageInfo(): Readonly<{
 		numUsedBytes: number;
 		numUsedMB: number;
 		playerCount: number;
 		isNearQuota: boolean;
-	} {
+	}> {
 		const numUsedBytes = this.getStorageUsageBytes();
 		const metadata = this.getMetadata();
 
@@ -474,12 +492,14 @@ export class StatsLocalStorageUtils {
 	 * @param params.formTimeControls - Time controls selected in form
 	 * @param params.formSinceUnixMS - Optional "since" date from form (undefined = all time)
 	 */
-	static resolveStorageConflict(params: {
-		username: string;
-		color: Color;
-		formTimeControls: AllowedTimeControl[];
-		formSinceUnixMS?: number;
-	}): LocalStorageResumeConflictResolution {
+	static resolveStorageConflict(
+		params: Readonly<{
+			username: string;
+			color: Color;
+			formTimeControls: AllowedTimeControl[];
+			formSinceUnixMS?: number;
+		}>,
+	): Readonly<LocalStorageResumeConflictResolution> {
 		const { username, color, formTimeControls, formSinceUnixMS } = params;
 
 		// Check if we have existing data for this user+color
@@ -510,7 +530,7 @@ export class StatsLocalStorageUtils {
 			return {
 				action: "delete-and-restart",
 				reason: `Time controls changed (saved: ${savedTimeControls.join(
-					", "
+					", ",
 				)} → form: ${formTimeControls.join(", ")}). Must restart.`,
 			};
 		}

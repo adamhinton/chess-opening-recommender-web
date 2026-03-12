@@ -64,17 +64,17 @@ export class MemoryMonitor {
 		// 3. Measure
 		if (performance.memory) {
 			const usedMB = Math.round(
-				performance.memory.usedJSHeapSize / 1024 / 1024
+				performance.memory.usedJSHeapSize / 1024 / 1024,
 			);
 			const totalMB = Math.round(
-				performance.memory.totalJSHeapSize / 1024 / 1024
+				performance.memory.totalJSHeapSize / 1024 / 1024,
 			);
 			const limitMB = Math.round(
-				performance.memory.jsHeapSizeLimit / 1024 / 1024
+				performance.memory.jsHeapSizeLimit / 1024 / 1024,
 			);
 
 			console.log(
-				`[Memory] Games: ${gameCount} | Openings: ${openingCount} | Used: ${usedMB}MB | Total: ${totalMB}MB | Limit: ${limitMB}MB`
+				`[Memory] Games: ${gameCount} | Openings: ${openingCount} | Used: ${usedMB}MB | Total: ${totalMB}MB | Limit: ${limitMB}MB`,
 			);
 		}
 	}

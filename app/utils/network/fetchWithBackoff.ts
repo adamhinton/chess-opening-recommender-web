@@ -29,7 +29,7 @@ export async function fetchWithBackoff({
 	maxRetries = 5,
 	baseDelayMs = 1000,
 	onRetry,
-}: FetchWithBackoffConfig): Promise<Response> {
+}: Readonly<FetchWithBackoffConfig>): Promise<Response> {
 	let numAttemptsSoFar = 0;
 
 	while (true) {
@@ -80,7 +80,7 @@ export async function fetchWithBackoff({
 				onRetry(
 					`Server is busy (Attempt ${numAttemptsSoFar}/${maxRetries}). Retrying in ${(
 						delayMs / 1000
-					).toFixed(1)}s...`
+					).toFixed(1)}s...`,
 				);
 			}
 
@@ -105,7 +105,7 @@ export async function fetchWithBackoff({
 				onRetry(
 					`Network error (Attempt ${numAttemptsSoFar}/${maxRetries}). Retrying in ${(
 						delayMs / 1000
-					).toFixed(1)}s...`
+					).toFixed(1)}s...`,
 				);
 			}
 

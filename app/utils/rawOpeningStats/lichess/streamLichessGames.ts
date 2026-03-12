@@ -14,7 +14,7 @@ export interface StreamLichessGamesConfig {
 	username: string;
 	color: Color;
 	numGames: number;
-	allowedTimeControls: AllowedTimeControl[];
+	allowedTimeControls: readonly AllowedTimeControl[];
 	sinceUnixMS?: number; // User's date filter from form (lower bound - stays constant)
 	untilUnixMS?: number; // Pagination cursor (upper bound - moves backwards each batch)
 	/**This passes up a user-friendly message to the UI informing them that there's a delay */
@@ -40,8 +40,8 @@ export interface StreamLichessGamesConfig {
  * ```
  */
 export async function* streamLichessGames(
-	config: StreamLichessGamesConfig,
-): AsyncGenerator<LichessGameAPIResponse, void, unknown> {
+	config: Readonly<StreamLichessGamesConfig>,
+): AsyncGenerator<Readonly<LichessGameAPIResponse>, void, unknown> {
 	const {
 		username,
 		color,

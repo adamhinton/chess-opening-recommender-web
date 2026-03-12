@@ -24,7 +24,7 @@ type OpeningName = NonNullable<LichessGameAPIResponse["opening"]>["name"];
  */
 export function isValidOpening(
 	openingName: OpeningName, // just a string lol
-	openingNamesToTrainingIDs: OpeningNamesToTrainingIDs,
+	openingNamesToTrainingIDs: Readonly<OpeningNamesToTrainingIDs>,
 ): boolean {
 	if (!openingName) {
 		return false;

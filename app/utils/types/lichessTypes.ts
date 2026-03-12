@@ -21,6 +21,8 @@ type Dont_Use_This_It_Isnt_What_You_Think = never;
  * A single game from Lichess API (NDJSON format).
  *
  * There are more fields in the response; this only includes fields and values we care about for opening stats.
+ *
+ * A lot of these variable names aren't very semantic - rated instead of isRated, etc. I give them better names when I transform them into our internal types.
  */
 export interface LichessGameAPIResponse {
 	id: string;
@@ -101,8 +103,8 @@ export type LichessUserProfile = z.infer<typeof LichessUserProfileSchema>;
  * Returns at least 1 to keep progress math safe.
  */
 export function estimateNumGamesToStream(params: {
-	userProfile: LichessUserProfile;
-	allowedTimeControls: AllowedTimeControl[];
+	userProfile: Readonly<LichessUserProfile>;
+	allowedTimeControls: Readonly<AllowedTimeControl[]>;
 	sinceUnixMS?: number;
 }): number {
 	const { userProfile, allowedTimeControls, sinceUnixMS } = params;

@@ -8,8 +8,8 @@ import {
 } from "../../types/stats";
 
 const sendRawStatsToHF = async (
-	data: PlayerData,
-): Promise<InferencePredictResponse | { error: string }> => {
+	data: Readonly<PlayerData>,
+): Promise<Readonly<InferencePredictResponse> | { error: string }> => {
 	// Step 1: Prepare to send
 	const hfSpaceApiUrl =
 		process.env.NODE_ENV === "development"
