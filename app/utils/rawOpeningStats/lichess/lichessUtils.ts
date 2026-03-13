@@ -22,7 +22,7 @@ import { Color, GameResult } from "../../types/stats";
  */
 export function selectPlayerRating(
 	perfs: Readonly<LichessPerformance>,
-): Readonly<RatingSelectionResult> {
+): RatingSelectionResult {
 	// Extract rating info for each time control
 	const blitz = extractRatingInfo(perfs, "blitz");
 	const rapid = extractRatingInfo(perfs, "rapid");
@@ -117,7 +117,7 @@ export function selectPlayerRating(
  */
 export async function fetchLichessUserProfile(
 	username: string,
-): Promise<Readonly<LichessUserProfile>> {
+): Promise<LichessUserProfile> {
 	const response = await fetch(`https://lichess.org/api/user/${username}`);
 
 	if (!response.ok) {

@@ -150,7 +150,7 @@ export class StatsLocalStorageUtils {
 	/**
 	 * Get current storage usage estimate
 	 */
-	private static getStorageUsageBytes(): number {
+	private static getStorageUsageBytes() {
 		let total = 0;
 		for (let i = 0; i < localStorage.length; i++) {
 			const key = localStorage.key(i);

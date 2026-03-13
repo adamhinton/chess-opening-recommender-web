@@ -41,7 +41,7 @@ export interface StreamLichessGamesConfig {
  */
 export async function* streamLichessGames(
 	config: Readonly<StreamLichessGamesConfig>,
-): AsyncGenerator<Readonly<LichessGameAPIResponse>, void, unknown> {
+): AsyncGenerator<LichessGameAPIResponse, void, unknown> {
 	const {
 		username,
 		color,

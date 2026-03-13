@@ -40,7 +40,7 @@ interface RecommendationToDelete {
 // Helper Functions
 // ============================================================================
 
-function formatDate(unixMs: number): string {
+function formatDate(unixMs: number) {
 	return new Date(unixMs).toLocaleDateString(undefined, {
 		month: "short",
 		day: "numeric",

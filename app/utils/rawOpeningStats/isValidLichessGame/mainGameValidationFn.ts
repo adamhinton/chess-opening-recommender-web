@@ -103,7 +103,7 @@ export function createValidationStats(): GameValidationStats {
  *
  * @param stats - Validation statistics to log
  */
-export function logValidationStats(stats: GameValidationStats): void {
+export function logValidationStats(stats: Readonly<GameValidationStats>): void {
 	const filterRate =
 		stats.totalGamesProcessed > 0
 			? ((stats.totalGamesProcessed - stats.numValidGames) /

@@ -56,7 +56,7 @@ const TIME_CONTROL_WEIGHTS: Record<LichessGameAPIResponse["speed"], number> = {
 const SHOULD_TRACK_MEMORY_USAGE = process.env.NODE_ENV === "development";
 
 export async function processLichessUsername(
-	formData: FormData,
+	formData: Readonly<FormData>,
 	onStatusUpdate?: (message: string) => void,
 	onProgressUpdate?: (progress: {
 		numGamesProcessed: number;

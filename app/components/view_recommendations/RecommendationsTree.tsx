@@ -60,7 +60,7 @@ function parseECO(eco: string): ParsedECO | null {
  * Letter -> Openings[]
  */
 function organizeByECO(
-	recommendations: SingleOpeningRecommendation[],
+	recommendations: Readonly<SingleOpeningRecommendation[]>,
 ): Map<ECOLetter, SingleOpeningRecommendation[]> {
 	const result = new Map<ECOLetter, SingleOpeningRecommendation[]>();
 

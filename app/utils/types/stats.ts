@@ -186,7 +186,7 @@ export class OpeningStatsUtils {
 	 * Calculate raw performance score for an opening.
 	 * Uses simple formula: (wins + 0.5 * draws) / total games.
 	 */
-	static calculateRawScore(stats: RawOpeningStats): number {
+	static calculateRawScore(stats: Readonly<RawOpeningStats>): number {
 		if (stats.numGames === 0) return 0;
 		return (stats.numWins + 0.5 * stats.numDraws) / stats.numGames;
 	}
@@ -209,7 +209,7 @@ export class OpeningStatsUtils {
 	 */
 	static convertToHFPayload(
 		playerData: Readonly<PlayerData>,
-	): Readonly<HFInterfacePayload> {
+	): HFInterfacePayload {
 		const result = {
 			name: playerData.lichessUsername,
 			rating: playerData.rating,
@@ -273,12 +273,12 @@ export class OpeningStatsUtils {
 	 * At this point we already know it's a valid game and valid opening, so we can just accumulate stats without worrying about validation.
 	 */
 	static accumulateOpeningStats(
-		playerData: PlayerData,
+		playerData: Readonly<PlayerData>,
 		openingName: OpeningName,
 		/**Its id in my internal model training database */
 		trainingID: number,
 		eco: string,
-		result: GameResult,
+		result: Readonly<GameResult>,
 		/**
 		 * Adds 1 game for blitz, two for Rapid, 3 for Classical.
 		 * Because slower games take longer and give higher quality data.

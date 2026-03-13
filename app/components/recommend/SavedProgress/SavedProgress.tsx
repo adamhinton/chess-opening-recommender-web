@@ -26,7 +26,7 @@ interface SavedProgressProps {
 	/**
 	 * Called when user clicks a finished player to view stats.
 	 */
-	onViewStats: (playerData: StoredPlayerData) => void;
+	onViewStats: (playerData: Readonly<StoredPlayerData>) => void;
 	/** Disable interactions while form is submitting */
 	isDisabled?: boolean;
 }
