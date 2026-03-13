@@ -20,6 +20,7 @@ type ProgressBarPropsStreaming = {
  * This is very quick, takes a couple seconds in dev, not sure about prod yet
  */
 type ProgressBarPropsInference = {
+	numGamesStreamedSoFar?: never; // avoids confusion between this and the streaming stage where this value is relevant
 	totalGamesNeeded: number;
 	estimatedSecondsRemaining: number;
 	stage: "Running AI Model";
