@@ -1,4 +1,7 @@
 // A UI component displaying an approximation of how much time remains to stream all Lichess games and return inference on recommended openings.
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 
 /**
  * While games are being streamed from Lichess and compiled in to opening stats
@@ -34,37 +37,66 @@ const formatTime = (seconds: number): string => {
 /**
  * Displays progress bar estimating time remaining for Lichess game streaming and inference.
  *
- * Accounts for games remaining to stream, streaming speed, and inference time.
+ * Throttles displayed text values to update at most every 500ms to avoid jarring flicker.
+ * The bar fill still transitions smoothly via CSS.
  */
 const ProgressBar = (props: ProgressBarProps) => {
+	// Displayed values are throttled — they lag behind props by up to 500ms
+	const [displayedGames, setDisplayedGames] = useState(
+		props.stage === "Analyzing Games" ? props.numGamesStreamedSoFar : 0,
+	);
+	const [displayedSeconds, setDisplayedSeconds] = useState(
+		props.estimatedSecondsRemaining,
+	);
+	// Keep a ref so the interval closure always reads the latest props
+	const propsRef = useRef(props);
+	propsRef.current = props;
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const current = propsRef.current;
+			if (current.stage === "Analyzing Games") {
+				setDisplayedGames(current.numGamesStreamedSoFar);
+			}
+			setDisplayedSeconds(current.estimatedSecondsRemaining);
+		}, 500);
+		return () => clearInterval(interval);
+	}, []);
+
+	// Bar fill uses actual (live) props so it animates continuously via CSS transition
 	const progressPercentage =
 		props.stage === "Analyzing Games"
 			? (props.numGamesStreamedSoFar / props.totalGamesNeeded) * 100
-			: 100; // Show full bar during inference
+			: 100;
 
 	return (
 		<div className="w-full max-w-2xl mx-auto p-4 space-y-2">
 			{/* Stage and time remaining */}
 			<div className="flex justify-between items-center text-sm">
 				<span className="font-medium text-foreground">{props.stage}</span>
-				<span className="text-muted-foreground">
-					~{formatTime(props.estimatedSecondsRemaining)} remaining
+				<span
+					key={displayedSeconds}
+					className="text-muted-foreground tabular-nums animate-number-update"
+				>
+					~{formatTime(displayedSeconds)} remaining
 				</span>
 			</div>
 
 			{/* Progress bar */}
 			<div className="w-full bg-secondary rounded-full h-2.5 overflow-hidden">
 				<div
-					className="bg-primary h-full rounded-full transition-all duration-300 ease-out"
+					className="bg-primary h-full rounded-full transition-all duration-700 ease-out"
 					style={{ width: `${Math.min(progressPercentage, 100)}%` }}
 				/>
 			</div>
 
 			{/* Games count (only during streaming) */}
 			{props.stage === "Analyzing Games" && (
-				<div className="text-xs text-muted-foreground text-center">
-					{props.numGamesStreamedSoFar.toLocaleString()} / ~{" "}
-					{props.totalGamesNeeded.toLocaleString()} games
+				<div className="text-xs text-muted-foreground text-center tabular-nums overflow-hidden">
+					<span key={displayedGames} className="inline animate-number-update">
+						{displayedGames.toLocaleString()}
+					</span>{" "}
+					/ ~ {props.totalGamesNeeded.toLocaleString()} games
 				</div>
 			)}
 		</div>

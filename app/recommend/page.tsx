@@ -198,17 +198,16 @@ const Recommend = () => {
 				<Divider />
 
 				<div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-					<form onSubmit={handleSubmit} className="space-y-6">
+					<form onSubmit={handleSubmit} className="space-y-5">
 						{/* Section: Your Lichess Account */}
 						<section>
-							<div className="flex items-center gap-2 mb-3">
+							<div className="flex items-center gap-2 mb-2">
 								<h2 className="text-lg font-semibold text-foreground">
 									Lichess Username
 									<ToolTip message="Lichess is the world's most popular 100% free (and ad-free) open source chess platform" />
 								</h2>
 							</div>
 							<div>
-								<div className="flex items-center gap-2 mb-2"></div>
 								<input
 									type="text"
 									id="username"
@@ -282,9 +281,35 @@ const Recommend = () => {
 								selectedTimeControls.length === 0 ||
 								!username.trim()
 							}
-							className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+							className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-md hover:bg-primary/90 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2"
 						>
-							{isSubmitting ? "Processing..." : "Get AI Opening Suggestions"}
+							{isSubmitting ? (
+								<>
+									<svg
+										className="animate-spin h-4 w-4"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+										/>
+										<path
+											className="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+										/>
+									</svg>
+									Analyzing...
+								</>
+							) : (
+								"Get AI Opening Suggestions"
+							)}
 						</button>
 						{selectedTimeControls.length === 0 && !isSubmitting && (
 							<p className="text-sm text-destructive mt-2">
@@ -295,7 +320,7 @@ const Recommend = () => {
 
 					{/* Progress Bar */}
 					{progressState && (
-						<div className="mt-6">
+						<div className="mt-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 							{progressState.stage === "Analyzing Games" ? (
 								<ProgressBar
 									stage="Analyzing Games"
@@ -347,4 +372,4 @@ const Recommend = () => {
 export default Recommend;
 
 /**Vertical dividing line between sections */
-const Divider = () => <div className="h-[2px] bg-muted-foreground/50 my-6" />;
+const Divider = () => <div className="h-px bg-border my-5" />;

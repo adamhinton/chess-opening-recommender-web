@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes number-update {
+	from {
+		opacity: 0.9;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.animate-number-update {
+	animation: number-update 0.25s ease-out;
+}
+
 @layer base {
 	:root {
 		--background: 0 0% 100%;
