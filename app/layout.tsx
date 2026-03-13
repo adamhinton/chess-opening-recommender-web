@@ -12,6 +12,12 @@ export const metadata: Metadata = {
 	metadataBase: new URL(defaultUrl),
 	title: "Chess Opening Recommender",
 	description: "AI analysis of chess games to recommend openings",
+	icons: {
+		icon: [
+			{ url: "/icon-light.png", media: "(prefers-color-scheme: light)" },
+			{ url: "/icon-dark.png", media: "(prefers-color-scheme: dark)" },
+		],
+	},
 };
 
 const geistSans = Geist({
