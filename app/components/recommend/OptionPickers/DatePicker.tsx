@@ -7,7 +7,7 @@ type DatePickerProps = {
 };
 
 const CURRENT_YEAR = new Date().getFullYear();
-// Lichess games before March 2018 lack needed data about number of moves; for simplicity we'll just start from 2019. Data that old won't be very relevant anyway.
+/**Lichess games before March 2018 lack needed data about number of moves; for simplicity we'll just start from 2019. Data that old won't be very relevant anyway. */
 const START_YEAR = 2019;
 
 const MONTHS = [
