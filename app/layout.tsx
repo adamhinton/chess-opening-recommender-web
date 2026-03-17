@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import { Header } from "./components/Header/Header";
 
@@ -40,8 +41,10 @@ export default function RootLayout({
 					enableSystem
 					disableTransitionOnChange
 				>
-					<Header />
-					{children}
+					<TooltipProvider>
+						<Header />
+						{children}
+					</TooltipProvider>
 				</ThemeProvider>
 			</body>
 		</html>

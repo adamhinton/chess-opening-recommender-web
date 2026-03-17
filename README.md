@@ -1,4 +1,4 @@
-# Chess Opening Recommender
+# Chess Opening Recommender 🎯
 
 A personalized recommendation engine that analyzes a player's chess games and suggests opening sequences that fit their specific playing style and skill level.
 
