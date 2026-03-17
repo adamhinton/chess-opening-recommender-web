@@ -69,7 +69,7 @@ export function HowItWorks() {
 					>
 						<div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
 							{/* Step Number */}
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<div
 									className={`
                     w-12 h-12 sm:w-14 sm:h-14

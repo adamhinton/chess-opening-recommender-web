@@ -101,7 +101,7 @@ const ECOLetterSection = ({
 
 				{/* Letter badge */}
 				<span
-					className={`flex-shrink-0 w-12 h-12 flex items-center justify-center
+					className={`shrink-0 w-12 h-12 flex items-center justify-center
 						rounded-lg border text-xl font-bold ${colorClasses}`}
 				>
 					{letter}
@@ -127,7 +127,7 @@ const ECOLetterSection = ({
 			{/* Openings list */}
 			{isExpanded && (
 				<div className="px-4 pb-4 animate-in slide-in-from-top-2 fade-in duration-200">
-					<div className="ml-[3.75rem] space-y-2 border-l-2 border-border/50 pl-4 py-1">
+					<div className="ml-15 space-y-2 border-l-2 border-border/50 pl-4 py-1">
 						{openings.map((opening, idx) => (
 							<SingleRecommendation
 								key={opening.opening_name}

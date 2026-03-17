@@ -43,7 +43,7 @@ const SingleRecommendation = ({
 			target="_blank"
 			rel="noopener noreferrer"
 			className="group flex items-center gap-3 px-4 py-2.5 rounded-lg
-				bg-gradient-to-r from-card to-card/80
+				bg-linear-to-r from-card to-card/80
 				border border-border/50
 				hover:border-primary/30 hover:from-primary/5 hover:to-transparent
 				transition-all duration-200 ease-out"
@@ -51,7 +51,7 @@ const SingleRecommendation = ({
 			{/* Optional rank badge */}
 			{rank !== undefined && (
 				<span
-					className="flex-shrink-0 w-7 h-7 flex items-center justify-center
+					className="shrink-0 w-7 h-7 flex items-center justify-center
 					rounded-full bg-primary/10 text-primary text-xs font-semibold"
 				>
 					{rank}
@@ -65,7 +65,7 @@ const SingleRecommendation = ({
 
 			{/* ECO code badge */}
 			<span
-				className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-mono
+				className="shrink-0 px-2 py-0.5 rounded text-xs font-mono
 				bg-muted text-muted-foreground"
 			>
 				{eco}
@@ -73,7 +73,7 @@ const SingleRecommendation = ({
 
 			{/* External link icon */}
 			<ExternalLink
-				className="flex-shrink-0 w-4 h-4 text-muted-foreground 
+				className="shrink-0 w-4 h-4 text-muted-foreground 
 				group-hover:text-primary transition-colors"
 			/>
 		</a>

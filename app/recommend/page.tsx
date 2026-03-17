@@ -344,7 +344,7 @@ const Recommend = () => {
 							<div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
-									className="h-4 w-4 flex-shrink-0 text-amber-500"
+									className="h-4 w-4 shrink-0 text-amber-500"
 									fill="none"
 									viewBox="0 0 24 24"
 									stroke="currentColor"
