@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 /**
@@ -10,7 +11,7 @@ const ToolTip = ({ message }: { message: string }) => {
 
 	return (
 		<div className="relative inline-block">
-			<button
+			<Button
 				type="button"
 				onMouseEnter={() => setIsVisible(true)}
 				onMouseLeave={() => setIsVisible(false)}
@@ -31,11 +32,11 @@ const ToolTip = ({ message }: { message: string }) => {
 						clipRule="evenodd"
 					/>
 				</svg>
-			</button>
+			</Button>
 
 			{isVisible && (
 				<div
-					className="absolute z-[100] w-60 px-5 py-4 text-sm font-medium text-foreground bg-slate-900 dark:bg-slate-100 dark:text-slate-900 border-2 border-slate-700 dark:border-slate-300 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-none"
+					className="absolute z-100 w-60 px-5 py-4 text-sm font-medium text-foreground bg-slate-900 dark:bg-slate-100 dark:text-slate-900 border-2 border-slate-700 dark:border-slate-300 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-none"
 					style={{
 						bottom: "calc(100% + 12px)",
 						left: "50%",

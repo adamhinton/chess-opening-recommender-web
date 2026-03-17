@@ -1,201 +1,228 @@
 "use client";
 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
+
 type DatePickerProps = {
 	sinceDate: Date | null;
 	onDateChange: (date: Date | null) => void;
 	isDisabled: boolean;
 };
 
-const CURRENT_YEAR = new Date().getFullYear();
 /**Lichess games before March 2018 lack needed data about number of moves; for simplicity we'll just start from 2019. Data that old won't be very relevant anyway. */
 const START_YEAR = 2019;
 
-const MONTHS = [
-	{ value: 0, label: "January" },
-	{ value: 1, label: "February" },
-	{ value: 2, label: "March" },
-	{ value: 3, label: "April" },
-	{ value: 4, label: "May" },
-	{ value: 5, label: "June" },
-	{ value: 6, label: "July" },
-	{ value: 7, label: "August" },
-	{ value: 8, label: "September" },
-	{ value: 9, label: "October" },
-	{ value: 10, label: "November" },
-	{ value: 11, label: "December" },
-];
-
-const getDaysInMonth = (year: number, month: number) => {
-	return new Date(year, month + 1, 0).getDate();
-};
-
 /**
  * Date picker for selecting a "since" date (games from this date to present).
- * Allows user to fold/unfold the picker.
- * Users can select year, month, and day via dropdowns or typing.
+ * Uses shadcn Calendar in a Popover with year/month navigation for easier browsing.
  */
 const DatePicker = ({
 	sinceDate,
 	onDateChange,
 	isDisabled,
 }: DatePickerProps) => {
-	// Extract current values from sinceDate or use defaults
-	const selectedYear = sinceDate?.getFullYear() ?? 2019;
-	const selectedMonth = sinceDate?.getMonth() ?? 0;
-	const selectedDay = sinceDate?.getDate() ?? 1;
-
-	const handleYearChange = (year: number) => {
-		const daysInMonth = getDaysInMonth(year, selectedMonth);
-		const validDay = Math.min(selectedDay, daysInMonth);
-		onDateChange(new Date(year, selectedMonth, validDay));
-	};
-
-	const handleMonthChange = (month: number) => {
-		const daysInMonth = getDaysInMonth(selectedYear, month);
-		const validDay = Math.min(selectedDay, daysInMonth);
-		onDateChange(new Date(selectedYear, month, validDay));
-	};
-
-	const handleDayChange = (day: number) => {
-		onDateChange(new Date(selectedYear, selectedMonth, day));
-	};
+	const [isOpen, setIsOpen] = useState(false);
+	const [displayMonth, setDisplayMonth] = useState(
+		sinceDate || new Date(START_YEAR, 0, 1),
+	);
 
 	const handleClearDate = () => {
 		onDateChange(null);
+		setIsOpen(false);
 	};
 
-	const yearOptions = Array.from(
-		{ length: CURRENT_YEAR - START_YEAR + 1 },
-		(_, i) => CURRENT_YEAR - i,
-	);
+	const handleDateSelect = (date: Date | undefined) => {
+		if (date) {
+			onDateChange(date);
+			setDisplayMonth(date);
+			setIsOpen(false);
+		}
+	};
 
-	const daysInCurrentMonth = getDaysInMonth(selectedYear, selectedMonth);
-	const dayOptions = Array.from(
-		{ length: daysInCurrentMonth },
-		(_, i) => i + 1,
-	);
+	const handlePrevMonth = () => {
+		setDisplayMonth(
+			new Date(displayMonth.getFullYear(), displayMonth.getMonth() - 1, 1),
+		);
+	};
+
+	const handleNextMonth = () => {
+		setDisplayMonth(
+			new Date(displayMonth.getFullYear(), displayMonth.getMonth() + 1, 1),
+		);
+	};
+
+	const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const year = parseInt(e.target.value, 10);
+		setDisplayMonth(new Date(year, displayMonth.getMonth(), 1));
+	};
+
+	const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const month = parseInt(e.target.value, 10);
+		setDisplayMonth(new Date(displayMonth.getFullYear(), month, 1));
+	};
+
+	const currentYear = displayMonth.getFullYear();
+	const currentMonth = displayMonth.getMonth();
+
+	const yearOptions = Array.from(
+		{ length: new Date().getFullYear() - START_YEAR + 1 },
+		(_, i) => START_YEAR + i,
+	).reverse();
+
+	const monthNames = [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	];
+
+	const formattedDate = sinceDate
+		? sinceDate.toLocaleDateString("en-US", {
+				year: "numeric",
+				month: "long",
+				day: "numeric",
+			})
+		: null;
 
 	return (
 		<div className="w-full space-y-3">
-			<label className="block text-sm font-medium text-foreground">
-				Analyze games since
-			</label>
+			<Label className="block text-sm font-medium">Analyze games since</Label>
 
-			{sinceDate ? (
-				<div className="space-y-3">
-					<div className="px-4 py-3 bg-secondary/50 border border-border rounded-md">
-						<div className="text-sm font-medium text-foreground">
-							{sinceDate.toLocaleDateString("en-US", {
-								year: "numeric",
-								month: "long",
-								day: "numeric",
-							})}
+			<div className="space-y-2">
+				<Popover open={isOpen} onOpenChange={setIsOpen}>
+					<PopoverTrigger asChild>
+						<Button
+							type="button"
+							variant={sinceDate ? "default" : "outline"}
+							disabled={isDisabled}
+							className="w-full justify-start text-left font-normal"
+						>
+							<CalendarIcon className="mr-2 h-4 w-4" />
+							{formattedDate ? (
+								<span>{formattedDate}</span>
+							) : (
+								<span className="text-muted-foreground">
+									Click to select a start date
+								</span>
+							)}
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="w-auto p-4" align="start" side="bottom">
+						<div className="space-y-4">
+							{/* Year and Month Navigation */}
+							<div className="flex gap-2 items-center justify-between">
+								<select
+									value={currentYear}
+									onChange={handleYearChange}
+									className="px-2 py-1 border border-border rounded text-sm bg-background"
+								>
+									{yearOptions.map((year) => (
+										<option key={year} value={year}>
+											{year}
+										</option>
+									))}
+								</select>
+
+								<select
+									value={currentMonth}
+									onChange={handleMonthChange}
+									className="px-2 py-1 border border-border rounded text-sm bg-background flex-1"
+								>
+									{monthNames.map((month, idx) => (
+										<option key={idx} value={idx}>
+											{month}
+										</option>
+									))}
+								</select>
+
+								<div className="flex gap-1">
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										onClick={handlePrevMonth}
+										className="h-8 w-8 p-0"
+										disabled={currentYear === START_YEAR && currentMonth === 0}
+									>
+										<ChevronLeft className="h-4 w-4" />
+									</Button>
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										onClick={handleNextMonth}
+										className="h-8 w-8 p-0"
+										disabled={
+											currentYear === new Date().getFullYear() &&
+											currentMonth === new Date().getMonth()
+										}
+									>
+										<ChevronRight className="h-4 w-4" />
+									</Button>
+								</div>
+							</div>
+
+							{/* Calendar */}
+							<div className="w-full h-64 overflow-hidden">
+								<Calendar
+									mode="single"
+									selected={sinceDate || undefined}
+									onSelect={handleDateSelect}
+									disabled={(date) => {
+										const startDate = new Date(START_YEAR, 0, 1);
+										return date > new Date() || date < startDate;
+									}}
+									month={displayMonth}
+									onMonthChange={setDisplayMonth}
+									initialFocus
+									className="w-full"
+								/>
+							</div>
+
+							{/* Clear Button */}
+							{sinceDate && (
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={handleClearDate}
+									disabled={isDisabled}
+									className="w-full text-destructive hover:bg-destructive/10"
+								>
+									<X className="mr-2 h-4 w-4" />
+									Clear (use all games since 2019)
+								</Button>
+							)}
 						</div>
+					</PopoverContent>
+				</Popover>
+
+				{/* Info Box - only shown when no date selected */}
+				{!sinceDate && (
+					<div className="px-3 py-2 bg-muted/40 border border-border/50 rounded-md text-xs text-muted-foreground">
+						<span>
+							Goes back as early as 2019. Older games are missing critical
+							analysis data.
+						</span>
 					</div>
-
-					{/* Date Selectors Grid */}
-					<div className="grid grid-cols-3 gap-3">
-						{/* Year Selector */}
-						<div className="space-y-1">
-							<label
-								htmlFor="year-select"
-								className="block text-xs font-medium text-foreground"
-							>
-								Year
-							</label>
-							<select
-								id="year-select"
-								value={selectedYear}
-								onChange={(e) => handleYearChange(Number(e.target.value))}
-								disabled={isDisabled}
-								className="w-full px-2 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-							>
-								{yearOptions.map((year) => (
-									<option key={year} value={year}>
-										{year}
-									</option>
-								))}
-							</select>
-						</div>
-
-						{/* Month Selector */}
-						<div className="space-y-1">
-							<label
-								htmlFor="month-select"
-								className="block text-xs font-medium text-foreground"
-							>
-								Month
-							</label>
-							<select
-								id="month-select"
-								value={selectedMonth}
-								onChange={(e) => handleMonthChange(Number(e.target.value))}
-								disabled={isDisabled}
-								className="w-full px-2 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-							>
-								{MONTHS.map((month) => (
-									<option key={month.value} value={month.value}>
-										{month.label}
-									</option>
-								))}
-							</select>
-						</div>
-
-						{/* Day Selector */}
-						<div className="space-y-1">
-							<label
-								htmlFor="day-select"
-								className="block text-xs font-medium text-foreground"
-							>
-								Day
-							</label>
-							<select
-								id="day-select"
-								value={selectedDay}
-								onChange={(e) => handleDayChange(Number(e.target.value))}
-								disabled={isDisabled}
-								className="w-full px-2 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-							>
-								{dayOptions.map((day) => (
-									<option key={day} value={day}>
-										{day}
-									</option>
-								))}
-							</select>
-						</div>
-					</div>
-
-					{/* Clear Button */}
-					<button
-						type="button"
-						onClick={handleClearDate}
-						disabled={isDisabled}
-						className="w-full px-3 py-2 text-sm bg-destructive/10 text-destructive rounded-md hover:bg-destructive/20 focus:outline-none focus:ring-2 focus:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						Use All Games (since 2019)
-					</button>
-				</div>
-			) : (
-				<div className="space-y-3">
-					<div className="px-4 py-3 bg-primary/10 border border-primary/30 rounded-md">
-						<div className="text-sm font-medium text-foreground mb-1">
-							All games (since 2019)
-						</div>
-						<div className="text-xs text-muted-foreground">
-							Using all-time data provides the best results for AI analysis
-						</div>
-					</div>
-
-					<button
-						type="button"
-						onClick={() => onDateChange(new Date(2019, 0, 1))}
-						disabled={isDisabled}
-						className="w-full px-3 py-2 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						Select a specific date
-					</button>
-				</div>
-			)}
+				)}
+			</div>
 		</div>
 	);
 };
