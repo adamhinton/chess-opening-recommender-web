@@ -1,7 +1,8 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 /**
  * Shows information on what will happen after user submits a Lichess username for inference.
  */
-
 const NextStepsInformational = ({
 	isSubmitting,
 }: {
@@ -13,13 +14,15 @@ const NextStepsInformational = ({
 				Generate Recommendations
 			</h2>
 
-			{/* What Happens Next Card */}
+			{/* What Happens Next — visually secondary so it doesn't compete with the submit button */}
 			{!isSubmitting && (
-				<div className="mb-4 p-4 bg-muted/30 border border-muted rounded-md">
-					<p className="text-sm font-medium text-foreground mb-3">
-						What happens next:
-					</p>
-					<div className="space-y-2">
+				<Card className="bg-muted/30 shadow-none border-muted">
+					<CardHeader className="pb-3">
+						<CardTitle className="text-sm font-medium">
+							What happens next:
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-2">
 						<div className="flex items-start gap-2 text-sm">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -82,11 +85,11 @@ const NextStepsInformational = ({
 								</span>
 							</div>
 						</div>
-					</div>
-					<p className="text-xs text-muted-foreground mt-3">
-						Total time: 3-10 minutes. Progress auto-saves if you leave.
-					</p>
-				</div>
+						<p className="text-xs text-muted-foreground mt-1">
+							Total time: 3-10 minutes. Progress auto-saves if you leave.
+						</p>
+					</CardContent>
+				</Card>
 			)}
 		</section>
 	);

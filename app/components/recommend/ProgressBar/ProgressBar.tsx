@@ -1,7 +1,9 @@
 // A UI component displaying an approximation of how much time remains to stream all Lichess games and return inference on recommended openings.
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Progress } from "@/components/ui/progress";
 
 /**
  * While games are being streamed from Lichess and compiled in to opening stats
@@ -83,13 +85,15 @@ const ProgressBar = (props: ProgressBarProps) => {
 				</span>
 			</div>
 
-			{/* Progress bar */}
-			<div className="w-full bg-secondary rounded-full h-2.5 overflow-hidden">
-				<div
-					className="bg-primary h-full rounded-full transition-all duration-700 ease-out"
-					style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-				/>
-			</div>
+			{/* Progress bar — amber/gold during "Analyzing Games", primary during "Running AI Model" */}
+			<Progress
+				value={Math.min(progressPercentage, 100)}
+				indicatorClassName={
+					props.stage === "Analyzing Games"
+						? "bg-amber-500 transition-all duration-700 ease-out"
+						: "transition-all duration-700 ease-out"
+				}
+			/>
 
 			{/* Games count (only during streaming) */}
 			{props.stage === "Analyzing Games" && (

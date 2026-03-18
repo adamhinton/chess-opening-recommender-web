@@ -5,11 +5,13 @@
 
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Tooltip,
 	TooltipContent,
@@ -69,7 +71,9 @@ type ProgressState =
  * In props, progressState is a discriminated union based on three stages:
  *
  * 1. Idle (user is filling out form, no progress to show)
+ *
  * 2. Analyzing Games (frontend is streaming user's lichess games, processing them, and assembling opening stats - show progress based on number of games processed so far vs total needed)
+ *
  * 3. Running AI Model (frontend has sent all data to Huggingface space and is waiting for it to run the AI model and return recommendations - show progress based on estimated time remaining)
  */
 const RecommendForm = ({
@@ -85,185 +89,206 @@ const RecommendForm = ({
 	progressState,
 	onSubmit,
 }: RecommendFormProps) => {
+	const progressCardRef = useRef<HTMLDivElement>(null);
+
+	// Scroll to the progress card whenever analysis kicks off (form submit or resume)
+	useEffect(() => {
+		if (progressState.stage !== "Idle") {
+			progressCardRef.current?.scrollIntoView({
+				behavior: "smooth",
+				block: "nearest",
+			});
+		}
+	}, [progressState.stage]);
+
 	return (
-		<div className="w-full space-y-6">
+		<div className="w-full space-y-5">
 			{/* Saved Progress section is handled by parent */}
 
-			{/* Section: See Example First */}
+			{/* Section: See Example First — compact amber banner */}
 			<SeeExampleSection isDisabled={isSubmitting} />
 
-			<Separator />
+			{/* Main form card */}
+			<Card>
+				<CardHeader className="pb-2 border-b border-border">
+					<CardTitle className="text-xl font-bold">
+						Configure Your Analysis
+					</CardTitle>
+					<p className="text-sm text-muted-foreground">
+						Fill in the fields below to generate personalized opening
+						recommendations.
+					</p>
+				</CardHeader>
+				<CardContent className="pt-6">
+					<form onSubmit={onSubmit} noValidate>
+						{/* ─── Step 1: Lichess Account ─────────────────────────────── */}
+						<section
+							aria-labelledby="step-username-heading"
+							className="space-y-3"
+						>
+							<StepHeader step={1} title="Lichess Account" />
 
-			<div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-				<form onSubmit={onSubmit} className="space-y-5">
-					{/* Section: Your Lichess Account */}
-					<section>
-						<div className="flex items-center gap-2 mb-2">
-							<Label htmlFor="username" className="text-base font-semibold">
-								Lichess Username
-							</Label>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<button
-										type="button"
-										className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-										aria-label="More information"
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 20 20"
-											fill="currentColor"
-											className="w-3 h-3"
-										>
-											<path
-												fillRule="evenodd"
-												d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
-												clipRule="evenodd"
-											/>
-										</svg>
-									</button>
-								</TooltipTrigger>
-								<TooltipContent>
-									Lichess is the world&apos;s most popular 100% free (and
-									ad-free) open source chess platform
-								</TooltipContent>
-							</Tooltip>
-						</div>
-						<Input
-							id="username"
-							type="text"
-							value={username}
-							onChange={(e) => setUsername(e.target.value)}
-							placeholder="Hikaru"
-							required
-							disabled={isSubmitting}
-						/>
-					</section>
-
-					<Separator />
-
-					{/* Section: Analysis Settings */}
-					<section>
-						<h2 className="text-base font-semibold mb-4">Analysis Settings</h2>
-
-						{/* Date Picker */}
-						<div className="mb-6">
-							<DatePicker
-								sinceDate={sinceDate}
-								onDateChange={setSinceDate}
-								isDisabled={isSubmitting}
-							/>
-						</div>
-
-						<Separator />
-
-						{/* Color Picker and Time Control Picker in single column */}
-						<div className="space-y-6">
-							<div>
-								<div className="flex items-center gap-2 mb-3">
-									<Label className="text-sm font-medium">
-										Play as (choose one)
+							<div className="space-y-2">
+								<div className="flex items-center gap-2">
+									<Label htmlFor="username" className="text-sm font-medium">
+										Lichess Username
 									</Label>
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<button
 												type="button"
 												className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-												aria-label="More information"
+												aria-label="About Lichess"
 											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													viewBox="0 0 20 20"
-													fill="currentColor"
-													className="w-3 h-3"
-												>
-													<path
-														fillRule="evenodd"
-														d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
-														clipRule="evenodd"
-													/>
-												</svg>
+												<InfoIcon />
+											</button>
+										</TooltipTrigger>
+										<TooltipContent>
+											Lichess is the world&apos;s most popular 100% free (and
+											ad-free) open source chess platform
+										</TooltipContent>
+									</Tooltip>
+								</div>
+								<Input
+									id="username"
+									type="text"
+									value={username}
+									onChange={(e) => setUsername(e.target.value)}
+									placeholder="e.g. Hikaru"
+									autoComplete="off"
+									autoCapitalize="none"
+									spellCheck={false}
+									required
+									disabled={isSubmitting}
+									aria-required="true"
+								/>
+							</div>
+						</section>
+
+						<Separator className="my-6" />
+
+						{/* ─── Step 2: Date Range ──────────────────────────────────── */}
+						<section aria-labelledby="step-date-heading" className="space-y-3">
+							<StepHeader step={2} title="Date Range" />
+							<DatePicker
+								sinceDate={sinceDate}
+								onDateChange={setSinceDate}
+								isDisabled={isSubmitting}
+							/>
+						</section>
+
+						<Separator className="my-6" />
+
+						{/* ─── Step 3: Piece Color ─────────────────────────────────── */}
+						<fieldset className="space-y-3 border-none p-0 m-0">
+							<legend className="w-full">
+								<div className="flex items-center gap-2">
+									<StepHeader step={3} title="Piece Color" />
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<button
+												type="button"
+												className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+												aria-label="Why piece color matters"
+											>
+												<InfoIcon />
 											</button>
 										</TooltipTrigger>
 										<TooltipContent>
 											Openings differ for White (who moves first) vs Black (who
-											responds). Choose which color you want to improve.
+											responds). Choose the color you want to improve.
 										</TooltipContent>
 									</Tooltip>
 								</div>
-								<ColorPicker
-									selectedColor={selectedColor}
-									onColorChange={setSelectedColor}
-									isDisabled={isSubmitting}
-								/>
-							</div>
+							</legend>
+							<ColorPicker
+								selectedColor={selectedColor}
+								onColorChange={setSelectedColor}
+								isDisabled={isSubmitting}
+							/>
+						</fieldset>
 
-							<Separator />
+						<Separator className="my-6" />
 
-							<div>
-								<TimeControlPicker
-									selectedTimeControls={selectedTimeControls}
-									onTimeControlChange={setSelectedTimeControls}
-									isDisabled={isSubmitting}
-								/>
-							</div>
-						</div>
-					</section>
-
-					<Separator />
-
-					{/* Displays info about what happens after submitting: 1. Compile opening stats, 2. AI analyzes your patterns, 3. Get personalized recommendations */}
-					<NextStepsInformational isSubmitting={isSubmitting} />
-
-					<Button
-						type="submit"
-						disabled={
-							isSubmitting ||
-							selectedTimeControls.length === 0 ||
-							!username.trim()
-						}
-						className="w-full py-6 text-base font-semibold"
-						size="lg"
-					>
-						{isSubmitting ? (
-							<>
-								<svg
-									className="animate-spin h-4 w-4 mr-2"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
+						{/* ─── Step 4: Time Controls ───────────────────────────────── */}
+						<fieldset className="space-y-3 border-none p-0 m-0">
+							<legend className="w-full">
+								<StepHeader step={4} title="Time Controls" />
+							</legend>
+							<TimeControlPicker
+								selectedTimeControls={selectedTimeControls}
+								onTimeControlChange={setSelectedTimeControls}
+								isDisabled={isSubmitting}
+								showLabel={false}
+							/>
+							{selectedTimeControls.length === 0 && !isSubmitting && (
+								<p
+									className="text-sm text-destructive"
+									role="alert"
+									aria-live="polite"
 								>
-									<circle
-										className="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										strokeWidth="4"
-									/>
-									<path
-										className="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-									/>
-								</svg>
-								Analyzing...
-							</>
-						) : (
-							"Get AI Opening Suggestions"
-						)}
-					</Button>
+									Select at least one time control to continue.
+								</p>
+							)}
+						</fieldset>
 
-					{selectedTimeControls.length === 0 && !isSubmitting && (
-						<p className="text-sm text-destructive mt-2">
-							Please select at least one time control
-						</p>
-					)}
-				</form>
+						<Separator className="my-6" />
 
-				{/* Progress Bar */}
-				{progressState.stage !== "Idle" && (
-					<div className="mt-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+						{/* Displays info about what happens after submitting: 1. Compile opening stats, 2. AI analyzes your patterns, 3. Get personalized recommendations */}
+						<NextStepsInformational isSubmitting={isSubmitting} />
+
+						{/* Submit button — gold accent, full width, prominent */}
+						<Button
+							type="submit"
+							disabled={
+								isSubmitting ||
+								selectedTimeControls.length === 0 ||
+								!username.trim()
+							}
+							className="mt-4 w-full py-6 text-base font-semibold bg-accent-gold text-white hover:bg-accent-gold/90 focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:ring-offset-2"
+							size="lg"
+							aria-busy={isSubmitting}
+						>
+							{isSubmitting ? (
+								<>
+									<svg
+										className="animate-spin h-4 w-4 mr-2"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+										aria-hidden="true"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+										/>
+										<path
+											className="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+										/>
+									</svg>
+									Analyzing...
+								</>
+							) : (
+								"Get AI Opening Suggestions"
+							)}
+						</Button>
+					</form>
+				</CardContent>
+			</Card>
+
+			{/* Progress Bar — appears below the form card when analysis is running */}
+			{progressState.stage !== "Idle" && (
+				<Card
+					ref={progressCardRef}
+					className="animate-in fade-in slide-in-from-bottom-2 duration-500"
+				>
+					<CardContent className="pt-6">
 						{progressState.stage === "Analyzing Games" ? (
 							<ProgressBar
 								stage="Analyzing Games"
@@ -306,11 +331,48 @@ const RecommendForm = ({
 								</span>
 							</AlertDescription>
 						</Alert>
-					</div>
-				)}
-			</div>
+					</CardContent>
+				</Card>
+			)}
 		</div>
 	);
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Local helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Numbered section header used to delineate each form step.
+ * The circle badge gives the form a clear scan path without heavy boxing.
+ */
+const StepHeader = ({ step, title }: { step: number; title: string }) => (
+	<div className="flex items-center gap-3 mb-1">
+		<span
+			className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-gold text-xs font-bold text-white"
+			aria-hidden="true"
+		>
+			{step}
+		</span>
+		<h2 className="text-base font-semibold text-foreground">{title}</h2>
+	</div>
+);
+
+/** Reusable info ⓘ SVG to avoid repeating the path string everywhere */
+const InfoIcon = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox="0 0 20 20"
+		fill="currentColor"
+		className="w-3 h-3"
+		aria-hidden="true"
+	>
+		<path
+			fillRule="evenodd"
+			d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+			clipRule="evenodd"
+		/>
+	</svg>
+);
 
 export default RecommendForm;

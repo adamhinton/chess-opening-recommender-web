@@ -1,13 +1,46 @@
+// ============================================================================
+// Displays user analyses saved in localStorage, with options to resume or view stats.
+
+// Displays both in-progress and completed anlayses
+
+// Only renders if saved analyses exist
+// ============================================================================
+
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronDown, Trash2 } from "lucide-react";
 import {
 	StatsLocalStorageUtils,
 	StoredPlayerData,
 } from "../../../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import { Color } from "../../../utils/types/stats";
 import { AllowedTimeControl } from "../../../utils/types/lichessTypes";
-import ConfirmationDialog from "../../ConfirmationDialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
 
 // ============================================================================
 // Types
@@ -44,18 +77,15 @@ interface PlayerToDelete {
  * Displays saved player analyses from localStorage.
  *
  * Features:
- * - Foldable section
- * - Separates ongoing (isComplete=false) vs finished (isComplete=true) players
- * - Resume button for ongoing players
- * - Click finished players to view stat
- * - Delete with confirmation dialog
+ * - Invisible when no saved data exists
+ * - Compact summary banner when saved data exists
+ * - Sheet drawer entry point for saved analyses
  */
-const SavedProgress = ({
-	onResumePlayer,
-	onViewStats,
-	isDisabled = false,
-}: SavedProgressProps) => {
-	const [isExpanded, setIsExpanded] = useState(true);
+const SavedProgress = (props: SavedProgressProps) => {
+	const { onResumePlayer, onViewStats, isDisabled = false } = props;
+	const [isSheetOpen, setIsSheetOpen] = useState(false);
+	const [isOngoingExpanded, setIsOngoingExpanded] = useState(true);
+	const [isFinishedExpanded, setIsFinishedExpanded] = useState(true);
 	const [storedPlayers, setStoredPlayers] = useState<StoredPlayerData[]>([]);
 	const [playerToDelete, setPlayerToDelete] = useState<PlayerToDelete | null>(
 		null,
@@ -74,6 +104,7 @@ const SavedProgress = ({
 	// Separate ongoing and finished players
 	const ongoingPlayers = storedPlayers.filter((p) => !p.isComplete);
 	const finishedPlayers = storedPlayers.filter((p) => p.isComplete);
+	const summaryText = `${ongoingPlayers.length} in progress, ${finishedPlayers.length} completed`;
 
 	// Don't render if no saved players
 	if (storedPlayers.length === 0) {
@@ -92,6 +123,7 @@ const SavedProgress = ({
 	};
 
 	const handleResume = (player: StoredPlayerData) => {
+		setIsSheetOpen(false);
 		onResumePlayer({
 			username: player.playerData.lichessUsername,
 			color: player.playerData.color,
@@ -99,111 +131,144 @@ const SavedProgress = ({
 		});
 	};
 
+	const handleViewStats = (player: StoredPlayerData) => {
+		setIsSheetOpen(false);
+		onViewStats(player);
+	};
+
 	return (
 		<>
-			<div className="bg-secondary/30 border border-border rounded-lg mb-6 overflow-hidden">
-				{/* Header - clickable to expand/collapse */}
-				<button
+			{/* Renders as just a quick banner that user can click to see details on saved progress */}
+			<aside
+				role="status"
+				aria-live="polite"
+				className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-border/70 border-l-4 border-l-accent-gold/60 bg-card/70 px-4 py-3 shadow-xs"
+			>
+				<div className="min-w-0">
+					<p className="text-sm font-semibold text-foreground">
+						Saved Progress
+					</p>
+					<p className="text-sm text-muted-foreground">{summaryText}</p>
+				</div>
+				<Button
 					type="button"
-					onClick={() => setIsExpanded(!isExpanded)}
+					variant="outline"
+					onClick={() => setIsSheetOpen(true)}
 					disabled={isDisabled}
-					className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50 transition-colors disabled:opacity-50"
+					className="transition-colors hover:border-accent-gold/70 hover:bg-accent-gold/10 hover:text-amber-800 dark:hover:text-amber-300"
 				>
-					<div className="flex items-center gap-2">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							className={`h-4 w-4 text-muted-foreground transition-transform ${
-								isExpanded ? "rotate-90" : ""
-							}`}
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
+					View Saved
+				</Button>
+			</aside>
+
+			{/* Side sheet that opens on click to display user's saved data */}
+			<Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+				<SheetContent side="right" className="w-full sm:max-w-md">
+					<SheetHeader className="border-b border-border/60 pr-12">
+						<div className="flex items-start justify-between gap-3">
+							<div className="space-y-1">
+								<SheetTitle>Your Saved Analyses</SheetTitle>
+								<SheetDescription>
+									Resume unfinished analyses or reopen completed ones from this
+									drawer.
+								</SheetDescription>
+							</div>
+							<Badge variant="secondary" className="shrink-0">
+								{storedPlayers.length} total
+							</Badge>
+						</div>
+					</SheetHeader>
+
+					<div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 pt-2">
+						<section
+							aria-labelledby="saved-progress-overview-heading"
+							className="rounded-lg border border-dashed border-border/70 bg-muted/20 p-4"
 						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M9 5l7 7-7 7"
-							/>
-						</svg>
-						<span className="text-sm font-medium text-foreground">
-							Saved Progress
-						</span>
-						<span className="text-xs text-muted-foreground">
-							({storedPlayers.length} player
-							{storedPlayers.length !== 1 ? "s" : ""})
-						</span>
+							<h2
+								id="saved-progress-overview-heading"
+								className="text-sm font-semibold text-foreground"
+							>
+								Overview
+							</h2>
+							<p className="mt-2 text-sm text-muted-foreground">
+								{summaryText}
+							</p>
+						</section>
+
+						{/* Ongoing analyses that can be resumed; resuming will continue streaming and accumulation of stats from lichess game history*/}
+						<SavedPlayersSection
+							title="In Progress"
+							count={ongoingPlayers.length}
+							isOpen={isOngoingExpanded}
+							onOpenChange={setIsOngoingExpanded}
+							emptyMessage="No unfinished analyses saved right now."
+						>
+							{ongoingPlayers.map((player, index) => (
+								<PlayerListRow
+									key={`${player.playerData.lichessUsername}-${player.playerData.color}`}
+									player={player}
+									variant="ongoing"
+									isDisabled={isDisabled}
+									onResume={() => handleResume(player)}
+									onDelete={() =>
+										setPlayerToDelete({
+											username: player.playerData.lichessUsername,
+											color: player.playerData.color,
+										})
+									}
+									showSeparator={index < ongoingPlayers.length - 1}
+								/>
+							))}
+						</SavedPlayersSection>
+
+						{/* Analyses that are fully complete and have results available */}
+						<SavedPlayersSection
+							title="Completed"
+							count={finishedPlayers.length}
+							isOpen={isFinishedExpanded}
+							onOpenChange={setIsFinishedExpanded}
+							emptyMessage="Completed analyses will appear here once available."
+						>
+							{finishedPlayers.map((player, index) => (
+								<PlayerListRow
+									key={`${player.playerData.lichessUsername}-${player.playerData.color}`}
+									player={player}
+									variant="finished"
+									isDisabled={isDisabled}
+									onViewStats={() => handleViewStats(player)}
+									onDelete={() =>
+										setPlayerToDelete({
+											username: player.playerData.lichessUsername,
+											color: player.playerData.color,
+										})
+									}
+									showSeparator={index < finishedPlayers.length - 1}
+								/>
+							))}
+						</SavedPlayersSection>
 					</div>
-				</button>
+				</SheetContent>
+			</Sheet>
 
-				{/* Content */}
-				{isExpanded && (
-					<div className="px-4 pb-4 space-y-4">
-						{/* Ongoing Players */}
-						{ongoingPlayers.length > 0 && (
-							<div>
-								<h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-									In Progress
-								</h4>
-								<div className="space-y-2">
-									{ongoingPlayers.map((player) => (
-										<PlayerRow
-											key={`${player.playerData.lichessUsername}-${player.playerData.color}`}
-											player={player}
-											variant="ongoing"
-											isDisabled={isDisabled}
-											onResume={() => handleResume(player)}
-											onDelete={() =>
-												setPlayerToDelete({
-													username: player.playerData.lichessUsername,
-													color: player.playerData.color,
-												})
-											}
-										/>
-									))}
-								</div>
-							</div>
-						)}
-
-						{/* Finished Players */}
-						{finishedPlayers.length > 0 && (
-							<div>
-								<h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-									Completed
-								</h4>
-								<div className="space-y-2">
-									{finishedPlayers.map((player) => (
-										<PlayerRow
-											key={`${player.playerData.lichessUsername}-${player.playerData.color}`}
-											player={player}
-											variant="finished"
-											isDisabled={isDisabled}
-											onViewStats={() => onViewStats(player)}
-											onDelete={() =>
-												setPlayerToDelete({
-													username: player.playerData.lichessUsername,
-													color: player.playerData.color,
-												})
-											}
-										/>
-									))}
-								</div>
-							</div>
-						)}
-					</div>
-				)}
-			</div>
-
-			{/* Delete Confirmation Dialog */}
-			<ConfirmationDialog
-				isOpen={playerToDelete !== null}
-				title="Delete Saved Data"
-				message={`Delete all saved analysis for "${playerToDelete?.username}" (${playerToDelete?.color})? This cannot be undone.`}
-				confirmLabel="Delete"
-				variant="destructive"
-				onConfirm={handleDelete}
-				onCancel={() => setPlayerToDelete(null)}
-			/>
+			<AlertDialog
+				open={playerToDelete !== null}
+				onOpenChange={(open) => !open && setPlayerToDelete(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Saved Data</AlertDialogTitle>
+						<AlertDialogDescription>
+							{`Delete all saved analysis for "${playerToDelete?.username}" (${playerToDelete?.color})? This cannot be undone.`}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction variant="destructive" onClick={handleDelete}>
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	);
 };
@@ -212,90 +277,131 @@ const SavedProgress = ({
 // Sub-components
 // ============================================================================
 
-interface PlayerRowProps {
+interface SavedPlayersSectionProps {
+	title: string;
+	count: number;
+	isOpen: boolean;
+	onOpenChange: (open: boolean) => void;
+	emptyMessage: string;
+	children: React.ReactNode;
+}
+
+const SavedPlayersSection = ({
+	title,
+	count,
+	isOpen,
+	onOpenChange,
+	emptyMessage,
+	children,
+}: SavedPlayersSectionProps) => {
+	return (
+		<section aria-label={title} className="rounded-lg border border-border/70">
+			<Collapsible open={isOpen} onOpenChange={onOpenChange}>
+				<CollapsibleTrigger asChild>
+					<Button
+						type="button"
+						variant="ghost"
+						className="flex h-auto w-full items-center justify-between rounded-lg px-4 py-3 hover:bg-muted/30"
+					>
+						<span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+							{title}
+							<Badge variant="outline">{count}</Badge>
+						</span>
+						<ChevronDown
+							className={`size-4 text-muted-foreground transition-transform ${
+								isOpen ? "rotate-180" : ""
+							}`}
+						/>
+					</Button>
+				</CollapsibleTrigger>
+				<CollapsibleContent>
+					<Separator />
+					{count === 0 ? (
+						<p className="px-4 py-4 text-sm text-muted-foreground">
+							{emptyMessage}
+						</p>
+					) : (
+						<ul className="px-4 py-2">{children}</ul>
+					)}
+				</CollapsibleContent>
+			</Collapsible>
+		</section>
+	);
+};
+
+interface PlayerListRowProps {
 	player: StoredPlayerData;
 	variant: "ongoing" | "finished";
 	isDisabled: boolean;
 	onResume?: () => void;
 	onViewStats?: () => void;
 	onDelete: () => void;
+	showSeparator: boolean;
 }
 
-const PlayerRow = ({
+/**Individual player's saved stats */
+const PlayerListRow = ({
 	player,
 	variant,
 	isDisabled,
 	onResume,
 	onViewStats,
 	onDelete,
-}: PlayerRowProps) => {
+	showSeparator,
+}: PlayerListRowProps) => {
 	const { lichessUsername, color } = player.playerData;
 
 	return (
-		<div className="flex items-center justify-between bg-background rounded-md p-3 border border-border">
-			{/* Player info */}
-			<div className="flex items-center gap-2">
-				{/* Color indicator */}
-				<span
-					className={`text-lg ${
-						color === "white" ? "text-amber-100" : "text-gray-800"
-					}`}
-					title={color}
-				>
-					{color === "white" ? "White" : "Black"}
-				</span>
-				<span className="font-medium text-foreground">{lichessUsername}</span>
-			</div>
+		<li>
+			<div className="flex items-center justify-between gap-3 py-3">
+				<div className="min-w-0 flex items-center gap-2">
+					<Badge variant={color === "white" ? "outline" : "secondary"}>
+						{color === "white" ? "♙ White" : "♟ Black"}
+					</Badge>
+					<span className="truncate text-sm font-medium text-foreground">
+						{lichessUsername}
+					</span>
+				</div>
 
-			{/* Actions */}
-			<div className="flex items-center gap-2">
-				{variant === "ongoing" && onResume && (
-					<button
+				<div className="flex shrink-0 items-center gap-2">
+					{variant === "ongoing" && onResume && (
+						<Button
+							type="button"
+							size="sm"
+							onClick={onResume}
+							disabled={isDisabled}
+						>
+							Resume
+						</Button>
+					)}
+
+					{variant === "finished" && onViewStats && (
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={onViewStats}
+							disabled={isDisabled}
+						>
+							View Stats
+						</Button>
+					)}
+
+					<Button
 						type="button"
-						onClick={onResume}
+						variant="ghost"
+						size="icon-sm"
+						onClick={onDelete}
 						disabled={isDisabled}
-						className="px-3 py-1 text-xs font-medium rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+						aria-label={`Delete ${lichessUsername}`}
+						className="text-muted-foreground hover:text-destructive"
 					>
-						Resume
-					</button>
-				)}
-
-				{variant === "finished" && onViewStats && (
-					<button
-						type="button"
-						onClick={onViewStats}
-						disabled={isDisabled}
-						className="px-3 py-1 text-xs font-medium rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors disabled:opacity-50"
-					>
-						View Stats
-					</button>
-				)}
-
-				{/* Delete button */}
-				<button
-					type="button"
-					onClick={onDelete}
-					disabled={isDisabled}
-					className="p-1 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
-					aria-label={`Delete ${lichessUsername}`}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						className="h-4 w-4"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-						/>
-					</svg>
-				</button>
+						<Trash2 className="size-4" />
+					</Button>
+				</div>
 			</div>
-		</div>
+			{showSeparator && <Separator />}
+		</li>
 	);
 };
 

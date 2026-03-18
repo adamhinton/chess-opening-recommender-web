@@ -1,3 +1,7 @@
+// ________________________
+// Allows the user to pick which time controls they want to analyze (Blitz, Rapid, Classical).
+// ________________________
+
 "use client";
 
 import { type AllowedTimeControl } from "@/app/utils/types/lichessTypes";
@@ -14,6 +18,8 @@ type TimeControlPickerProps = {
 	selectedTimeControls: AllowedTimeControl[];
 	onTimeControlChange: (timeControls: AllowedTimeControl[]) => void;
 	isDisabled: boolean;
+	/** Pass false when a parent fieldset/legend already labels this group */
+	showLabel?: boolean;
 };
 
 /**
@@ -25,6 +31,7 @@ const TimeControlPicker = ({
 	selectedTimeControls,
 	onTimeControlChange,
 	isDisabled,
+	showLabel = true,
 }: TimeControlPickerProps) => {
 	const allowedTimeControls: {
 		value: AllowedTimeControl;
@@ -54,35 +61,37 @@ const TimeControlPicker = ({
 
 	return (
 		<div className="flex flex-col gap-3">
-			<div className="flex items-center gap-2">
-				<Label className="text-sm font-medium">Time Controls</Label>
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<button
-							type="button"
-							className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-							aria-label="More information"
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 20 20"
-								fill="currentColor"
-								className="w-3 h-3"
+			{showLabel && (
+				<div className="flex items-center gap-2">
+					<Label className="text-sm font-medium">Time Controls</Label>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<button
+								type="button"
+								className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+								aria-label="More information"
 							>
-								<path
-									fillRule="evenodd"
-									d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
-									clipRule="evenodd"
-								/>
-							</svg>
-						</button>
-					</TooltipTrigger>
-					<TooltipContent>
-						Select which game speeds you want to analyze. You can choose
-						multiple.
-					</TooltipContent>
-				</Tooltip>
-			</div>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									className="w-3 h-3"
+								>
+									<path
+										fillRule="evenodd"
+										d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+										clipRule="evenodd"
+									/>
+								</svg>
+							</button>
+						</TooltipTrigger>
+						<TooltipContent>
+							Select which game speeds you want to analyze. You can choose
+							multiple.
+						</TooltipContent>
+					</Tooltip>
+				</div>
+			)}
 
 			<ToggleGroup
 				type="multiple"

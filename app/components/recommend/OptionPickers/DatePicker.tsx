@@ -1,3 +1,7 @@
+// ________________________
+// Allows the user to pick a "since" date for which games to analyze (e.g. only analyze games since Jan 1, 2022).
+// ________________________
+
 "use client";
 
 import { useState } from "react";
@@ -23,6 +27,7 @@ const START_YEAR = 2019;
 /**
  * Date picker for selecting a "since" date (games from this date to present).
  * Uses shadcn Calendar in a Popover with year/month navigation for easier browsing.
+ * User can only pick "since", not "until".
  */
 const DatePicker = ({
 	sinceDate,
@@ -104,6 +109,7 @@ const DatePicker = ({
 		<div className="w-full space-y-3">
 			<Label className="block text-sm font-medium">Analyze games since</Label>
 
+			{/* Calendar date picker that pops up when clicking calendar icon */}
 			<div className="space-y-2">
 				<Popover open={isOpen} onOpenChange={setIsOpen}>
 					<PopoverTrigger asChild>

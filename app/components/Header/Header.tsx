@@ -17,6 +17,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Github, Linkedin } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Header: React.FC = () => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -43,17 +44,21 @@ export const Header: React.FC = () => {
 					</Link>
 
 					{/* Mobile menu hamburger button */}
-					<button
+					<Button
+						variant="ghost"
+						size="icon"
+						type="button"
 						onClick={toggleMobileMenu}
-						className="sm:hidden p-2 rounded-md hover:bg-accent text-foreground"
+						className="sm:hidden"
 						aria-label="Toggle mobile menu"
+						aria-expanded={isMobileMenuOpen}
 					>
 						{isMobileMenuOpen ? (
 							<X className="h-5 w-5" />
 						) : (
 							<Menu className="h-5 w-5" />
 						)}
-					</button>
+					</Button>
 				</div>
 
 				{/* Navigation and controls section */}

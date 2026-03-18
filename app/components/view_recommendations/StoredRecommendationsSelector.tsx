@@ -13,7 +13,18 @@
 import { useState } from "react";
 import { ChevronRight, Trash2, User, Crown } from "lucide-react";
 import { StoredRecommendationData } from "../../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
-import ConfirmationDialog from "../../components/ConfirmationDialog";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Color } from "../../utils/types/stats";
 
 // ============================================================================
@@ -48,10 +59,7 @@ function formatDate(unixMs: number) {
 	});
 }
 
-// ============================================================================
-// Component
-// ============================================================================
-
+/**Displays user's stored recommendations, with option to continue analysis, view completed inference, or delete saved items */
 const StoredRecommendationsSelector = ({
 	storedRecommendations,
 	selectedRecommendation,
@@ -86,11 +94,12 @@ const StoredRecommendationsSelector = ({
 		<>
 			<div className="bg-secondary/30 border border-border rounded-xl overflow-hidden">
 				{/* Header - clickable to expand/collapse */}
-				<button
+				<Button
 					type="button"
+					variant="ghost"
 					onClick={() => setIsExpanded(!isExpanded)}
-					className="w-full flex items-center justify-between p-4 
-						hover:bg-secondary/50 transition-colors text-left"
+					aria-expanded={isExpanded}
+					className="h-auto w-full justify-between p-4 hover:bg-secondary/50 text-left"
 				>
 					<div className="flex items-center gap-3">
 						<ChevronRight
@@ -118,7 +127,7 @@ const StoredRecommendationsSelector = ({
 							</span>
 						</div>
 					)}
-				</button>
+				</Button>
 
 				{/* Content */}
 				{isExpanded && (
@@ -148,15 +157,25 @@ const StoredRecommendationsSelector = ({
 			</div>
 
 			{/* Delete Confirmation Dialog */}
-			<ConfirmationDialog
-				isOpen={itemToDelete !== null}
-				title="Delete Recommendations"
-				message={`Delete saved recommendations for "${itemToDelete?.username}" (${itemToDelete?.color})? This cannot be undone.`}
-				confirmLabel="Delete"
-				variant="destructive"
-				onConfirm={handleDelete}
-				onCancel={() => setItemToDelete(null)}
-			/>
+			<AlertDialog
+				open={itemToDelete !== null}
+				onOpenChange={(open) => !open && setItemToDelete(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Recommendations</AlertDialogTitle>
+						<AlertDialogDescription>
+							{`Delete saved recommendations for "${itemToDelete?.username}" (${itemToDelete?.color})? This cannot be undone.`}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction variant="destructive" onClick={handleDelete}>
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	);
 };
@@ -191,10 +210,11 @@ const RecommendationRow = ({
 				}`}
 		>
 			{/* Clickable area for selection */}
-			<button
+			<Button
 				type="button"
+				variant="ghost"
 				onClick={onSelect}
-				className="flex-1 flex items-center gap-3 text-left"
+				className="flex-1 h-auto justify-start gap-3 px-0 py-0 font-normal hover:bg-transparent"
 			>
 				{/* User icon */}
 				<User className="w-5 h-5 text-muted-foreground" />
@@ -205,16 +225,9 @@ const RecommendationRow = ({
 						<span className="font-medium text-foreground truncate">
 							{username}
 						</span>
-						<span
-							className={`text-xs px-2 py-0.5 rounded-full
-								${
-									color === "white"
-										? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
-										: "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-								}`}
-						>
-							{color}
-						</span>
+						<Badge variant={color === "white" ? "outline" : "secondary"}>
+							{color === "white" ? "♙ White" : "♟ Black"}
+						</Badge>
 						{isSelected && (
 							<span className="text-xs text-primary font-medium">
 								✓ Selected
@@ -226,21 +239,22 @@ const RecommendationRow = ({
 						{formatDate(savedAtUnixMS)}
 					</div>
 				</div>
-			</button>
+			</Button>
 
 			{/* Delete button */}
-			<button
+			<Button
 				type="button"
+				variant="ghost"
+				size="icon"
 				onClick={(e) => {
 					e.stopPropagation();
 					onDelete();
 				}}
-				className="p-2 text-muted-foreground hover:text-destructive 
-					transition-colors rounded-md hover:bg-destructive/10"
+				className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
 				aria-label={`Delete recommendations for ${username}`}
 			>
 				<Trash2 className="w-4 h-4" />
-			</button>
+			</Button>
 		</div>
 	);
 };

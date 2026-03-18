@@ -1,3 +1,8 @@
+// ________________________
+// Main landing page
+// Hero section ,tech stack, table of contents, etc.
+// ________________________
+
 import { HeroSection } from "./components/HeroPage/HeroSection";
 import {
 	TableOfContents,
@@ -32,7 +37,7 @@ export default function Home() {
 
 			{/* Divider */}
 			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<div className="h-[2px] bg-gradient-to-r from-transparent via-border to-transparent" />
+				<div className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
 			<div className="py-8">
@@ -41,21 +46,21 @@ export default function Home() {
 
 			{/* Divider */}
 			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<div className="h-[2px] bg-gradient-to-r from-transparent via-border to-transparent" />
+				<div className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
 			<HowItWorks />
 
 			{/* Divider */}
 			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<div className="h-[2px] bg-gradient-to-r from-transparent via-border to-transparent" />
+				<div className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
 			<Features />
 
 			{/* Divider */}
 			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<div className="h-[2px] bg-gradient-to-r from-transparent via-border to-transparent" />
+				<div className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
 			<TechnicalDetails />

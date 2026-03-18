@@ -170,20 +170,24 @@ const Recommend = () => {
 		[submitAnalysis],
 	);
 
-	/**
-	 * Handle viewing stats for a finished player.
-	 */
+	/**See saved stats for an already-analyzed player */
 	const handleViewStats = (playerData: Readonly<StoredPlayerData>) => {
 		console.log("View stats for:", playerData.playerData.lichessUsername);
 		router.push("view-recommendations");
 	};
 
 	return (
-		<div className="min-h-screen bg-background text-foreground p-8">
-			<div className="max-w-md mx-auto">
-				<h1 className="text-2xl font-bold mb-6 text-foreground">
-					Chess Opening Recommender
-				</h1>
+		<main className="min-h-screen bg-background text-foreground px-4 py-10 sm:px-6 lg:px-8">
+			<div className="max-w-2xl mx-auto space-y-6">
+				<header>
+					<h1 className="text-3xl font-bold tracking-tight text-foreground">
+						Chess Opening Recommender
+					</h1>
+					<p className="mt-1 text-sm text-muted-foreground">
+						Enter your Lichess username and preferences to get AI-powered
+						opening suggestions.
+					</p>
+				</header>
 
 				{/* Saved Progress - shows if there are saved players */}
 				<SavedProgress
@@ -193,7 +197,7 @@ const Recommend = () => {
 					isDisabled={isSubmitting}
 				/>
 
-				{/* Recommend Form */}
+				{/* Recommend Form - user requests inference here */}
 				<RecommendForm
 					username={username}
 					setUsername={setUsername}
@@ -208,7 +212,7 @@ const Recommend = () => {
 					onSubmit={handleSubmit}
 				/>
 			</div>
-		</div>
+		</main>
 	);
 };
 
