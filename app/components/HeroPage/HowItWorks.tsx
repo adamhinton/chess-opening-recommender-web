@@ -1,4 +1,9 @@
+// _________________
+// Hero page section describing how the AI model works.
+// _________________
+
 import { Subtext } from "./Subtext";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Step {
 	number: number;
@@ -42,6 +47,7 @@ const steps: Step[] = [
 	},
 ];
 
+// Hero page section describing how the AI model works. */
 export function HowItWorks() {
 	return (
 		<section
@@ -57,21 +63,26 @@ export function HowItWorks() {
 			</div>
 
 			<div className="space-y-6">
-				{steps.map((step) => (
-					<div
+				{steps.map((step, index) => (
+					<Card
 						key={step.number}
-						className="
-              bg-card border-2 border-border rounded-xl
-              p-6 sm:p-8
+						className={`
+              bg-card border-2 rounded-xl
               transition-all duration-200
-              hover:border-primary/50 hover:shadow-lg
-            "
+              hover:shadow-lg
+              ${
+								step.number === 3
+									? "border-accent-gold hover:border-accent-gold/80"
+									: "border-border hover:border-primary/50"
+							}
+            `}
 					>
-						<div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-							{/* Step Number */}
-							<div className="shrink-0">
-								<div
-									className={`
+						<CardContent className="p-6 sm:p-8">
+							<div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+								{/* Step Number */}
+								<div className="relative shrink-0 sm:min-w-14">
+									<div
+										className={`
                     w-12 h-12 sm:w-14 sm:h-14
                     rounded-full
                     flex items-center justify-center
@@ -82,29 +93,36 @@ export function HowItWorks() {
 												: "bg-primary/10 text-primary"
 										}
                   `}
-								>
-									{step.number}
+									>
+										{step.number}
+									</div>
+									{index < steps.length - 1 && (
+										<div
+											aria-hidden="true"
+											className="hidden sm:block absolute left-1/2 top-14 h-[calc(100%+1.75rem)] w-px -translate-x-1/2 bg-border/60"
+										/>
+									)}
+								</div>
+
+								{/* Content */}
+								<div className="flex-1 space-y-2">
+									<h3
+										className={`text-xl sm:text-2xl font-bold ${
+											step.number === 3 ? "text-primary" : ""
+										}`}
+									>
+										{step.title}
+									</h3>
+									<p className="text-foreground/90 leading-relaxed">
+										{step.description}
+									</p>
+									<Subtext size="sm" className="pt-1">
+										{step.technicalDetail}
+									</Subtext>
 								</div>
 							</div>
-
-							{/* Content */}
-							<div className="flex-1 space-y-2">
-								<h3
-									className={`text-xl sm:text-2xl font-bold ${
-										step.number === 3 ? "text-primary" : ""
-									}`}
-								>
-									{step.title}
-								</h3>
-								<p className="text-foreground/90 leading-relaxed">
-									{step.description}
-								</p>
-								<Subtext size="sm" className="pt-1">
-									{step.technicalDetail}
-								</Subtext>
-							</div>
-						</div>
-					</div>
+						</CardContent>
+					</Card>
 				))}
 			</div>
 		</section>

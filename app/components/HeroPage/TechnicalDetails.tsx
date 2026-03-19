@@ -1,4 +1,10 @@
+// ______
+// Hero page section explaining the technical details of the project. Tech stack, ML architecture, data pipeline, and unique features.
+// ______
+
 import { Subtext } from "./Subtext";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface TechDetail {
 	category: string;
@@ -105,49 +111,66 @@ export function TechnicalDetails() {
 			{/* Tech Stack Breakdown */}
 			<div className="space-y-8 mb-12">
 				{techStack.map((section, index) => (
-					<div
+					<Card
 						key={index}
 						className="
               bg-card border-2 border-border rounded-xl
-              p-6 sm:p-8
               hover:border-primary/50 hover:shadow-lg
-              transition-all duration-200
+              transition-all duration-200 py-6 sm:py-8
             "
 					>
-						<h3 className="text-2xl font-bold mb-6 text-primary">
-							{section.category}
-						</h3>
-						<div className="space-y-5">
-							{section.items.map((item, itemIndex) => (
-								<div key={itemIndex}>
-									<h4 className="font-semibold text-foreground mb-1.5">
-										{item.label}
-									</h4>
-									<Subtext size="md">{item.description}</Subtext>
-								</div>
-							))}
-						</div>
-					</div>
+						<CardHeader className="px-6 sm:px-8 pb-0">
+							<CardTitle className="text-2xl font-bold text-primary">
+								{section.category}
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="px-6 sm:px-8 pt-6">
+							<div className="space-y-5">
+								{section.items.map((item, itemIndex) => (
+									<div key={itemIndex}>
+										<Badge
+											variant="secondary"
+											className="mb-2 border border-border/70 bg-muted/70 text-foreground"
+										>
+											{item.label}
+										</Badge>
+										<Subtext size="md">{item.description}</Subtext>
+									</div>
+								))}
+							</div>
+						</CardContent>
+					</Card>
 				))}
 			</div>
 
 			{/* Key Features Highlight */}
-			<div className="bg-primary/5 border-2 border-primary/20 rounded-xl p-6 sm:p-8">
-				<h3 className="text-2xl font-bold mb-6 text-center">
-					What Makes This Unique
-				</h3>
-				<div className="grid gap-6 sm:grid-cols-3">
-					{keyFeatures.map((feature, index) => (
-						<div key={index} className="space-y-2">
-							<div className="flex items-center gap-2">
-								<div className="w-2 h-2 rounded-full bg-primary" />
-								<h4 className="font-bold text-foreground">{feature.title}</h4>
-							</div>
-							<Subtext size="sm">{feature.detail}</Subtext>
-						</div>
-					))}
-				</div>
-			</div>
+			<Card className="bg-primary/5 border-2 border-primary/20 border-t-4 border-t-accent-gold rounded-xl py-6 sm:py-8">
+				<CardHeader className="px-6 sm:px-8 pb-0">
+					<CardTitle className="text-2xl font-bold text-center">
+						What Makes This Unique
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="px-6 sm:px-8 pt-6">
+					<div className="grid gap-6 sm:grid-cols-3">
+						{keyFeatures.map((feature, index) => (
+							<Card
+								key={index}
+								className="border border-border/70 bg-card/80 py-4"
+							>
+								<CardContent className="space-y-2 px-4 sm:px-5">
+									<div className="flex items-center gap-2">
+										<div className="w-2 h-2 rounded-full bg-accent-gold" />
+										<h4 className="font-bold text-foreground">
+											{feature.title}
+										</h4>
+									</div>
+									<Subtext size="sm">{feature.detail}</Subtext>
+								</CardContent>
+							</Card>
+						))}
+					</div>
+				</CardContent>
+			</Card>
 
 			{/* Tech Stack Summary */}
 			<div className="mt-10 text-center">

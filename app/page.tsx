@@ -11,6 +11,7 @@ import {
 import { HowItWorks } from "./components/HeroPage/HowItWorks";
 import { Features } from "./components/HeroPage/Features";
 import { TechnicalDetails } from "./components/HeroPage/TechnicalDetails";
+import { Separator } from "@/components/ui/separator";
 
 const tocSections: TOCSection[] = [
 	{
@@ -32,12 +33,13 @@ const tocSections: TOCSection[] = [
 
 export default function Home() {
 	return (
-		<main className="min-h-screen pb-16">
+		// hero-queen-watermark class adds a repeated decorative chess queen backdrop on the hero page
+		<main className="hero-queen-watermark min-h-screen pb-16">
 			<HeroSection />
 
 			{/* Divider */}
 			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<div className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
+				<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
 			<div className="py-8">
@@ -46,21 +48,21 @@ export default function Home() {
 
 			{/* Divider */}
 			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<div className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
+				<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
 			<HowItWorks />
 
 			{/* Divider */}
 			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<div className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
+				<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
 			<Features />
 
 			{/* Divider */}
 			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<div className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
+				<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
 			<TechnicalDetails />

@@ -126,3 +126,46 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+/* Decorative queen watermark for hero surfaces. Purely visual and low-opacity to preserve text contrast.
+This is intended to be accessible and not interfere with screen readers etc
+*/
+.hero-queen-watermark {
+	position: relative;
+	isolation: isolate;
+}
+
+.hero-queen-watermark::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: -1;
+	background-image:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' font-size='220' fill='hsl(39 89%25 46%25 / 0.11)' font-family='Georgia, serif'%3E%E2%99%9B%3C/text%3E%3C/svg%3E"),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' font-size='220' fill='hsl(39 89%25 46%25 / 0.08)' font-family='Georgia, serif'%3E%E2%99%9B%3C/text%3E%3C/svg%3E");
+	background-repeat: repeat-y, repeat-y;
+	background-size:
+		18rem 18rem,
+		16rem 16rem;
+	background-position:
+		right -2rem top 0,
+		left -2.5rem top 6rem;
+}
+
+.dark .hero-queen-watermark::before {
+	background-image:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' font-size='220' fill='hsl(39 89%25 60%25 / 0.17)' font-family='Georgia, serif'%3E%E2%99%9B%3C/text%3E%3C/svg%3E"),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' font-size='220' fill='hsl(39 89%25 60%25 / 0.13)' font-family='Georgia, serif'%3E%E2%99%9B%3C/text%3E%3C/svg%3E");
+}
+
+@media (max-width: 640px) {
+	.hero-queen-watermark::before {
+		background-size:
+			13rem 13rem,
+			11.5rem 11.5rem;
+		background-position:
+			right -2.75rem top 0,
+			left -3rem top 4rem;
+	}
+}

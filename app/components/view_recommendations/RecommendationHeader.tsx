@@ -61,7 +61,7 @@ const RecommendationHeader = ({
 			</div>
 
 			{/* Hero / Header content */}
-			<div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card/50 to-background shadow-sm">
+			<div className="relative overflow-hidden rounded-2xl border border-border bg-linear-to-br from-card via-card/50 to-background shadow-sm">
 				{/* Background decorative elements */}
 				<div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
 					<Sparkles className="w-48 h-48 text-primary" />

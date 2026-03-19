@@ -21,10 +21,10 @@ export function TOCItem({ label, href, description }: TOCItemProps) {
 			onClick={handleClick}
 			className="
         group block
-        bg-card border border-border rounded-lg
+	bg-card border border-border border-l-4 border-l-transparent rounded-lg
         p-4 sm:p-5
         transition-all duration-200
-        hover:border-primary/50 hover:shadow-lg hover:scale-[1.02]
+	hover:border-border hover:border-l-accent-gold hover:shadow-lg hover:scale-[1.02]
         hover:bg-primary/5
         cursor-pointer
       "

@@ -1,6 +1,12 @@
+// _________________
+// Hero Page features section
+// _________________
+
 import Link from "next/link";
 import Image from "next/image";
 import { Subtext } from "./Subtext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface Feature {
 	title: string;
@@ -29,6 +35,7 @@ const features: Feature[] = [
 	},
 ];
 
+/**Section of Hero page describing the application's features. */
 export function Features() {
 	return (
 		<section
@@ -45,13 +52,13 @@ export function Features() {
 
 			<div className="space-y-8">
 				{features.map((feature, index) => (
-					<div
+					<Card
 						key={index}
 						className="
               bg-card border-2 border-border rounded-xl
               overflow-hidden
               hover:border-primary/50 hover:shadow-lg
-              transition-all duration-200
+              transition-all duration-200 py-0
             "
 					>
 						{/* Screenshot or Placeholder */}
@@ -84,37 +91,34 @@ export function Features() {
 						)}
 
 						{/* Content */}
-						<div className="p-6 sm:p-8 space-y-4">
+						<CardContent className="p-6 sm:p-8 space-y-4">
 							<h3 className="text-2xl font-bold">{feature.title}</h3>
 							<p className="text-foreground/90 leading-relaxed">
 								{feature.description}
 							</p>
-							<Link
-								href={feature.link}
-								className="
-                  inline-flex items-center gap-2
-                  text-primary font-semibold
-                  hover:underline
-                  transition-all duration-200
-                "
-							>
-								{feature.linkText}
-								<svg
-									className="w-4 h-4"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
+							<Button asChild variant="link" className="px-0 text-primary">
+								<Link
+									href={feature.link}
+									className="inline-flex items-center gap-2"
 								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M9 5l7 7-7 7"
-									/>
-								</svg>
-							</Link>
-						</div>
-					</div>
+									{feature.linkText}
+									<svg
+										className="w-4 h-4"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M9 5l7 7-7 7"
+										/>
+									</svg>
+								</Link>
+							</Button>
+						</CardContent>
+					</Card>
 				))}
 			</div>
 		</section>
