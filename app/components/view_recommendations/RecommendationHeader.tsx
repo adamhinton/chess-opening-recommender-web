@@ -39,20 +39,6 @@ const RecommendationHeader = ({
 		<div className="space-y-6">
 			{/* Navigation */}
 			<div className="flex items-center justify-between">
-				{/* Only show this link if there are other recommendations */}
-				{RecommendationsLocalStorageUtils.getStoredCount() > 1 && (
-					<Button
-						variant="ghost"
-						asChild
-						className="gap-2 text-muted-foreground hover:text-foreground group px-2"
-					>
-						<Link href="/view-recommendations">
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							My other recommendations
-						</Link>
-					</Button>
-				)}
-
 				<Button variant="outline" asChild className="gap-2">
 					<Link href="/recommend">
 						<RotateCcw className="w-4 h-4" />
