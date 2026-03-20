@@ -61,6 +61,7 @@ A lightweight Python API that hosts the pre-trained model. The Web Client sends 
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS, Shadcn UI
 - **State:** React Server Components + Client Hooks
+- **ShadCN** For pre-built, accessible UI components that speed up development and ensure a polished look.
 
 **Backend & Data**
 
