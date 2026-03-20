@@ -18,6 +18,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Github, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QueenLogo } from "@/app/components/QueenLogo";
 
 export const Header: React.FC = () => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -32,12 +33,7 @@ export const Header: React.FC = () => {
 				{/* Logo and title section */}
 				<div className="flex items-center justify-between">
 					<Link href="/" className="flex items-center space-x-3 group">
-						{/* Logo placeholder */}
-						<div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-							<span className="text-primary-foreground font-bold text-sm">
-								♟
-							</span>
-						</div>
+						<QueenLogo size="sm" />
 						<span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-200">
 							Chess Opening Recommender
 						</span>

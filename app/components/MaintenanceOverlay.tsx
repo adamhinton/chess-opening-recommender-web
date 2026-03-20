@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const MaintenanceOverlay = () => {
 	return (
-		<div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background p-4 text-foreground">
+		<div className="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-background p-4 text-foreground">
 			<div className="max-w-md text-center space-y-6">
 				<h1 className="text-4xl font-bold tracking-tight">Under Maintenance</h1>
 				<p className="text-xl text-muted-foreground">

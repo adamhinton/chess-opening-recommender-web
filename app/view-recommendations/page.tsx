@@ -16,7 +16,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import {
 	RecommendationsLocalStorageUtils,
 	StoredRecommendationData,
@@ -29,8 +28,6 @@ import StoredRecommendationsSelector from "../components/view_recommendations/St
 import EmptyState from "../components/view_recommendations/EmptyState";
 
 const ViewRecommendationsPage = () => {
-	const router = useRouter();
-
 	const [isLoading, setIsLoading] = useState(true);
 	const [storedRecommendations, setStoredRecommendations] = useState<
 		StoredRecommendationData[]
@@ -38,37 +35,38 @@ const ViewRecommendationsPage = () => {
 	const [selectedRecommendation, setSelectedRecommendation] =
 		useState<StoredRecommendationData | null>(null);
 
+	// Extracted so it can be called on mount AND after demo data is seeded
+	const loadRecommendations = useCallback(() => {
+		const allRecommendations =
+			RecommendationsLocalStorageUtils.getAllStoredRecommendations();
+		setStoredRecommendations(allRecommendations);
+
+		if (allRecommendations.length === 0) {
+			setIsLoading(false);
+			return;
+		}
+
+		if (allRecommendations.length === 1) {
+			// Only one set - auto-select it
+			setSelectedRecommendation(allRecommendations[0]);
+		} else {
+			// Multiple sets - check for recent one
+			const mostRecent =
+				RecommendationsLocalStorageUtils.getMostRecentRecommendation();
+			if (mostRecent) {
+				// Recent recommendation exists - auto-select it
+				setSelectedRecommendation(mostRecent);
+			}
+			// Otherwise, user will pick from the selector
+		}
+
+		setIsLoading(false);
+	}, []);
+
 	// Load recommendations on mount
 	useEffect(() => {
-		const loadRecommendations = () => {
-			const allRecommendations =
-				RecommendationsLocalStorageUtils.getAllStoredRecommendations();
-			setStoredRecommendations(allRecommendations);
-
-			if (allRecommendations.length === 0) {
-				setIsLoading(false);
-				return;
-			}
-
-			if (allRecommendations.length === 1) {
-				// Only one set - auto-select it
-				setSelectedRecommendation(allRecommendations[0]);
-			} else {
-				// Multiple sets - check for recent one
-				const mostRecent =
-					RecommendationsLocalStorageUtils.getMostRecentRecommendation();
-				if (mostRecent) {
-					// Recent recommendation exists - auto-select it
-					setSelectedRecommendation(mostRecent);
-				}
-				// Otherwise, user will pick from the selector
-			}
-
-			setIsLoading(false);
-		};
-
 		loadRecommendations();
-	}, [router]);
+	}, [loadRecommendations]);
 
 	const handleSelect = useCallback((rec: StoredRecommendationData) => {
 		setSelectedRecommendation(rec);
@@ -91,7 +89,7 @@ const ViewRecommendationsPage = () => {
 				setSelectedRecommendation(updated.length > 0 ? updated[0] : null);
 			}
 		},
-		[selectedRecommendation]
+		[selectedRecommendation],
 	);
 
 	if (isLoading) {
@@ -112,7 +110,7 @@ const ViewRecommendationsPage = () => {
 	if (storedRecommendations.length === 0) {
 		return (
 			<div className="min-h-screen bg-background">
-				<EmptyState />
+				<EmptyState onDemoLoad={loadRecommendations} />
 			</div>
 		);
 	}
@@ -160,7 +158,7 @@ const ViewRecommendationsPage = () => {
 							onClick={() =>
 								handleDelete(
 									selectedRecommendation.username,
-									selectedRecommendation.color
+									selectedRecommendation.color,
 								)
 							}
 							className="text-sm text-muted-foreground hover:text-destructive 

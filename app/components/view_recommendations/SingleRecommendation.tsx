@@ -44,8 +44,8 @@ const SingleRecommendation = ({
 			rel="noopener noreferrer"
 			className="group flex items-center gap-3 px-4 py-2.5 rounded-lg
 				bg-linear-to-r from-card to-card/80
-				border border-border/50
-				hover:border-primary/30 hover:from-primary/5 hover:to-transparent
+				border border-border/50 border-l-2 border-l-transparent
+				hover:border-primary/30 hover:from-primary/5 hover:to-transparent hover:border-l-accent-gold
 				transition-all duration-200 ease-out"
 		>
 			{/* Optional rank badge */}
@@ -66,7 +66,8 @@ const SingleRecommendation = ({
 			{/* ECO code badge */}
 			<span
 				className="shrink-0 px-2 py-0.5 rounded text-xs font-mono
-				bg-muted text-muted-foreground"
+				bg-muted text-muted-foreground transition-colors
+				group-hover:bg-accent-gold/10 group-hover:text-accent-gold"
 			>
 				{eco}
 			</span>

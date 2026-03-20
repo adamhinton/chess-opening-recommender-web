@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Subtext } from "./Subtext";
+import { generateDummyRecommendations } from "../../utils/recommendations/dummyRecommendations";
+import { RecommendationsLocalStorageUtils } from "../../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
+import { Color } from "../../utils/types/stats";
 
 export function HeroSection() {
 	const router = useRouter();
@@ -14,6 +17,34 @@ export function HeroSection() {
 		e.preventDefault();
 		if (navigatingTo) return;
 		setNavigatingTo(href);
+		setTimeout(() => router.push(href), 160);
+	};
+
+	/**
+	 * Navigate to view-recommendations, seeding dummy data first if the user
+	 * has no saved recommendations yet
+	 * The dummy data is helpful if the user is e.g. a recruiter who just wants to see how the app works without signing up for Lichess or generating their own recommendations
+	 */
+	const handleViewResults = (e: React.MouseEvent) => {
+		e.preventDefault();
+		if (navigatingTo) return;
+
+		const href = "/view-recommendations";
+		setNavigatingTo(href);
+
+		const existing =
+			RecommendationsLocalStorageUtils.getAllStoredRecommendations();
+		if (existing.length === 0) {
+			const dummyUsername = "example-player";
+			const dummyColor: Color = "white";
+			const dummyRecommendations = generateDummyRecommendations(50, dummyColor);
+			RecommendationsLocalStorageUtils.saveRecommendations(
+				dummyUsername,
+				dummyColor,
+				dummyRecommendations,
+			);
+		}
+
 		setTimeout(() => router.push(href), 160);
 	};
 
@@ -158,10 +189,7 @@ export function HeroSection() {
 							}
 						`}
 					>
-						<a
-							href="/view-recommendations"
-							onClick={(e) => handleNav(e, "/view-recommendations")}
-						>
+						<a href="/view-recommendations" onClick={handleViewResults}>
 							{navigatingTo === "/view-recommendations" ? (
 								<>
 									<svg

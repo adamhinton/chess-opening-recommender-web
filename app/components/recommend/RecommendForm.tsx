@@ -26,11 +26,6 @@ import NextStepsInformational from "./NextStepsInformational";
 import { Color } from "../../utils/types/stats";
 import { AllowedTimeControl } from "../../utils/types/lichessTypes";
 
-/**
- * Base props shared across all RecommendForm states.
- * All form state and handlers that don't change based on progress stage.
- * @internal - Use only as part of discriminated union below
- */
 interface RecommendFormProps {
 	username: string;
 	setUsername: (value: string) => void;
@@ -346,10 +341,16 @@ const RecommendForm = ({
  * Numbered section header used to delineate each form step.
  * The circle badge gives the form a clear scan path without heavy boxing.
  */
-const StepHeader = ({ step, title }: { step: number; title: string }) => (
+export const StepHeader = ({
+	step,
+	title,
+}: {
+	step: number;
+	title: string;
+}) => (
 	<div className="flex items-center gap-3 mb-1">
 		<span
-			className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-gold text-xs font-bold text-white"
+			className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-gold text-xs font-bold text-black"
 			aria-hidden="true"
 		>
 			{step}

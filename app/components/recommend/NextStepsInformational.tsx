@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StepHeader } from "./RecommendForm";
 
 /**
  * Shows information on what will happen after user submits a Lichess username for inference.
@@ -10,9 +11,10 @@ const NextStepsInformational = ({
 }) => {
 	return (
 		<section>
-			<h2 className="text-lg font-semibold text-foreground mb-4">
+			{/* <h2 className="text-lg font-semibold text-foreground mb-4">
 				Generate Recommendations
-			</h2>
+			</h2> */}
+			<StepHeader step={5} title="Generate Recommendations" />
 
 			{/* What Happens Next — visually secondary so it doesn't compete with the submit button */}
 			{!isSubmitting && (

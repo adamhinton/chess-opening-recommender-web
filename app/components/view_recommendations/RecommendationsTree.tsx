@@ -12,6 +12,8 @@
 import { useMemo } from "react";
 import ECOLetterSection, { ECOLetter } from "./ECOLetterSection";
 import { SingleOpeningRecommendation } from "../../utils/types/stats";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 // ============================================================================
 // Types
@@ -111,13 +113,16 @@ const RecommendationsTree = ({
 	return (
 		<div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
 			{/* Summary */}
-			<div className="flex items-center justify-between px-1">
-				<h2 className="text-lg font-semibold text-foreground">
-					Recommended Openings by Category
-				</h2>
-				<span className="text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">
-					{recommendations.length} total openings
-				</span>
+			<div className="px-1">
+				<div className="flex items-center justify-between mb-3">
+					<h2 className="text-lg font-semibold text-foreground">
+						Recommended Openings by Category
+					</h2>
+					<Badge variant="secondary">
+						{recommendations.length} total openings
+					</Badge>
+				</div>
+				<Separator />
 			</div>
 
 			{/* Tree sections */}
