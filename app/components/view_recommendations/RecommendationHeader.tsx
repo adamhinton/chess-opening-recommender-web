@@ -8,11 +8,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, CheckCircle2 } from "lucide-react";
-import {
-	RecommendationsLocalStorageUtils,
-	StoredRecommendationData,
-} from "@/app/utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
+import { RotateCcw, CheckCircle2 } from "lucide-react";
+import { StoredRecommendationData } from "@/app/utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
 import { Subtext } from "@/app/components/HeroPage/Subtext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
