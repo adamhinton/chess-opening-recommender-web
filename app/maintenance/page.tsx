@@ -1,5 +1,5 @@
-import { MaintenanceOverlay } from "../components/MaintenanceOverlay";
+import { MaintenanceOverlay } from "../components/maintenance/MaintenanceOverlay";
 
 export default function MaintenancePage() {
-  return <MaintenanceOverlay />;
+	return <MaintenanceOverlay />;
 }

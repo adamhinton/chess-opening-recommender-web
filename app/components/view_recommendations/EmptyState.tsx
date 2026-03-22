@@ -12,7 +12,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { QueenLogo } from "@/app/components/QueenLogo";
+import { QueenLogo } from "@/app/components/logos/QueenLogo";
 import { generateDummyRecommendations } from "../../utils/recommendations/dummyRecommendations";
 import { RecommendationsLocalStorageUtils } from "../../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
 import { Color } from "../../utils/types/stats";

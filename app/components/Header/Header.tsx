@@ -18,7 +18,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Github, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { QueenLogo } from "@/app/components/QueenLogo";
+import { QueenLogo } from "@/app/components/logos/QueenLogo";
 
 export const Header: React.FC = () => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
