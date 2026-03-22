@@ -126,7 +126,9 @@ You will need:
 
 ### Setting up the AI Model (Forking the Project)
 
-If you are running this project yourself, you need your own instance of the Inference API.
+If you are running this project yourself, you need your own instance of the HuggingFace Inference API.
+
+I will also be happy to help you get a copy of this.
 
 1.  Go to the [Hugging Face Space](https://huggingface.co/spaces/adamhinton/chess-opening-recommender).
 2.  Click the three dots menu and select **"Duplicate this Space"**.
