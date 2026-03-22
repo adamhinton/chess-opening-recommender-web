@@ -9,6 +9,9 @@
  * Pings /health which is a quick endpoint that verifies the space is online.
  *
  * This is run on the server so as not to expose secrets.
+ *
+ * Doesn't throw error on failure because it's not mission critical, and isn't async
+ * 	because we want it to run in the background without blocking the main process.
  */
 const wakeUpHuggingFaceSpace = async (): Promise<{
 	success: boolean;

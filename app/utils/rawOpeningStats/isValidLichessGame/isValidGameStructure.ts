@@ -1,3 +1,8 @@
+// _____________
+// Utils run on each streamed Lichess game
+// to make sure the game has the structure and data we need for stats accumulation.
+// _____________
+
 import { LichessGameAPIResponse } from "../../types/lichessTypes";
 
 /**

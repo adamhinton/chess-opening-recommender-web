@@ -31,6 +31,7 @@ const tocSections: TOCSection[] = [
 	},
 ];
 
+/**Landing/hero page */
 export default function Home() {
 	return (
 		// hero-queen-watermark class adds a repeated decorative chess queen backdrop on the hero page

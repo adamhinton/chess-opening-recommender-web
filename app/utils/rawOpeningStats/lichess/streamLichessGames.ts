@@ -1,3 +1,7 @@
+// _____________
+// Utils and types for streaming games from Lichess API, to accumulate a player's opening stats.
+// _____________
+
 import {
 	LichessGameAPIResponse,
 	AllowedTimeControl,

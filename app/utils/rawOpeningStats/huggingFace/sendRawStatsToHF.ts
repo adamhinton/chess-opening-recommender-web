@@ -1,3 +1,8 @@
+// _____________
+// Once the player's accumulated opening stats are parsed on the frontend, this sends those stats to the HuggingFace
+// AI model for inference.
+// _____________
+
 "use server";
 
 import {
@@ -7,6 +12,12 @@ import {
 	PlayerData,
 } from "../../types/stats";
 
+/**
+ * Sends player's accumulated opening stats to HuggingFace model to get opening recommendations.
+ *
+ * @param data All of the player's data needed for the model to perform inference
+ * @returns Information about the openings recommended, color, and user account.
+ */
 const sendRawStatsToHF = async (
 	data: Readonly<PlayerData>,
 ): Promise<Readonly<InferencePredictResponse> | { error: string }> => {
@@ -26,6 +37,8 @@ const sendRawStatsToHF = async (
 	}
 
 	const payload = OpeningStatsUtils.convertToHFPayload(data);
+
+	// Step 2: Send
 	const response = await fetch(`${hfSpaceApiUrl}/predict`, {
 		method: "POST",
 		headers: {
