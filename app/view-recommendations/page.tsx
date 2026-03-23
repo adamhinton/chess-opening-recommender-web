@@ -20,12 +20,14 @@ import {
 	RecommendationsLocalStorageUtils,
 	StoredRecommendationData,
 } from "../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
-import { Color } from "../utils/types/stats";
+import { type Color } from "../utils/types/stats";
 
 import RecommendationHeader from "../components/view_recommendations/RecommendationHeader";
 import RecommendationsTree from "../components/view_recommendations/RecommendationsTree";
 import StoredRecommendationsSelector from "../components/view_recommendations/StoredRecommendationsSelector";
 import EmptyState from "../components/view_recommendations/EmptyState";
+import { StoredPlayerData } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
+import { Button } from "@/components/ui/button";
 
 const ViewRecommendationsPage = () => {
 	const [isLoading, setIsLoading] = useState(true);
@@ -46,15 +48,16 @@ const ViewRecommendationsPage = () => {
 			return;
 		}
 
+		// If there's only one stored recommendation, display it immediately
 		if (allRecommendations.length === 1) {
-			// Only one set - auto-select it
 			setSelectedRecommendation(allRecommendations[0]);
 		} else {
 			// Multiple sets - check for recent one
 			const mostRecent =
 				RecommendationsLocalStorageUtils.getMostRecentRecommendation();
 			if (mostRecent) {
-				// Recent recommendation exists - auto-select it
+				// User has come here immediately after getting a recommendation set -
+				// 	display that new one by default
 				setSelectedRecommendation(mostRecent);
 			}
 			// Otherwise, user will pick from the selector
@@ -73,7 +76,10 @@ const ViewRecommendationsPage = () => {
 	}, []);
 
 	const handleDelete = useCallback(
-		(username: string, color: Color) => {
+		(
+			username: StoredPlayerData["playerData"]["lichessUsername"],
+			color: Color,
+		) => {
 			RecommendationsLocalStorageUtils.deleteRecommendations(username, color);
 
 			// Refresh the list
@@ -94,7 +100,7 @@ const ViewRecommendationsPage = () => {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen bg-background flex items-center justify-center">
+			<main className="min-h-screen bg-background flex items-center justify-center">
 				<div className="text-center">
 					<div
 						className="w-8 h-8 border-2 border-primary border-t-transparent 
@@ -102,21 +108,22 @@ const ViewRecommendationsPage = () => {
 					/>
 					<p className="text-muted-foreground">Loading recommendations...</p>
 				</div>
-			</div>
+			</main>
 		);
 	}
 
 	// None saved
 	if (storedRecommendations.length === 0) {
 		return (
-			<div className="min-h-screen bg-background">
+			<main className="min-h-screen bg-background">
 				<EmptyState onDemoLoad={loadRecommendations} />
-			</div>
+			</main>
 		);
 	}
 
+	// Now we know user has at least one recommendation
 	return (
-		<div className="min-h-screen bg-background">
+		<main className="min-h-screen bg-background">
 			<div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
 				{/* Selector for multiple recommendation sets */}
 				{storedRecommendations.length > 1 && (
@@ -125,7 +132,6 @@ const ViewRecommendationsPage = () => {
 						selectedRecommendation={selectedRecommendation}
 						onSelect={handleSelect}
 						onDelete={handleDelete}
-						isSingleRecommendation={storedRecommendations.length === 1}
 					/>
 				)}
 
@@ -145,31 +151,31 @@ const ViewRecommendationsPage = () => {
 					</>
 				) : (
 					// No selection yet - prompt to select
-					<div className="text-center py-12 text-muted-foreground">
-						<p>Select a recommendation set above to view.</p>
-					</div>
+					<p className="text-center py-12 text-muted-foreground">
+						Select a recommendation set above to view.
+					</p>
 				)}
 
 				{/* Single recommendation - show delete option */}
 				{storedRecommendations.length === 1 && selectedRecommendation && (
-					<div className="pt-4 border-t border-border">
-						<button
-							type="button"
+					<footer className="pt-4 border-t border-border">
+						<Button
+							variant="ghost"
+							size="sm"
 							onClick={() =>
 								handleDelete(
 									selectedRecommendation.username,
 									selectedRecommendation.color,
 								)
 							}
-							className="text-sm text-muted-foreground hover:text-destructive 
-								transition-colors"
+							className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
 						>
 							Delete this recommendation set
-						</button>
-					</div>
+						</Button>
+					</footer>
 				)}
 			</div>
-		</div>
+		</main>
 	);
 };
 
