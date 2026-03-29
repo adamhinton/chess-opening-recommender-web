@@ -64,7 +64,7 @@ A lightweight Python API that hosts the pre-trained model. The Web Client sends 
 - **ShadCN** For pre-built, accessible UI components that speed up development and ensure a polished look.
 - **Monitoring/Logging:**:
   - Uptime: UptimeRobot
-  - More coming soon; this is my next PR (April 2026)
+  - Monitoring: Sentry
 
 **Backend & Data**
 
@@ -110,6 +110,7 @@ You will need:
     | `NEXT_PUBLIC_HF_SPACE_URL_DEV`                 | URL for local dev (likely localhost if running the python repo locally) |
     | `HF_SPACE_URL_PROD`                            | The full URL to your Hugging Face Space                                 |
     | `HF_API_TOKEN`                                 | Your Hugging Face Access Token                                          |
+    | `SENTRY_AUTH_TOKEN`                            | Your Sentry authentication token (for error monitoring)                 |
 
 3.  **Build the Docker image:**
 
