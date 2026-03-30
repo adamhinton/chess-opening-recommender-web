@@ -3,6 +3,8 @@
 // Particularly, implementing exponential backoff to respect any API limits etc
 // __________________
 
+import * as Sentry from "@sentry/nextjs";
+
 /**
  * Configuration for fetchWithBackoff
  */
@@ -53,6 +55,18 @@ export async function fetchWithBackoff({
 			// If we are here, it's a 429 or 5xx error.
 			// Check if we've exceeded max retries
 			if (numAttemptsSoFar >= maxRetries) {
+				Sentry.captureMessage(
+					`fetchWithBackoff: exhausted ${maxRetries} retries on ${response.status} response`,
+					{
+						level: "error",
+						extra: {
+							url,
+							status: response.status,
+							statusText: response.statusText,
+							numAttempts: numAttemptsSoFar,
+						},
+					},
+				);
 				return response;
 			}
 
@@ -91,6 +105,13 @@ export async function fetchWithBackoff({
 			numAttemptsSoFar++;
 
 			if (numAttemptsSoFar > maxRetries) {
+				Sentry.captureException(error, {
+					extra: {
+						url,
+						numAttempts: numAttemptsSoFar,
+						context: "fetchWithBackoff: network error retries exhausted",
+					},
+				});
 				throw error;
 			}
 

@@ -11,6 +11,7 @@ import {
 	OpeningStatsUtils,
 	PlayerData,
 } from "../../types/stats";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Sends player's accumulated opening stats to HuggingFace model to get opening recommendations.
@@ -28,11 +29,17 @@ const sendRawStatsToHF = async (
 			: process.env.HF_SPACE_URL_PROD;
 
 	if (!hfSpaceApiUrl) {
+		Sentry.captureMessage("HuggingFace space URL not configured", {
+			level: "error",
+		});
 		return { error: "HuggingFace space URL not configured" };
 	}
 
 	const hfApiToken = process.env.HF_API_TOKEN;
 	if (!hfApiToken) {
+		Sentry.captureMessage("HuggingFace API token not configured", {
+			level: "error",
+		});
 		return { error: "HuggingFace API token not configured" };
 	}
 
@@ -48,14 +55,54 @@ const sendRawStatsToHF = async (
 		body: JSON.stringify(payload),
 	});
 
-	const responseJSON = await response.json();
+	if (!response.ok) {
+		const err = new Error(
+			`HF inference request failed: ${response.status} ${response.statusText}`,
+		);
+		Sentry.captureException(err, {
+			extra: {
+				username: data.lichessUsername,
+				color: data.color,
+				status: response.status,
+				statusText: response.statusText,
+				url: `${hfSpaceApiUrl}/predict`,
+			},
+		});
+		return {
+			error: `HuggingFace inference failed: ${response.status} ${response.statusText}`,
+		};
+	}
+
+	let responseJSON: unknown;
+	try {
+		responseJSON = await response.json();
+	} catch (parseError) {
+		Sentry.captureException(parseError, {
+			extra: {
+				username: data.lichessUsername,
+				color: data.color,
+				context: "Failed to parse HF inference response as JSON",
+				status: response.status,
+			},
+		});
+		return { error: "Failed to parse response from HuggingFace space" };
+	}
+
 	const isValidResponse = isValidInferencePredictResponse(responseJSON);
 
 	if (!isValidResponse) {
+		Sentry.captureMessage("Invalid response shape from HuggingFace inference", {
+			level: "error",
+			extra: {
+				username: data.lichessUsername,
+				color: data.color,
+				responseJSON,
+			},
+		});
 		return { error: "Invalid response from HuggingFace space" };
 	}
 
-	return responseJSON;
+	return responseJSON as InferencePredictResponse;
 };
 
 export default sendRawStatsToHF;

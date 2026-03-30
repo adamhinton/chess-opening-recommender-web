@@ -8,6 +8,7 @@ import {
 } from "../../types/lichessTypes";
 import { Color, LICHESS_MIN_DATE_UNIX_MS } from "../../types/stats";
 import { fetchWithBackoff } from "../../network/fetchWithBackoff";
+import * as Sentry from "@sentry/nextjs";
 
 //lichess.org/api#tag/games/GET/api/games/user/{username}
 
@@ -135,6 +136,12 @@ export async function* streamLichessGames(
 						yield game;
 					} catch (error) {
 						console.error("Error parsing final game:", error);
+						Sentry.captureException(error, {
+							extra: {
+								context: "Lichess stream - final buffer parse failure",
+								username,
+							},
+						});
 					}
 				}
 				break;
@@ -156,10 +163,16 @@ export async function* streamLichessGames(
 				try {
 					// Don't want to validate every single game here with Zod, that would get expensive with thousands of games
 					// But, the lichess API is very reliable so we'll assume data is valid
-					const game = JSON.parse(trimmed) as LichessGameAPIResponse;
+					const game = JSON.parse(trimmed) as unknown as LichessGameAPIResponse;
 					yield game;
 				} catch (error) {
 					console.error("Error parsing game line:", error);
+					Sentry.captureException(error, {
+						extra: {
+							context: "Lichess stream - NDJSON line parse failure",
+							username,
+						},
+					});
 					// Continue processing other games
 				}
 			}

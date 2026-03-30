@@ -1,3 +1,14 @@
+// _________________
+// Processing of inference requests:
+// 1. Stream games from Lichess API with filters
+// 2. Validate games and accumulate player's stats
+// 3. Periodically save progress to localStorage (both for resuming and to avoid data loss)
+// 4. Send accumulated stats to Hugging Face for inference of recommended openings
+// 5. Save recommendations to localStorage
+
+// Sentry alerts me when something has gone wrong.
+// _________________
+
 "use client";
 
 import { streamLichessGames } from "../utils/rawOpeningStats/lichess/streamLichessGames";
@@ -13,6 +24,7 @@ import {
 	OpeningStatsUtils,
 	PlayerData,
 	isValidInferencePredictResponse,
+	isValidPlayerData,
 	LICHESS_MIN_DATE_UNIX_MS,
 } from "../utils/types/stats";
 import { loadOpeningNamesForColor } from "../utils/rawOpeningStats/modelArtifacts/modelArtifactUtils";
@@ -30,6 +42,7 @@ import {
 } from "../utils/rawOpeningStats/lichess/lichessUtils";
 import sendRawStatsToHF from "../utils/rawOpeningStats/huggingFace/sendRawStatsToHF";
 import { RecommendationsLocalStorageUtils } from "../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
+import * as Sentry from "@sentry/nextjs";
 
 // Much lower number for testing so I don't get IPbanned by Lichess
 // The most active player on lichess has about 400,000 games, so 200k for one color in prod
@@ -386,15 +399,56 @@ export async function processLichessUsername(
 
 		console.log("blah blah blah");
 
+		// Client-side validation of PlayerData before sending to inference
+		// (server-side conversion also validates, but this catches client bugs before the round-trip)
+		// TODO clean up this validation error handling a bit
+		const numUniqueOpenings = Object.keys(playerData.openingStats).length;
+		if (!isValidPlayerData(playerData)) {
+			Sentry.captureMessage(
+				"PlayerData failed client-side validation before HF inference",
+				{
+					level: "error",
+					extra: {
+						username,
+						playerColor,
+						allowedTimeControls,
+						sinceUnixMS,
+						totalValidGames,
+						numUniqueOpenings,
+					},
+				},
+			);
+			return {
+				success: false,
+				message: "An error occurred with the accumulated player data.",
+			};
+		}
+
 		// 5.  Now send to HF for inference
 		// Takes 10 seconds or less when running both this app and the inference on local;
 		// Not sure how long in dev but probably not long
 		const response = await sendRawStatsToHF(playerData);
 		console.log("response:", response);
 
+		// Alert if inference returned an error instead of valid predictions
+		if ("error" in response) {
+			Sentry.captureMessage(
+				`HF inference returned an error: ${response.error}`,
+				{
+					level: "error",
+					extra: {
+						username,
+						playerColor,
+						allowedTimeControls,
+						sinceUnixMS,
+						totalValidGames,
+					},
+				},
+			);
+		}
+
 		// Save recommendations to localStorage if inference was successful
 		if (isValidInferencePredictResponse(response)) {
-			console.log("blah blah blah it's a valid response");
 			const saveResult = RecommendationsLocalStorageUtils.saveRecommendations(
 				username,
 				playerColor,
@@ -405,6 +459,13 @@ export async function processLichessUsername(
 					`[Recommendations] Saved ${response.recommendations.length} recommendations for ${username} (${playerColor})`,
 				);
 			} else {
+				Sentry.captureMessage(
+					`Failed to save recommendations to localStorage: ${saveResult.error}`,
+					{
+						level: "warning",
+						extra: { username, playerColor },
+					},
+				);
 				console.warn(
 					`[Recommendations] Failed to save recommendations: ${saveResult.error}`,
 				);
@@ -422,6 +483,9 @@ export async function processLichessUsername(
 
 		return response;
 	} catch (error) {
+		Sentry.captureException(error, {
+			extra: { username, playerColor, allowedTimeControls, sinceUnixMS },
+		});
 		console.error("Error processing username:", error);
 		return {
 			success: false,

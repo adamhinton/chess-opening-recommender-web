@@ -4,6 +4,7 @@
 
 import z from "zod";
 import { AllowedTimeControl } from "./lichessTypes";
+import * as Sentry from "@sentry/nextjs";
 
 /**This is just a string but we're putting a name on it for clarity when we use it as an object key */
 const OpeningNameSchema = z.string();
@@ -172,6 +173,16 @@ export function isValidInferencePredictResponse(
  * Run this after raw data processing to ensure no mistakes
  */
 export function isValidPlayerData(data: unknown): data is PlayerData {
+	if (!PlayerDataSchema.safeParse(data).success) {
+		console.error("Invalid PlayerData structure:", data);
+		Sentry.captureMessage("PlayerData failed Zod validation", {
+			level: "error",
+			extra: {
+				data,
+			},
+		});
+		return false;
+	}
 	return PlayerDataSchema.safeParse(data).success;
 }
 
@@ -228,10 +239,17 @@ export class OpeningStatsUtils {
 		};
 
 		// If in dev and it doesn't saitisfy schema, throw. If in prod, don't bother; the HF API will reject it if it's malformed and we can catch it there.
-		if (process.env.NODE_ENV === "development") {
-			const parseResult = HFInterfacePayloadSchema.safeParse(result);
-			if (!parseResult.success) {
-				console.error("Invalid HFInterfacePayload:", parseResult.error);
+		const parseResult = HFInterfacePayloadSchema.safeParse(result);
+		if (!parseResult.success) {
+			console.error("Invalid HFInterfacePayload:", parseResult.error);
+			Sentry.captureMessage("HFInterfacePayload failed Zod validation", {
+				level: "error",
+				extra: {
+					parseResult: parseResult,
+					validationErrors: parseResult.error.flatten(),
+				},
+			});
+			if (process.env.NODE_ENV === "development") {
 				throw new Error("HFInterfacePayload validation failed");
 			}
 		}
@@ -256,10 +274,17 @@ export class OpeningStatsUtils {
 		};
 
 		// Validate the structure in dev to catch any mistakes early
-		if (process.env.NODE_ENV === "development") {
-			const parseResult = PlayerDataSchema.safeParse(result);
-			if (!parseResult.success) {
-				console.error("Invalid PlayerData:", parseResult.error);
+		const parseResult = PlayerDataSchema.safeParse(result);
+		if (!parseResult.success) {
+			console.error("Invalid PlayerData:", parseResult.error);
+			Sentry.captureMessage("PlayerData failed Zod validation at creation", {
+				level: "error",
+				extra: {
+					playerData: result,
+					validationErrors: parseResult.error.flatten(),
+				},
+			});
+			if (process.env.NODE_ENV === "development") {
 				throw new Error("PlayerData validation failed");
 			}
 		}

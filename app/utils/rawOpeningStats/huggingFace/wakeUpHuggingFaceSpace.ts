@@ -1,5 +1,7 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
+
 /**
  * HuggingFace (HF) spaces sleep after inactivity
  *
@@ -75,6 +77,12 @@ const wakeUpHuggingFaceSpace = async (): Promise<{
 			error instanceof Error ? error.message : "Unknown error occurred";
 
 		console.error("[HF Space] Failed to wake up space:", message);
+
+		// Non-fatal — report to Sentry for visibility but don't block the main flow
+		Sentry.captureException(error, {
+			tags: { context: "hf-wake-up" },
+			level: "warning",
+		});
 
 		// Don't throw - we want the main process to continue even if wake-up fails
 		// The space will just take longer to respond to the actual inference call

@@ -10,6 +10,7 @@
  */
 
 import { Color } from "../../types/stats";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Type for the JSON structure: { "Opening Name": training_id, ... }
@@ -39,7 +40,7 @@ export type OpeningNamesToTrainingIDs = Map<string, number>;
  * }
  */
 export async function loadOpeningNamesForColor(
-	color: Color
+	color: Color,
 ): Promise<OpeningNamesToTrainingIDs> {
 	try {
 		const jsonModule = await import(
@@ -51,20 +52,24 @@ export async function loadOpeningNamesForColor(
 
 		// Convert to Map<string, string> for O(1) lookup and training ID access
 		const openingNamesToTrainingIDs: OpeningNamesToTrainingIDs = new Map(
-			Object.entries(openingMap).map(([name, id]) => [name, id])
+			Object.entries(openingMap).map(([name, id]) => [name, id]),
 		);
 
 		console.log(
-			`Loaded ${openingNamesToTrainingIDs.size} valid opening names for ${color} player`
+			`Loaded ${openingNamesToTrainingIDs.size} valid opening names for ${color} player`,
 		);
 
 		return openingNamesToTrainingIDs;
 	} catch (error) {
 		// Fail loudly - if we can't load openings, we shouldn't proceed
-		throw new Error(
+		const wrappedError = new Error(
 			`Failed to load opening names for ${color}: ${
 				error instanceof Error ? error.message : String(error)
-			}`
+			}`,
 		);
+		Sentry.captureException(wrappedError, {
+			extra: { color },
+		});
+		throw wrappedError;
 	}
 }
