@@ -39,18 +39,14 @@ export default function Home() {
 			<HeroSection />
 
 			{/* Divider */}
-			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
-			</div>
+			<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 
 			<div className="py-8">
 				<TableOfContents sections={tocSections} />
 			</div>
 
 			{/* Divider */}
-			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
-			</div>
+			<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 
 			<HowItWorks />
 
@@ -59,13 +55,13 @@ export default function Home() {
 				<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 			</div>
 
+			{/* Project features */}
 			<Features />
 
 			{/* Divider */}
-			<div className="w-full max-w-4xl mx-auto px-4 py-8">
-				<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
-			</div>
+			<Separator className="h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
 
+			{/* Tech stack details */}
 			<TechnicalDetails />
 		</main>
 	);
