@@ -28,12 +28,40 @@ export type GameResult = z.infer<typeof ResultTypeSchema>;
 export const ColorSchema = z.enum(["white", "black"]);
 export type Color = z.infer<typeof ColorSchema>;
 
+// ============================================================================
+// ECO Code Types
+// ============================================================================
+
+/**ECO codes are formatted like `A09`; this is the first half of the code. */
+export type ECOLetter = "A" | "B" | "C" | "D" | "E";
+
+/** ECO cdes are formatted like `A09`; this is the digit section. */
+type ECODigit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+/**The two digits that make up part of an ECO code. It's a string because it can have leading zeros. */
+export type ECONumber = `${ECODigit}${ECODigit}`;
+
+/**Template literal type laying out the structure of an ECO code string: letterdigitdigit (i.e. A09, B73)
+ *
+ * Note that it's only letters A-E and digits 00-99.
+ */
+export type ECOCode = `${ECOLetter}${ECONumber}`;
+
+// TODO check whether this is hurting compiler performance; when I hover over ECOCode type it shows a 500 member union due to the spreading of tempalte literals. I think that's fine - I'm just using the TS template literal type like it's written - but double check.
+export const ECOCodeSchema = z.custom<ECOCode>(
+	(val) => typeof val === "string" && /^[A-E][0-9]{2}$/.test(val),
+	{
+		message:
+			"Invalid ECO code. Expected format: A-E followed by two digits (e.g. B90)",
+	},
+);
+
 /**
  * See docstring for RawOpeningStats type.
  */
 export const RawOpeningStatsSchema = z.object({
 	openingName: z.string(),
-	eco: z.string(),
+	eco: ECOCodeSchema,
 	trainingID: z.number(),
 	numGames: z.number().nonnegative(),
 	numWins: z.number().nonnegative(),
@@ -88,7 +116,7 @@ export const HFInterfacePayloadSchema = z.object({
 			opening_name: z.string(),
 			// Sequential id we used in training
 			opening_id: z.number(),
-			eco: z.string(),
+			eco: ECOCodeSchema,
 			num_games: z.number().nonnegative(),
 			num_wins: z.number().nonnegative(),
 			num_draws: z.number().nonnegative(),
@@ -112,7 +140,7 @@ export type HFInterfacePayload = z.infer<typeof HFInterfacePayloadSchema>;
  */
 export const SingleOpeningRecommendationSchema = z.object({
 	opening_name: z.string(),
-	eco: z.string(),
+	eco: ECOCodeSchema,
 	predicted_score: z.number().min(0).max(1),
 });
 
@@ -302,7 +330,7 @@ export class OpeningStatsUtils {
 		openingName: OpeningName,
 		/**Its id in my internal model training database */
 		trainingID: number,
-		eco: string,
+		eco: ECOCode,
 		result: Readonly<GameResult>,
 		/**
 		 * Adds 1 game for blitz, two for Rapid, 3 for Classical.
@@ -317,7 +345,7 @@ export class OpeningStatsUtils {
 			// Update existing stats
 			existing.numGames += weight; // more for slower games
 
-			// Increments numWins in player's opening stats if it's a win, numDraws for draw, etc
+			// Increments numWins in player's opening stats if it's a win, numDraws for draw, numLosses for loss.
 			const resultKeyMap: Record<
 				GameResult,
 				"numWins" | "numDraws" | "numLosses"

@@ -3,6 +3,7 @@
  */
 
 import { z } from "zod";
+import { ECOCode } from "./stats";
 
 // ============================================================================
 // Lichess User Profile API Types
@@ -36,7 +37,7 @@ export interface LichessGameAPIResponse {
 		black: LichessPlayerFromAPI;
 	};
 	opening?: {
-		eco: string;
+		eco: ECOCode;
 		name: string;
 		ply: Dont_Use_This_It_Isnt_What_You_Think;
 	};

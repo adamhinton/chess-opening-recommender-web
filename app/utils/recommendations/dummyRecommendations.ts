@@ -11,6 +11,7 @@
 
 import {
 	Color,
+	ECOCode,
 	InferencePredictResponse,
 	SingleOpeningRecommendation,
 } from "../types/stats";
@@ -19,7 +20,7 @@ import {
  * A curated list of 50 plausible opening names with ECO codes
  * Selected to represent a variety of ECO categories (A-E)
  */
-const DUMMY_OPENINGS: Array<{ name: string; eco: string }> = [
+const DUMMY_OPENINGS: Array<{ name: string; eco: ECOCode }> = [
 	// A openings (Flank openings)
 	{ name: "English Opening: King's English Variation", eco: "A20" },
 	{ name: "English Opening: Symmetrical Variation", eco: "A30" },

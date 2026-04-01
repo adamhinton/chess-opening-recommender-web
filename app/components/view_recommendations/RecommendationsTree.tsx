@@ -10,8 +10,12 @@
 "use client";
 
 import { useMemo } from "react";
-import ECOLetterSection, { ECOLetter } from "./ECOLetterSection";
-import { SingleOpeningRecommendation } from "../../utils/types/stats";
+import ECOLetterSection from "./ECOLetterSection";
+import {
+	SingleOpeningRecommendation,
+	ECOLetter,
+	ECOCode,
+} from "../../utils/types/stats";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
@@ -41,7 +45,7 @@ interface ParsedECO {
  * @example "B90" -> { letter: "B" }
  * @example "A00" -> { letter: "A" }
  */
-function parseECO(eco: string): ParsedECO | null {
+function parseECO(eco: ECOCode): ParsedECO | null {
 	if (!eco || eco.length < 2) return null;
 
 	const letter = eco.charAt(0).toUpperCase();

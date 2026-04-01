@@ -12,7 +12,10 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import SingleRecommendation from "./SingleRecommendation";
-import { SingleOpeningRecommendation } from "../../utils/types/stats";
+import {
+	SingleOpeningRecommendation,
+	ECOLetter,
+} from "../../utils/types/stats";
 import {
 	Tooltip,
 	TooltipContent,
@@ -28,8 +31,6 @@ import {
 // ============================================================================
 // Types
 // ============================================================================
-
-export type ECOLetter = "A" | "B" | "C" | "D" | "E";
 
 /** Description of what each ECO letter category covers - with friendly explanations */
 const ECO_DETAILS: Record<ECOLetter, { title: string; description: string }> = {
@@ -67,7 +68,7 @@ const ECO_LETTER_COLORS: Record<ECOLetter, string> = {
 	C: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
 	D: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
 	E: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
-};
+} as const;
 
 /** Left border color for the openings list — matched to each ECO letter's theme */
 const ECO_BORDER_COLORS: Record<ECOLetter, string> = {
@@ -76,7 +77,7 @@ const ECO_BORDER_COLORS: Record<ECOLetter, string> = {
 	C: "border-l-amber-500/40",
 	D: "border-l-purple-500/40",
 	E: "border-l-rose-500/40",
-};
+} as const;
 
 interface ECOLetterSectionProps {
 	letter: ECOLetter;
