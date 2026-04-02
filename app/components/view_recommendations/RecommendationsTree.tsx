@@ -94,7 +94,6 @@ const RecommendationsTree = ({
 	showRanks = false,
 }: RecommendationsTreeProps) => {
 	// Organize recommendations into the tree structure
-	// TODO not sure I needed to memoize here
 	const organizedData = useMemo(
 		() => organizeByECO(recommendations),
 		[recommendations],
