@@ -47,7 +47,6 @@ export type ECONumber = `${ECODigit}${ECODigit}`;
  */
 export type ECOCode = `${ECOLetter}${ECONumber}`;
 
-// TODO check whether this is hurting compiler performance; when I hover over ECOCode type it shows a 500 member union due to the spreading of tempalte literals. I think that's fine - I'm just using the TS template literal type like it's written - but double check.
 export const ECOCodeSchema = z.custom<ECOCode>(
 	(val) => typeof val === "string" && /^[A-E][0-9]{2}$/.test(val),
 	{
