@@ -251,9 +251,8 @@ export class OpeningStatsUtils {
 		const result = {
 			name: playerData.lichessUsername,
 			rating: playerData.rating,
-			// not sure why TS isn't inferring that this is white or black
 			side:
-				playerData.color === "white" ? ("white" as unknown as Color) : "black",
+				playerData.color === "white" ? ("white" as const) : ("black" as const),
 			opening_stats: Object.values(playerData.openingStats).map((stat) => ({
 				opening_name: stat.openingName,
 				opening_id: stat.trainingID,
@@ -265,7 +264,8 @@ export class OpeningStatsUtils {
 			})),
 		};
 
-		// If in dev and it doesn't saitisfy schema, throw. If in prod, don't bother; the HF API will reject it if it's malformed and we can catch it there.
+		// If in dev and it doesn't saitisfy schema, throw.
+		// If in prod, don't bother; the HF API will reject it if it's malformed and we can catch it there.
 		const parseResult = HFInterfacePayloadSchema.safeParse(result);
 		if (!parseResult.success) {
 			console.error("Invalid HFInterfacePayload:", parseResult.error);
