@@ -41,6 +41,7 @@ type ECODigit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 /**The two digits that make up part of an ECO code. It's a string because it can have leading zeros. */
 export type ECONumber = `${ECODigit}${ECODigit}`;
 
+// TODO this is displaying super ugly when I over over it; try to fix that
 /**Template literal type laying out the structure of an ECO code string: letterdigitdigit (i.e. A09, B73)
  *
  * Note that it's only letters A-E and digits 00-99.
