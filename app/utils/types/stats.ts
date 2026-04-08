@@ -42,6 +42,7 @@ type ECODigit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export type ECONumber = `${ECODigit}${ECODigit}`;
 
 // TODO this is displaying super ugly when I over over it; try to fix that
+// The issue is Intellisense; the type is well designed but it displays as a massive 500 string literal union which is obnoxious
 /**Template literal type laying out the structure of an ECO code string: letterdigitdigit (i.e. A09, B73)
  *
  * Note that it's only letters A-E and digits 00-99.

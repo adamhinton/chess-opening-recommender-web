@@ -19,10 +19,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
-// ============================================================================
-// Types
-// ============================================================================
-
 interface RecommendationsTreeProps {
 	recommendations: SingleOpeningRecommendation[];
 	/** Whether to show rank numbers on individual openings; always off right now; there's a TODO to revisit this */
