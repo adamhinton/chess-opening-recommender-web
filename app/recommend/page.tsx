@@ -14,7 +14,6 @@ import RecommendForm from "../components/recommend/RecommendForm";
 import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
 import { Color } from "../utils/types/stats";
 import { AllowedTimeControl } from "../utils/types/lichessTypes";
-import { StoredPlayerData } from "../utils/rawOpeningStats/localStorage/statsLocalStorage";
 import { useRouter } from "next/navigation";
 
 const Recommend = () => {
@@ -171,7 +170,7 @@ const Recommend = () => {
 	);
 
 	/**See saved stats for an already-analyzed player */
-	const handleViewStats = (playerData: Readonly<StoredPlayerData>) => {
+	const handleViewStats = () => {
 		router.push("view-recommendations");
 	};
 
