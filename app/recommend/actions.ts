@@ -68,6 +68,47 @@ const TIME_CONTROL_WEIGHTS: Record<LichessGameAPIResponse["speed"], number> = {
  */
 const SHOULD_TRACK_MEMORY_USAGE = process.env.NODE_ENV === "development";
 
+/**
+ * Collects browser/device context for Sentry performance tracking.
+ * Uses non-standard APIs (Chrome-only) with safe fallbacks.
+ */
+function collectBrowserContext(): Record<string, string | number> {
+	const ctx: Record<string, string | number> = {};
+
+	if (typeof navigator !== "undefined") {
+		ctx["browser.hardware_concurrency"] = navigator.hardwareConcurrency ?? 0;
+		ctx["browser.language"] = navigator.language ?? "unknown";
+		ctx["browser.user_agent"] = navigator.userAgent ?? "unknown";
+
+		// Chrome-only: device memory in GB
+		const nav = navigator as unknown as Record<string, unknown>;
+		if (typeof nav.deviceMemory === "number") {
+			ctx["device.memory_gb"] = nav.deviceMemory;
+		}
+
+		// Network Information API (Chrome/Edge)
+		const conn = nav.connection as Record<string, unknown> | undefined;
+		if (conn) {
+			if (typeof conn.effectiveType === "string") {
+				ctx["network.effective_type"] = conn.effectiveType;
+			}
+			if (typeof conn.downlink === "number") {
+				ctx["network.downlink_mbps"] = conn.downlink;
+			}
+			if (typeof conn.rtt === "number") {
+				ctx["network.rtt_ms"] = conn.rtt;
+			}
+		}
+	}
+
+	if (typeof screen !== "undefined") {
+		ctx["screen.width"] = screen.width;
+		ctx["screen.height"] = screen.height;
+	}
+
+	return ctx;
+}
+
 export async function processLichessUsername(
 	formData: Readonly<FormData>,
 	onStatusUpdate?: (message: string) => void,
@@ -257,121 +298,198 @@ export async function processLichessUsername(
 		// When resuming, start from the oldest game we've already processed
 		let currentUntilUnixMS = oldestGameTimestampUnixMS;
 
+		// Collect browser context once before the stream starts
+		const browserContext = collectBrowserContext();
+		const streamStartMs = Date.now();
+
 		// Keep streaming in batches until we have enough valid games
-		while (validGameCount < numGamesNeeded) {
-			const stream = streamLichessGames({
-				username,
-				color: playerColor,
-				numGames: Math.min(5000, numGamesNeeded - validGameCount), // Fetch in chunks of up to 5000
-				allowedTimeControls: allowedTimeControls,
-				sinceUnixMS: sinceUnixMS, // User's date filter (constant)
-				untilUnixMS: currentUntilUnixMS, // The oldest timestamp already streamed (moves backwards)
-				onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
-			});
+		// Wrapped in a Sentry span so we get duration, throughput, and browser context in the Performance dashboard
+		await Sentry.startSpan(
+			{
+				name: "lichess-game-stream",
+				op: "lichess.stream",
+				attributes: {
+					"lichess.username": username,
+					"lichess.color": playerColor,
+					"lichess.time_controls": allowedTimeControls.join(","),
+					"lichess.num_games_needed": numGamesNeeded,
+					"lichess.is_resume": numGamesProcessedSoFar > 0,
+					"lichess.resumed_from_game_count": numGamesProcessedSoFar,
+					"lichess.estimated_total": estimatedTotalGamesNeeded,
+					...browserContext,
+				},
+			},
+			async (span) => {
+				while (validGameCount < numGamesNeeded) {
+					const stream = streamLichessGames({
+						username,
+						color: playerColor,
+						numGames: Math.min(5000, numGamesNeeded - validGameCount), // Fetch in chunks of up to 5000
+						allowedTimeControls: allowedTimeControls,
+						sinceUnixMS: sinceUnixMS, // User's date filter (constant)
+						untilUnixMS: currentUntilUnixMS, // The oldest timestamp already streamed (moves backwards)
+						onWait: onStatusUpdate, // informs the user in the UI when there's a delay in the API call
+					});
 
-			let gamesInThisBatch = 0;
+					let gamesInThisBatch = 0;
 
-			for await (const game of stream) {
-				totalGamesProcessed++;
-				gamesInThisBatch++;
-				validationStats.totalGamesProcessed++;
+					for await (const game of stream) {
+						totalGamesProcessed++;
+						gamesInThisBatch++;
+						validationStats.totalGamesProcessed++;
 
-				// Track the oldest timestamp seen for pagination after this batch completes
-				if (game.createdAt) {
-					const oldestToNumber = Number(game.createdAt);
-					oldestGameTimestampUnixMS = oldestToNumber;
-				}
+						// Track the oldest timestamp seen for pagination after this batch completes
+						if (game.createdAt) {
+							const oldestToNumber = Number(game.createdAt);
+							oldestGameTimestampUnixMS = oldestToNumber;
+						}
 
-				// Check memory usage (sampled inside the class)
-				// We want to verify that heap size stays relatively flat (O(k) with k being the number of unique openings)
-				// as totalProcessed (O(n)) increases.
-				memoryMonitor.check(
-					totalGamesProcessed,
-					Object.keys(playerData.openingStats).length, // number of unique openings
-				);
+						// Check memory usage (sampled inside the class)
+						// We want to verify that heap size stays relatively flat (O(k) with k being the number of unique openings)
+						// as totalProcessed (O(n)) increases.
+						memoryMonitor.check(
+							totalGamesProcessed,
+							Object.keys(playerData.openingStats).length, // number of unique openings
+						);
 
-				if (!isValidLichessGame(game, filters)) {
-					// Basic tracking of why game wasn't accepted
-					if (
-						!game.opening ||
-						!openingNamesToTrainingIDs.has(game.opening.name)
-					) {
-						validationStats.numFilteredByOpening++;
+						if (!isValidLichessGame(game, filters)) {
+							// Basic tracking of why game wasn't accepted
+							if (
+								!game.opening ||
+								!openingNamesToTrainingIDs.has(game.opening.name)
+							) {
+								validationStats.numFilteredByOpening++;
+							}
+							continue;
+						}
+
+						// Game is valid: Accumulate stats
+						const result = getGameResult(game, playerColor);
+
+						/**
+						 * Determine weight based on speed
+						 * Slow games are higher quality data and so add more to the total
+						 */
+						const weight = TIME_CONTROL_WEIGHTS[game.speed] || 1;
+
+						OpeningStatsUtils.accumulateOpeningStats(
+							playerData,
+							game.opening!.name, // Safe because isValidLichessGame checks this
+							openingNamesToTrainingIDs.get(game.opening!.name)!, // Safe because isValidLichessGame checks this
+							game.opening!.eco,
+							result,
+							weight,
+						);
+
+						validGameCount++;
+						validationStats.numValidGames++;
+						if (totalGamesProcessed % 50 === 0) {
+							console.log(`Processed ${totalGamesProcessed} games`);
+						}
+
+						// Report progress to UI
+						if (onProgressUpdate) {
+							onProgressUpdate({
+								numGamesProcessed: numGamesProcessedSoFar + validGameCount,
+								totalGamesNeeded: estimatedTotalGamesNeeded,
+							});
+						}
+
+						// Save progress in localStorage every 500 valid games
+						if (
+							validGameCount % SAVE_LOCAL_STORAGE_EVERY_N_GAMES === 0 &&
+							oldestGameTimestampUnixMS
+						) {
+							StatsLocalStorageUtils.saveStats(playerData, {
+								fetchProgress: numGamesProcessedSoFar + validGameCount,
+								isComplete: false, // Still streaming - not complete
+								sinceUnixMS: oldestGameTimestampUnixMS,
+							});
+							console.log(
+								`[Incremental Save] Saved progress at ${
+									numGamesProcessedSoFar + validGameCount
+								} games`,
+							);
+						}
+
+						// Stop if we've reached the target
+						if (validGameCount >= numGamesNeeded) {
+							break;
+						}
 					}
-					continue;
-				}
 
-				// Game is valid: Accumulate stats
-				const result = getGameResult(game, playerColor);
+					// If we got no games in this batch, the user has no more games to fetch
+					if (gamesInThisBatch === 0) {
+						console.log("No more games available from Lichess");
+						break;
+					}
 
-				/**
-				 * Determine weight based on speed
-				 * Slow games are higher quality data and so add more to the total
-				 */
-				const weight = TIME_CONTROL_WEIGHTS[game.speed] || 1;
+					// Update pagination cursor for next batch: fetch games older than the oldest we just processed
+					// Subtract 1ms to avoid fetching the exact same game again
+					if (oldestGameTimestampUnixMS) {
+						currentUntilUnixMS = oldestGameTimestampUnixMS - 1;
+					}
 
-				OpeningStatsUtils.accumulateOpeningStats(
-					playerData,
-					game.opening!.name, // Safe because isValidLichessGame checks this
-					openingNamesToTrainingIDs.get(game.opening!.name)!, // Safe because isValidLichessGame checks this
-					game.opening!.eco,
-					result,
-					weight,
-				);
-
-				validGameCount++;
-				validationStats.numValidGames++;
-				if (totalGamesProcessed % 50 === 0) {
-					console.log(`Processed ${totalGamesProcessed} games`);
-				}
-
-				// Report progress to UI
-				if (onProgressUpdate) {
-					onProgressUpdate({
-						numGamesProcessed: numGamesProcessedSoFar + validGameCount,
-						totalGamesNeeded: estimatedTotalGamesNeeded,
-					});
-				}
-
-				// Save progress in localStorage every 500 valid games
-				if (
-					validGameCount % SAVE_LOCAL_STORAGE_EVERY_N_GAMES === 0 &&
-					oldestGameTimestampUnixMS
-				) {
-					StatsLocalStorageUtils.saveStats(playerData, {
-						fetchProgress: numGamesProcessedSoFar + validGameCount,
-						isComplete: false, // Still streaming - not complete
-						sinceUnixMS: oldestGameTimestampUnixMS,
-					});
 					console.log(
-						`[Incremental Save] Saved progress at ${
-							numGamesProcessedSoFar + validGameCount
-						} games`,
+						`[Batch Complete] Fetched ${gamesInThisBatch} games in this batch. Valid games so far: ${validGameCount}/${numGamesNeeded}`,
 					);
 				}
 
-				// Stop if we've reached the target
-				if (validGameCount >= numGamesNeeded) {
-					break;
-				}
-			}
+				// ── Stream complete: record Sentry performance metrics on span ──
+				const streamDurationMs = Date.now() - streamStartMs;
+				const streamDurationSec = streamDurationMs / 1000;
+				const gamesPerSecond =
+					streamDurationSec > 0 ? totalGamesProcessed / streamDurationSec : 0;
+				const validGamesPerSecond =
+					streamDurationSec > 0 ? validGameCount / streamDurationSec : 0;
+				const validationPassRate =
+					totalGamesProcessed > 0 ? validGameCount / totalGamesProcessed : 0;
 
-			// If we got no games in this batch, the user has no more games to fetch
-			if (gamesInThisBatch === 0) {
-				console.log("No more games available from Lichess");
-				break;
-			}
+				// Attributes are searchable/filterable in the Sentry span detail view
+				span.setAttribute("lichess.games_per_second", gamesPerSecond);
+				span.setAttribute(
+					"lichess.valid_games_per_second",
+					validGamesPerSecond,
+				);
+				span.setAttribute("lichess.total_games_streamed", totalGamesProcessed);
+				span.setAttribute("lichess.valid_game_count", validGameCount);
+				span.setAttribute("lichess.validation_pass_rate", validationPassRate);
+				span.setAttribute("lichess.stream_duration_ms", streamDurationMs);
+				span.setAttribute(
+					"lichess.unique_openings",
+					Object.keys(playerData.openingStats).length,
+				);
 
-			// Update pagination cursor for next batch: fetch games older than the oldest we just processed
-			// Subtract 1ms to avoid fetching the exact same game again
-			if (oldestGameTimestampUnixMS) {
-				currentUntilUnixMS = oldestGameTimestampUnixMS - 1;
-			}
-
-			console.log(
-				`[Batch Complete] Fetched ${gamesInThisBatch} games in this batch. Valid games so far: ${validGameCount}/${numGamesNeeded}`,
-			);
-		}
+				// Measurements are chartable as time-series in Sentry Performance → Custom Measurements
+				Sentry.setMeasurement("games_per_second", gamesPerSecond, "ratio");
+				Sentry.setMeasurement(
+					"valid_games_per_second",
+					validGamesPerSecond,
+					"ratio",
+				);
+				Sentry.setMeasurement(
+					"total_games_streamed",
+					totalGamesProcessed,
+					"none",
+				);
+				Sentry.setMeasurement("valid_game_count", validGameCount, "none");
+				Sentry.setMeasurement(
+					"validation_pass_rate",
+					validationPassRate,
+					"ratio",
+				);
+				Sentry.setMeasurement(
+					"stream_duration_ms",
+					streamDurationMs,
+					"millisecond",
+				);
+				Sentry.setMeasurement(
+					"unique_openings",
+					Object.keys(playerData.openingStats).length,
+					"none",
+				);
+			},
+		);
 
 		// 4. Finalize
 		logValidationStats(validationStats);
