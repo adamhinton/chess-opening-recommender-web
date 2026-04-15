@@ -397,10 +397,7 @@ export async function processLichessUsername(
 			);
 		}
 
-		console.log("blah blah blah");
-
 		// Client-side validation of PlayerData before sending to inference
-		// (server-side conversion also validates, but this catches client bugs before the round-trip)
 		// TODO clean up this validation error handling a bit
 		const numUniqueOpenings = Object.keys(playerData.openingStats).length;
 		if (!isValidPlayerData(playerData)) {
@@ -428,7 +425,6 @@ export async function processLichessUsername(
 		// Takes 10 seconds or less when running both this app and the inference on local;
 		// Not sure how long in dev but probably not long
 		const response = await sendRawStatsToHF(playerData);
-		console.log("response:", response);
 
 		// Alert if inference returned an error instead of valid predictions
 		if ("error" in response) {

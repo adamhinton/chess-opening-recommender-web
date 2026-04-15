@@ -172,7 +172,6 @@ const Recommend = () => {
 
 	/**See saved stats for an already-analyzed player */
 	const handleViewStats = (playerData: Readonly<StoredPlayerData>) => {
-		console.log("View stats for:", playerData.playerData.lichessUsername);
 		router.push("view-recommendations");
 	};
 
