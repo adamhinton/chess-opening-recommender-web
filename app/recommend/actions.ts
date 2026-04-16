@@ -489,6 +489,10 @@ export async function processLichessUsername(
 					Object.keys(playerData.openingStats).length,
 					"none",
 				);
+				// TODO not sure I'm doing this right
+				// Want to track metrics of games per second and get alerted if slow
+				Sentry.metrics.count("games_per_second", gamesPerSecond);
+				Sentry.metrics.count("valid_games_per_second", validGamesPerSecond);
 			},
 		);
 
