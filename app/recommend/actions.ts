@@ -308,6 +308,7 @@ export async function processLichessUsername(
 			{
 				name: "lichess-game-stream",
 				op: "lichess.stream",
+				forceTransaction: true, // Ensure this appears as a transaction in Sentry Performance even if not at the root of a request
 				attributes: {
 					"lichess.username": username,
 					"lichess.color": playerColor,
