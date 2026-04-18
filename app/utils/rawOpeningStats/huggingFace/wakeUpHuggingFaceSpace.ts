@@ -68,6 +68,10 @@ const wakeUpHuggingFaceSpace = async (): Promise<{
 
 		console.log("[HF Space] Successfully woken up and healthy");
 
+		Sentry.logger.info("[HF Space] Wake-up successful", {
+			tags: { context: "hf-wake-up" },
+		});
+
 		return {
 			success: true,
 			message: "HuggingFace Space is awake and ready",
