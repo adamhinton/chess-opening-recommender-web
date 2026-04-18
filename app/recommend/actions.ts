@@ -44,11 +44,11 @@ import sendRawStatsToHF from "../utils/rawOpeningStats/huggingFace/sendRawStatsT
 import { RecommendationsLocalStorageUtils } from "../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
 import * as Sentry from "@sentry/nextjs";
 
-// Much lower number for testing so I don't get IPbanned by Lichess
 // The most active player on lichess has about 400,000 games, so 200k for one color in prod
 export const MAX_GAMES_TO_FETCH =
 	process.env.NODE_ENV === "development" ? 200_000 : 200_000;
 
+/** Save to localStorage every N valid games */
 export const SAVE_LOCAL_STORAGE_EVERY_N_GAMES = 100;
 
 // ============================================================================
@@ -311,12 +311,16 @@ export async function processLichessUsername(
 				forceTransaction: true, // Ensure this appears as a transaction in Sentry Performance even if not at the root of a request
 				attributes: {
 					"lichess.username": username,
-					"lichess.color": playerColor,
-					"lichess.time_controls": allowedTimeControls.join(","),
+					"lichess.player_color": playerColor,
+					"lichess.allowed_time_controls": allowedTimeControls.join(","),
 					"lichess.num_games_needed": numGamesNeeded,
-					"lichess.is_resume": numGamesProcessedSoFar > 0,
+					"lichess.is_resume_from_saved_progress": numGamesProcessedSoFar > 0,
 					"lichess.resumed_from_game_count": numGamesProcessedSoFar,
 					"lichess.estimated_total": estimatedTotalGamesNeeded,
+					"lichess.stream_start_MS": streamStartMs,
+					"lichess.max_games_to_fetch": MAX_GAMES_TO_FETCH,
+					"lichess.max_rating_delta_between_players":
+						MAX_RATING_DELTA_BETWEEN_PLAYERS,
 					...browserContext,
 				},
 			},
