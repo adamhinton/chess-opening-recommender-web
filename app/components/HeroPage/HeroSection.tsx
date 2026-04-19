@@ -8,6 +8,7 @@ import { Subtext } from "./Subtext";
 import { generateDummyRecommendations } from "../../utils/recommendations/dummyRecommendations";
 import { RecommendationsLocalStorageUtils } from "../../utils/recommendations/recommendationsLocalStorage/recommendationsLocalStorage";
 import { Color } from "../../utils/types/stats";
+import * as Sentry from "@sentry/nextjs";
 
 export function HeroSection() {
 	const router = useRouter();
@@ -28,6 +29,10 @@ export function HeroSection() {
 	const handleViewResults = (e: React.MouseEvent) => {
 		e.preventDefault();
 		if (navigatingTo) return;
+
+		Sentry.logger.info("example-results-clicked", {
+			message: "User clicked to view example recommendations",
+		});
 
 		const href = "/view-recommendations";
 		setNavigatingTo(href);
