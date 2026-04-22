@@ -70,7 +70,7 @@ A lightweight Python API that hosts the pre-trained model. The Web Client sends 
 
 - **Database:** Currently localStorage, soon to be Supabase
 - **Game Data:** Lichess API (NDJSON streaming)
-- **Model Hosting:** Hugging Face Spaces (CPU Inference)
+- **Model Hosting:** Hugging Face Spaces (CPU Inference) using Docker
 
 **Machine Learning**
 
